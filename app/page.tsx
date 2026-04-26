@@ -158,7 +158,7 @@ export default async function HomePage() {
                 className="serviceCard"
               >
                 <div className="serviceIconBox">
-                  <ServiceIcon type={service.icon} />
+                  <ServiceIcon type={service.icon as any} />
                 </div>
 
                 <div className="serviceText">
