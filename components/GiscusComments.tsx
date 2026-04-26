@@ -7,7 +7,7 @@ export default function GiscusComments() {
     <div className="giscusWrap">
       <Giscus
         id="comments"
-        repo={process.env.NEXT_PUBLIC_GISCUS_REPO!}
+        repo={process.env.NEXT_PUBLIC_GISCUS_REPO as `${string}/${string}`}
         repoId={process.env.NEXT_PUBLIC_GISCUS_REPO_ID!}
         category={process.env.NEXT_PUBLIC_GISCUS_CATEGORY!}
         categoryId={process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID!}
