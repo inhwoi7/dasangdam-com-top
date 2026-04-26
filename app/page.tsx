@@ -3,7 +3,6 @@ import {
   ArrowRightIcon,
   ServiceIcon,
   SunLogo,
-  type ServiceIconType,
 } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 
@@ -11,7 +10,7 @@ type ServiceItem = {
   title: string;
   description: string;
   href: string;
-  icon: ServiceIconType;
+  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune";
 };
 
 const SERVICES: ServiceItem[] = [
