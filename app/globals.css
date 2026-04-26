@@ -1,26 +1,806 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f6f0e6;
+  --bg-strong: #f3eadb;
+  --card: #fffdfa;
+  --card-soft: #fff8ea;
+  --line: #eadfcd;
+  --line-strong: #e4bf63;
+  --text: #1e2430;
+  --text-soft: #6f665d;
+  --text-faint: #948a80;
+  --shadow: 0 16px 40px rgba(74, 56, 28, 0.08);
+  --shadow-soft: 0 10px 24px rgba(74, 56, 28, 0.05);
+  --radius-hero: 52px;
+  --radius-xl: 34px;
+  --radius-lg: 28px;
+  --radius-md: 22px;
+  --radius-sm: 16px;
+  --container: 1180px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background:
+    radial-gradient(circle at top center, rgba(255, 241, 204, 0.55), transparent 28%),
+    linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+  color: var(--text);
+  font-family:
+    "Pretendard",
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    sans-serif;
+  line-height: 1.55;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.page,
+.postPage {
+  min-height: 100vh;
+  padding: 18px 20px 72px;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+/* Hero */
+.brandSection {
+  margin-bottom: 14px;
+}
+
+.brandShell {
+  min-height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 28px 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fffefc 0%, #fbf7f0 100%);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.brandLogo {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fff4cd 0%, #ffe9ab 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.brandLogo svg {
+  width: 32px;
+  height: 32px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.brandEyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #a77a2b;
+}
+
+.brandText h1 {
+  margin: 0;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 800;
+}
+
+.brandSubtitle {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+/* Section common */
+.sectionHeader {
+  margin-bottom: 18px;
+}
+
+.sectionMini {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 249, 236, 0.95);
+  border: 1px solid #f0e3c8;
+  color: #a97f33;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+/* Today pick */
+.recommendSection {
+  margin-bottom: 22px;
+}
+
+.recommendCard {
+  display: block;
+  padding: 18px 20px 22px;
+  border-radius: 26px;
+  border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(circle at center, rgba(255, 243, 202, 0.48), transparent 68%),
+    linear-gradient(180deg, #fffdf8 0%, #fff8ea 100%);
+  box-shadow: var(--shadow);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.recommendCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 44px rgba(74, 56, 28, 0.12);
+}
+
+.recommendTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.recommendMini {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff2cb;
+  color: #9d6f1e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.recommendMiniText {
+  color: #8c7757;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.recommendBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.recommendCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.recommendCopy h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+.recommendCopy p {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  font-size: 15px;
+}
+
+.recommendAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.recommendAction span {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.recommendAction svg {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+/* Services */
+.serviceSection {
+  margin-bottom: 18px;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.serviceCard {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 18px 18px 16px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 249, 0.95);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.serviceIconBox {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.serviceCard:nth-child(1) .serviceIconBox {
+  background: #fff3cf;
+  color: #d79a11;
+}
+
+.serviceCard:nth-child(2) .serviceIconBox {
+  background: #eef4ff;
+  color: #5c84f5;
+}
+
+.serviceCard:nth-child(3) .serviceIconBox {
+  background: #fff0f4;
+  color: #f05a7e;
+}
+
+.serviceCard:nth-child(4) .serviceIconBox {
+  background: #ecfbef;
+  color: #38a857;
+}
+
+.serviceCard:nth-child(5) .serviceIconBox {
+  background: #fff2f4;
+  color: #db5572;
+}
+
+.serviceCard:nth-child(6) .serviceIconBox {
+  background: #fff6e7;
+  color: #f08b22;
+}
+
+.serviceIconBox svg {
+  width: 24px;
+  height: 24px;
+}
+
+.serviceText {
+  flex: 1;
+  min-width: 0;
+}
+
+.serviceText strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.serviceText p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.serviceArrow,
+.postArrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid #e7dcc9;
+  background: #fbf6ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #8c7a62;
+}
+
+.serviceArrow svg,
+.postArrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Library */
+.librarySection {
+  margin-top: 8px;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.postRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 18px 18px 18px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 250, 0.97);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.postRow:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.postMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.postMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.categoryTag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fff4d5;
+  color: #9d6f1e;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.postDate {
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.postMain h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.postMain p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Detail page */
+.postPage {
+  background:
+    radial-gradient(circle at top center, rgba(255, 241, 204, 0.5), transparent 26%),
+    linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
+}
+
+.postArticle {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.postHeaderCard,
+.postBodyCard,
+.commentsCard {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(255, 253, 249, 0.97);
+  box-shadow: var(--shadow-soft);
+}
+
+.postHeaderCard {
+  padding: 28px 28px 26px;
+  margin-bottom: 16px;
+}
+
+.postBodyCard {
+  padding: 28px;
+  margin-bottom: 16px;
+}
+
+.commentsCard {
+  padding: 24px 28px;
+}
+
+.postTitle {
+  margin: 14px 0 0;
+  font-size: 40px;
+  line-height: 1.25;
+  letter-spacing: -0.045em;
+  font-weight: 800;
+}
+
+.postExcerpt {
+  margin: 14px 0 0;
+  font-size: 17px;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.commentsCard h2 {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.giscusWrap {
+  margin-top: 8px;
+}
+
+/* Notion renderer */
+.notionProse {
+  color: var(--text);
+}
+
+.notionBlock + .notionBlock,
+.notionCallout + .notionBlock,
+.notionBlock + .notionCallout,
+.notionImage + .notionBlock,
+.notionToggle + .notionBlock {
+  margin-top: 14px;
+}
+
+.notionProse h1,
+.notionProse h2,
+.notionProse h3 {
+  margin: 24px 0 10px;
+  line-height: 1.35;
+  letter-spacing: -0.04em;
+}
+
+.notionProse h1 {
+  font-size: 32px;
+}
+
+.notionProse h2 {
+  font-size: 26px;
+}
+
+.notionProse h3 {
+  font-size: 22px;
+}
+
+.notionProse p,
+.notionProse li,
+.notionProse blockquote,
+.notionProse summary {
+  font-size: 16px;
+  line-height: 1.9;
+  color: #2c3340;
+}
+
+.notionProse p {
+  margin: 0;
+}
+
+.notionProse ul,
+.notionProse ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.notionProse a {
+  color: #a46c12;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.notionDivider {
+  border: 0;
+  border-top: 1px solid #eadfcd;
+  margin: 22px 0;
+}
+
+.notionChildren {
+  margin-top: 10px;
+  padding-left: 16px;
+}
+
+.notionCallout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: #fff8ea;
+  border: 1px solid #f0dfb4;
+}
+
+.notionCalloutIcon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.notionCalloutContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notionCode {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #1f2430;
+  color: #f7f7f7;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.notionImage {
+  margin: 18px 0;
+}
+
+.notionImage img {
+  width: 100%;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+}
+
+.notionImage figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.notionTodo {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.notionToggle {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fbf7ef;
+  border: 1px solid var(--line);
+}
+
+.notionToggle summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .brandShell {
+    min-height: auto;
+    border-radius: 38px;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px 20px;
+  }
+
+  .brandText h1 {
+    font-size: 46px;
+  }
+
+  .brandSubtitle {
+    font-size: 16px;
+  }
+
+  .recommendBody {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .recommendAction {
+    align-self: flex-end;
+  }
+
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .postTitle {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page,
+  .postPage {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .brandShell {
+    border-radius: 28px;
+    padding: 22px 16px;
+  }
+
+  .brandLogo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .brandText h1 {
+    font-size: 38px;
+  }
+
+  .brandSubtitle {
+    font-size: 15px;
+  }
+
+  .recommendCard,
+  .serviceCard,
+  .postRow,
+  .postHeaderCard,
+  .postBodyCard,
+  .commentsCard {
+    border-radius: 22px;
+  }
+
+  .recommendCard {
+    padding: 16px;
+  }
+
+  .recommendTop {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .recommendCopy h2 {
+    font-size: 22px;
+  }
+
+  .recommendAction {
+    align-self: flex-start;
+  }
+
+  .sectionHeader h2 {
+    font-size: 24px;
+  }
+
+  .serviceCard {
+    min-height: 102px;
+    padding: 16px;
+  }
+
+  .serviceText strong {
+    font-size: 17px;
+  }
+
+  .postMain h3 {
+    font-size: 17px;
+  }
+
+  .postRow {
+    align-items: flex-start;
+  }
+
+  .postTitle {
+    font-size: 28px;
+  }
+
+  .postExcerpt {
+    font-size: 15px;
+  }
+
+  .postHeaderCard,
+  .postBodyCard,
+  .commentsCard {
+    padding: 20px;
+  }
+
+  .notionProse h1 {
+    font-size: 28px;
+  }
+
+  .notionProse h2 {
+    font-size: 24px;
+  }
+
+  .notionProse h3 {
+    font-size: 20px;
+  }
+
+  .notionProse p,
+  .notionProse li,
+  .notionProse blockquote,
+  .notionProse summary {
+    font-size: 15px;
+  }
 }

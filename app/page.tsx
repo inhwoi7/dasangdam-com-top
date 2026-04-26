@@ -1,65 +1,226 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRightIcon,
+  ServiceIcon,
+  SunLogo,
+  type ServiceIconType,
+} from "@/components/icons";
+import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 
-export default function Home() {
+type ServiceItem = {
+  title: string;
+  description: string;
+  href: string;
+  icon: ServiceIconType;
+};
+
+const SERVICES: ServiceItem[] = [
+  {
+    title: "사주",
+    description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.",
+    href: "https://my-saju-app.vercel.app/",
+    icon: "saju",
+  },
+  {
+    title: "MBTI 매칭",
+    description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.",
+    href: "https://dasangdam-mbti-sunny.vercel.app/",
+    icon: "mbti",
+  },
+  {
+    title: "사주 궁합",
+    description: "우리 둘의 성향 차이와 조화를 확인해보세요.",
+    href: "https://dasangdam-chemi-app.vercel.app/",
+    icon: "compatibility",
+  },
+  {
+    title: "IPIP-50 성격검사",
+    description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.",
+    href: "https://ipip50-rho.vercel.app/",
+    icon: "ipip",
+  },
+  {
+    title: "행운의 숫자",
+    description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.",
+    href: "/services/lotto",
+    icon: "lucky",
+  },
+  {
+    title: "오늘의 운세",
+    description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.",
+    href: "/services/today-fortune",
+    icon: "fortune",
+  },
+];
+
+function formatDate(dateString: string) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+export default async function HomePage() {
+  const [todayPick, articlePosts] = await Promise.all([
+    getFeaturedQuote(),
+    getArticlePosts(5),
+  ]);
+
+  const hasTodayPickLink = Boolean(todayPick?.slug);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="page">
+      <div className="container">
+        <section className="brandSection">
+          <div className="brandShell">
+            <div className="brandLogo">
+              <SunLogo />
+            </div>
+
+            <div className="brandText">
+              <p className="brandEyebrow">WISE REST WITH SUNNY</p>
+              <h1>다상담</h1>
+              <p className="brandSubtitle">
+                써니와 함께하는 인생의 지혜로운 쉼터
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="recommendSection">
+          {todayPick ? (
+            hasTodayPickLink ? (
+              <Link href={`/blog/${todayPick.slug}`} className="recommendCard">
+                <div className="recommendTop">
+                  <span className="recommendMini">TODAY&apos;S PICK</span>
+                  <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+                </div>
+
+                <div className="recommendBody">
+                  <div className="recommendCopy">
+                    <h2>{todayPick.title}</h2>
+                    {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                  </div>
+
+                  <div className="recommendAction">
+                    <span>문장 보러가기</span>
+                    <ArrowRightIcon />
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="recommendCard">
+                <div className="recommendTop">
+                  <span className="recommendMini">TODAY&apos;S PICK</span>
+                  <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+                </div>
+
+                <div className="recommendBody">
+                  <div className="recommendCopy">
+                    <h2>{todayPick.title}</h2>
+                    {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="recommendCard">
+              <div className="recommendTop">
+                <span className="recommendMini">TODAY&apos;S PICK</span>
+                <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+              </div>
+
+              <div className="recommendBody">
+                <div className="recommendCopy">
+                  <h2>아직 등록된 오늘의 문장이 없습니다.</h2>
+                  <p>Notion에서 Published 체크된 quote 글을 추가해주세요.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="serviceSection">
+          <div className="sectionHeader">
+            <span className="sectionMini">PLAYGROUND</span>
+            <h2>지금 나에게 필요한 게 뭘까요?</h2>
+          </div>
+
+          <div className="serviceGrid">
+            {SERVICES.map((service) => (
+              <Link
+                key={service.title}
+                href={service.href}
+                className="serviceCard"
+              >
+                <div className="serviceIconBox">
+                  <ServiceIcon type={service.icon} />
+                </div>
+
+                <div className="serviceText">
+                  <strong>{service.title}</strong>
+                  <p>{service.description}</p>
+                </div>
+
+                <div className="serviceArrow">
+                  <ArrowRightIcon />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="librarySection">
+          <div className="sectionHeader">
+            <span className="sectionMini">BLOG &amp; CONSULT</span>
+            <h2>다상담 서재</h2>
+          </div>
+
+          <div className="postList">
+            {articlePosts.length > 0 ? (
+              articlePosts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={`/blog/${post.slug}`}
+                  className="postRow"
+                >
+                  <div className="postMain">
+                    <div className="postMeta">
+                      {post.category && (
+                        <span className="categoryTag">{post.category}</span>
+                      )}
+                      {post.publishedDate && (
+                        <span className="postDate">
+                          {formatDate(post.publishedDate)}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3>{post.title}</h3>
+                    {post.excerpt && <p>{post.excerpt}</p>}
+                  </div>
+
+                  <div className="postArrow">
+                    <ArrowRightIcon />
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="postRow">
+                <div className="postMain">
+                  <h3>아직 등록된 서재 글이 없습니다.</h3>
+                  <p>Notion에서 Published 체크된 article 글을 추가해주세요.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
