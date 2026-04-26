@@ -6,6 +6,8 @@ import {
 } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 
+export const revalidate = 0;
+
 type ServiceItem = {
   title: string;
   description: string;
