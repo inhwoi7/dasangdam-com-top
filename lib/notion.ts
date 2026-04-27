@@ -4,13 +4,7 @@ const NOTION_TOKEN = process.env.NOTION_TOKEN!;
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID!;
 const NOTION_VERSION = "2022-06-28";
 
-// ─── 공통 fetch 헬퍼 ───
 async function notionFetch(endpoint: string, body?: object) {
-  console.log("────────────────────────────────");
-  console.log("[notionFetch] endpoint:", endpoint);
-  console.log("[ENV] TOKEN :", NOTION_TOKEN ? NOTION_TOKEN.slice(0, 12) + "..." : "❌ 없음");
-  console.log("[ENV] DB_ID :", NOTION_DATABASE_ID ?? "❌ 없음");
-
   const res = await fetch(`https://api.notion.com/v1${endpoint}`, {
     method: body ? "POST" : "GET",
     headers: {
@@ -19,18 +13,15 @@ async function notionFetch(endpoint: string, body?: object) {
       "Content-Type": "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,
-    cache: "no-store", // 항상 최신 데이터
+    cache: "no-store",
   });
 
   if (!res.ok) {
     const err = await res.text();
-    console.error("[notionFetch] ❌ HTTP 오류:", res.status, err);
     throw new Error(`Notion API 오류 ${res.status}: ${err}`);
   }
 
-  const json = await res.json();
-  console.log("[notionFetch] ✅ 응답 results 수:", json.results?.length ?? "N/A");
-  return json;
+  return res.json();
 }
 
 export type PostItem = {
@@ -61,7 +52,7 @@ function getFileUrl(p: any) {
 
 function mapPost(page: any): PostItem {
   const p = page.properties;
-  const mapped = {
+  return {
     id:            page.id,
     title:         getTitle(p.Title),
     slug:          getRichText(p.Slug),
@@ -72,13 +63,9 @@ function mapPost(page: any): PostItem {
     featured:      getCheckbox(p.Featured),
     thumbnail:     getFileUrl(p.Thumbnail) || undefined,
   };
-  console.log("[mapPost]", mapped.title, "/ type:", mapped.type, "/ slug:", mapped.slug);
-  return mapped;
 }
 
-// ─── getFeaturedQuote ───
 export async function getFeaturedQuote(): Promise<PostItem | null> {
-  console.log("▶ [getFeaturedQuote] 시작");
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
@@ -90,27 +77,14 @@ export async function getFeaturedQuote(): Promise<PostItem | null> {
       sorts: [{ property: "PublishedDate", direction: "descending" }],
       page_size: 1,
     });
-
-    if (!data.results?.length) {
-      console.log("[getFeaturedQuote] ⚠️ 결과 없음");
-
-      // 디버그: 필터 없이 전체 조회해서 실제 컬럼명 확인
-      const all = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, { page_size: 1 });
-      if (all.results?.length) {
-        console.log("[DEBUG] 실제 프로퍼티 키:", Object.keys(all.results[0].properties));
-      }
-      return null;
-    }
-    return mapPost(data.results[0]);
+    return data.results?.[0] ? mapPost(data.results[0]) : null;
   } catch (e: any) {
-    console.error("[getFeaturedQuote] ❌", e.message);
+    console.error("[getFeaturedQuote]", e.message);
     return null;
   }
 }
 
-// ─── getArticlePosts ───
 export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
-  console.log("▶ [getArticlePosts] 시작");
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
@@ -122,33 +96,14 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
       sorts: [{ property: "PublishedDate", direction: "descending" }],
       page_size: limit,
     });
-
-    if (!data.results?.length) {
-      console.log("[getArticlePosts] ⚠️ 결과 없음");
-
-      // 디버그: 필터 없이 전체 조회해서 실제 컬럼명 확인
-      const all = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, { page_size: 1 });
-      if (all.results?.length) {
-        console.log("[DEBUG] 실제 프로퍼티 키:", Object.keys(all.results[0].properties));
-        for (const [key, val] of Object.entries(all.results[0].properties as any)) {
-          const v = val as any;
-          console.log(`  - ${key} (${v.type}):`, JSON.stringify(v[v.type]));
-        }
-      } else {
-        console.log("[DEBUG] ❌ DB 자체가 비어 있음");
-      }
-      return [];
-    }
-    return data.results.map(mapPost);
+    return data.results?.map(mapPost) ?? [];
   } catch (e: any) {
-    console.error("[getArticlePosts] ❌", e.message);
+    console.error("[getArticlePosts]", e.message);
     return [];
   }
 }
 
-// ─── getPostBySlug ───
 export async function getPostBySlug(slug: string) {
-  console.log("▶ [getPostBySlug] slug:", slug);
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
@@ -159,21 +114,18 @@ export async function getPostBySlug(slug: string) {
       },
       page_size: 1,
     });
-
     const page = data.results?.[0];
     if (!page) return null;
     return { ...mapPost(page), blocks: await getAllBlocks(page.id) };
   } catch (e: any) {
-    console.error("[getPostBySlug] ❌", e.message);
+    console.error("[getPostBySlug]", e.message);
     return null;
   }
 }
 
-// ─── getAllBlocks ───
 export async function getAllBlocks(blockId: string): Promise<any[]> {
   const all: any[] = [];
   let cursor: string | undefined;
-
   do {
     const url = `/blocks/${blockId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ""}`;
     const data = await notionFetch(url);
@@ -183,9 +135,8 @@ export async function getAllBlocks(blockId: string): Promise<any[]> {
     }
     cursor = data.has_more ? data.next_cursor : undefined;
   } while (cursor);
-
   return all;
 }
 
-export const getFeaturedPost  = getFeaturedQuote;
+export const getFeaturedPost   = getFeaturedQuote;
 export const getPublishedPosts = getArticlePosts;
