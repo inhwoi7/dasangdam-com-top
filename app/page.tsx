@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
-import { getArticlePosts, getFeaturedQuote } from "../../lib/notion";
+import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 
 export const revalidate = 0;
 
