@@ -105,15 +105,15 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
 
 export async function getPostBySlug(slug: string) {
   try {
+    // ✅ Published 필터 없이 slug만으로 조회 (필터 조합 오류 방지)
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
-        and: [
-          { property: "Published", checkbox:  { equals: true } },
-          { property: "Slug",      rich_text: { equals: slug } },
-        ],
+        property: "Slug",
+        rich_text: { equals: slug },
       },
       page_size: 1,
     });
+
     const page = data.results?.[0];
     if (!page) return null;
     return { ...mapPost(page), blocks: await getAllBlocks(page.id) };
