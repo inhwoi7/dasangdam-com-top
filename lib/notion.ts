@@ -52,10 +52,11 @@ function getFileUrl(p: any) {
 
 function mapPost(page: any): PostItem {
   const p = page.properties;
+  const slug = getRichText(p.Slug);
   return {
     id:            page.id,
     title:         getTitle(p.Title),
-    slug:          getRichText(p.Slug),
+    slug:          slug || page.id, // slug가 없으면 page.id를 fallback으로 사용
     excerpt:       getRichText(p.Excerpt),
     category:      getSelect(p.Category),
     type:          getSelect(p.Type),
@@ -105,7 +106,7 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
 
 export async function getPostBySlug(slug: string) {
   try {
-    // ✅ Published 필터 없이 slug만으로 조회 (필터 조합 오류 방지)
+    // 1차: Slug 프로퍼티로 검색
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         property: "Slug",
@@ -114,7 +115,18 @@ export async function getPostBySlug(slug: string) {
       page_size: 1,
     });
 
-    const page = data.results?.[0];
+    let page = data.results?.[0];
+
+    // 2차: slug가 page.id인 경우 직접 조회
+    if (!page) {
+      try {
+        const pageData = await notionFetch(`/pages/${slug}`);
+        if (pageData?.id) page = pageData;
+      } catch {
+        return null;
+      }
+    }
+
     if (!page) return null;
     return { ...mapPost(page), blocks: await getAllBlocks(page.id) };
   } catch (e: any) {

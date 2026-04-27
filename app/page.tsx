@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
-import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
+import { getArticlePosts, getFeaturedQuote } from "../../lib/notion";
 
-// 접속할 때마다 최신 데이터를 가져옴
 export const revalidate = 0;
 
 type ServiceItem = {
@@ -13,12 +12,12 @@ type ServiceItem = {
 };
 
 const SERVICES: ServiceItem[] = [
-  { title: "사주",         description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.",      href: "https://my-saju-app.vercel.app/",           icon: "saju" },
-  { title: "MBTI 매칭",    description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.",     href: "https://dasangdam-mbti-sunny.vercel.app/",  icon: "mbti" },
-  { title: "사주 궁합",    description: "우리 둘의 성향 차이와 조화를 확인해보세요.",          href: "https://dasangdam-chemi-app.vercel.app/",   icon: "compatibility" },
-  { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "https://ipip50-rho.vercel.app/",             icon: "ipip" },
-  { title: "행운의 숫자",  description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lotto",                          icon: "lucky" },
-  { title: "오늘의 운세",  description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.",   href: "/services/today-fortune",                   icon: "fortune" },
+  { title: "사주",          description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.",      href: "https://my-saju-app.vercel.app/",          icon: "saju" },
+  { title: "MBTI 매칭",     description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.",     href: "https://dasangdam-mbti-sunny.vercel.app/", icon: "mbti" },
+  { title: "사주 궁합",     description: "우리 둘의 성향 차이와 조화를 확인해보세요.",          href: "https://dasangdam-chemi-app.vercel.app/",  icon: "compatibility" },
+  { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "https://ipip50-rho.vercel.app/",            icon: "ipip" },
+  { title: "행운의 숫자",   description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lotto",                         icon: "lucky" },
+  { title: "오늘의 운세",   description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.",   href: "/services/today-fortune",                  icon: "fortune" },
 ];
 
 function formatDate(dateString: string) {
@@ -28,33 +27,19 @@ function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
 
-// ─── 데이터 fetch + 에러 메시지 캡처 ───
 async function fetchData() {
-  let quoteError = "";
-  let articleError = "";
-
-  const todayPick = await getFeaturedQuote().catch((e: any) => {
-    quoteError = e?.message ?? "알 수 없는 오류";
-    return null;
-  });
-
-  const articlePosts = await getArticlePosts(5).catch((e: any) => {
-    articleError = e?.message ?? "알 수 없는 오류";
-    return [];
-  });
-
-  return { todayPick, articlePosts, quoteError, articleError };
+  const todayPick = await getFeaturedQuote().catch(() => null);
+  const articlePosts = await getArticlePosts(5).catch(() => []);
+  return { todayPick, articlePosts };
 }
 
 export default async function HomePage() {
-  const { todayPick, articlePosts, quoteError, articleError } = await fetchData();
+  const { todayPick, articlePosts } = await fetchData();
   const hasTodayPickLink = Boolean(todayPick?.slug);
 
   return (
     <main className="page">
       <div className="container">
-
-        {/* ── 브랜드 ── */}
         <section className="brandSection">
           <div className="brandShell">
             <div className="brandLogo"><SunLogo /></div>
@@ -66,15 +51,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── TODAY'S PICK ── */}
         <section className="recommendSection">
-          {/* 에러 표시 */}
-          {quoteError && (
-            <div style={{ background: "#fee2e2", color: "#991b1b", padding: "12px 16px", borderRadius: 8, marginBottom: 8, fontSize: 13 }}>
-              ❌ [TODAY&apos;S PICK 오류] {quoteError}
-            </div>
-          )}
-
           {todayPick ? (
             hasTodayPickLink ? (
               <Link href={`/blog/${todayPick.slug}`} className="recommendCard">
@@ -115,15 +92,14 @@ export default async function HomePage() {
               </div>
               <div className="recommendBody">
                 <div className="recommendCopy">
-                  <h2>데이터가 없습니다</h2>
-                  <p>Notion에서 Published=✅, Type=quote 인 글을 추가해주세요.</p>
+                  <h2>아직 등록된 오늘의 문장이 없습니다.</h2>
+                  <p>Notion에서 Published 체크된 quote 글을 추가해주세요.</p>
                 </div>
               </div>
             </div>
           )}
         </section>
 
-        {/* ── 서비스 ── */}
         <section className="serviceSection">
           <div className="sectionHeader">
             <span className="sectionMini">PLAYGROUND</span>
@@ -145,20 +121,11 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 서재 ── */}
         <section className="librarySection">
           <div className="sectionHeader">
             <span className="sectionMini">BLOG &amp; CONSULT</span>
             <h2>써니의 기록</h2>
           </div>
-
-          {/* 에러 표시 */}
-          {articleError && (
-            <div style={{ background: "#fee2e2", color: "#991b1b", padding: "12px 16px", borderRadius: 8, marginBottom: 8, fontSize: 13 }}>
-              ❌ [서재 오류] {articleError}
-            </div>
-          )}
-
           <div className="postList">
             {articlePosts.length > 0 ? (
               articlePosts.map((post) => (
@@ -177,14 +144,13 @@ export default async function HomePage() {
             ) : (
               <div className="postRow">
                 <div className="postMain">
-                  <h3>데이터가 없습니다</h3>
-                  <p>Notion에서 Published=✅, Type=article 인 글을 추가해주세요.</p>
+                  <h3>아직 등록된 서재 글이 없습니다.</h3>
+                  <p>Notion에서 Published 체크된 article 글을 추가해주세요.</p>
                 </div>
               </div>
             )}
           </div>
         </section>
-
       </div>
     </main>
   );
