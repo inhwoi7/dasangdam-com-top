@@ -6,6 +6,9 @@ import {
 } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 
+// ✅ 캐시 비활성화: 접속할 때마다 Notion에서 최신 데이터를 가져옵니다.
+export const revalidate = 0;
+
 type ServiceItem = {
   title: string;
   description: string;
@@ -65,9 +68,10 @@ function formatDate(dateString: string) {
 }
 
 export default async function HomePage() {
+  // ✅ 오류가 나도 페이지가 터지지 않도록 안전하게 가져옵니다.
   const [todayPick, articlePosts] = await Promise.all([
-    getFeaturedQuote(),
-    getArticlePosts(5),
+    getFeaturedQuote().catch(() => null),
+    getArticlePosts(5).catch(() => []),
   ]);
 
   const hasTodayPickLink = Boolean(todayPick?.slug);

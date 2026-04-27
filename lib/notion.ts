@@ -11,27 +11,6 @@ function getDatabaseId() {
   return databaseId;
 }
 
-let cachedDataSourceId: string | null = null;
-
-async function getDataSourceId() {
-  if (cachedDataSourceId) return cachedDataSourceId;
-
-  const database = await notion.databases.retrieve({
-    database_id: getDatabaseId(),
-  });
-
-  const dataSourceId = (database as any)?.data_sources?.[0]?.id;
-
-  if (!dataSourceId) {
-    throw new Error(
-      "이 데이터베이스에서 data source ID를 찾지 못했습니다. Notion DB 구조를 다시 확인해주세요."
-    );
-  }
-
-  cachedDataSourceId = dataSourceId;
-  return dataSourceId;
-}
-
 export type PostItem = {
   id: string;
   title: string;
@@ -94,118 +73,110 @@ function mapPost(page: any): PostItem {
 
 /**
  * TODAY'S PICK:
- * Published=true, Type=quote 인 글 중
- * PublishedDate가 가장 최신인 1개를 가져옵니다.
+ * Published=true, Type=quote 인 글 중 최신 1개
  */
 export async function getFeaturedQuote(): Promise<PostItem | null> {
-  const dataSourceId = await getDataSourceId();
-
-  const response = await notion.dataSources.query({
-    data_source_id: dataSourceId,
-    filter: {
-      and: [
-        {
-          property: "Published",
-          checkbox: {
-            equals: true,
+  try {
+    const response = await notion.databases.query({
+      database_id: getDatabaseId(),
+      filter: {
+        and: [
+          {
+            property: "Published",
+            checkbox: { equals: true },
           },
-        },
-        {
-          property: "Type",
-          select: {
-            equals: "quote",
+          {
+            property: "Type",
+            select: { equals: "quote" },
           },
+        ],
+      },
+      sorts: [
+        {
+          property: "PublishedDate",
+          direction: "descending",
         },
       ],
-    },
-    sorts: [
-      {
-        property: "PublishedDate",
-        direction: "descending",
-      },
-    ],
-    page_size: 1,
-  });
+      page_size: 1,
+    });
 
-  const first = response.results[0];
-  return first ? mapPost(first) : null;
+    const first = response.results[0];
+    return first ? mapPost(first) : null;
+  } catch (error) {
+    console.error("[getFeaturedQuote] Notion API 오류:", error);
+    return null;
+  }
 }
 
 /**
  * 다상담 서재:
- * Published=true, Type=article 인 글만 최신순으로 가져옵니다.
+ * Published=true, Type=article 인 글 최신순
  */
 export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
-  const dataSourceId = await getDataSourceId();
-
-  const response = await notion.dataSources.query({
-    data_source_id: dataSourceId,
-    filter: {
-      and: [
-        {
-          property: "Published",
-          checkbox: {
-            equals: true,
+  try {
+    const response = await notion.databases.query({
+      database_id: getDatabaseId(),
+      filter: {
+        and: [
+          {
+            property: "Published",
+            checkbox: { equals: true },
           },
-        },
-        {
-          property: "Type",
-          select: {
-            equals: "article",
+          {
+            property: "Type",
+            select: { equals: "article" },
           },
+        ],
+      },
+      sorts: [
+        {
+          property: "PublishedDate",
+          direction: "descending",
         },
       ],
-    },
-    sorts: [
-      {
-        property: "PublishedDate",
-        direction: "descending",
-      },
-    ],
-    page_size: limit,
-  });
+      page_size: limit,
+    });
 
-  return response.results.map(mapPost);
+    return response.results.map(mapPost);
+  } catch (error) {
+    console.error("[getArticlePosts] Notion API 오류:", error);
+    return [];
+  }
 }
 
 /**
  * slug로 단일 글 조회
- * quote / article 구분 없이 Published=true 인 글 중에서 찾습니다.
  */
 export async function getPostBySlug(slug: string) {
-  const dataSourceId = await getDataSourceId();
-
-  const response = await notion.dataSources.query({
-    data_source_id: dataSourceId,
-    filter: {
-      and: [
-        {
-          property: "Published",
-          checkbox: {
-            equals: true,
+  try {
+    const response = await notion.databases.query({
+      database_id: getDatabaseId(),
+      filter: {
+        and: [
+          {
+            property: "Published",
+            checkbox: { equals: true },
           },
-        },
-        {
-          property: "Slug",
-          rich_text: {
-            equals: slug,
+          {
+            property: "Slug",
+            rich_text: { equals: slug },
           },
-        },
-      ],
-    },
-    page_size: 1,
-  });
+        ],
+      },
+      page_size: 1,
+    });
 
-  const page = response.results[0];
-  if (!page) return null;
+    const page = response.results[0];
+    if (!page) return null;
 
-  const post = mapPost(page);
-  const blocks = await getAllBlocks(page.id);
+    const post = mapPost(page);
+    const blocks = await getAllBlocks(page.id);
 
-  return {
-    ...post,
-    blocks,
-  };
+    return { ...post, blocks };
+  } catch (error) {
+    console.error("[getPostBySlug] Notion API 오류:", error);
+    return null;
+  }
 }
 
 export async function getAllBlocks(blockId: string): Promise<any[]> {
@@ -232,9 +203,6 @@ export async function getAllBlocks(blockId: string): Promise<any[]> {
   return allBlocks;
 }
 
-/**
- * 기존 함수명 호환용
- * 예전 코드에서 getFeaturedPost / getPublishedPosts를 써도 동작하게 유지
- */
+// 기존 함수명 호환
 export const getFeaturedPost = getFeaturedQuote;
 export const getPublishedPosts = getArticlePosts;
