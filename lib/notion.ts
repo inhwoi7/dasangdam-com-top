@@ -1,19 +1,36 @@
 import "server-only";
-import { Client } from "@notionhq/client";
 
-const notion = new Client({ auth: process.env.NOTION_TOKEN }) as any;
+const NOTION_TOKEN = process.env.NOTION_TOKEN!;
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID!;
+const NOTION_VERSION = "2022-06-28";
 
-function getDatabaseId(): string {
-  const token = process.env.NOTION_TOKEN;
-  const databaseId = process.env.NOTION_DATABASE_ID;
-
+// ─── 공통 fetch 헬퍼 ───
+async function notionFetch(endpoint: string, body?: object) {
   console.log("────────────────────────────────");
-  console.log("[ENV] NOTION_TOKEN     :", token ? token.slice(0, 12) + "..." : "❌ 없음");
-  console.log("[ENV] NOTION_DATABASE_ID:", databaseId ?? "❌ 없음");
-  console.log("────────────────────────────────");
+  console.log("[notionFetch] endpoint:", endpoint);
+  console.log("[ENV] TOKEN :", NOTION_TOKEN ? NOTION_TOKEN.slice(0, 12) + "..." : "❌ 없음");
+  console.log("[ENV] DB_ID :", NOTION_DATABASE_ID ?? "❌ 없음");
 
-  if (!databaseId) throw new Error("NOTION_DATABASE_ID가 설정되지 않았습니다.");
-  return databaseId;
+  const res = await fetch(`https://api.notion.com/v1${endpoint}`, {
+    method: body ? "POST" : "GET",
+    headers: {
+      Authorization: `Bearer ${NOTION_TOKEN}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    cache: "no-store", // 항상 최신 데이터
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("[notionFetch] ❌ HTTP 오류:", res.status, err);
+    throw new Error(`Notion API 오류 ${res.status}: ${err}`);
+  }
+
+  const json = await res.json();
+  console.log("[notionFetch] ✅ 응답 results 수:", json.results?.length ?? "N/A");
+  return json;
 }
 
 export type PostItem = {
@@ -55,36 +72,15 @@ function mapPost(page: any): PostItem {
     featured:      getCheckbox(p.Featured),
     thumbnail:     getFileUrl(p.Thumbnail) || undefined,
   };
-  console.log("[mapPost] 매핑 결과:", JSON.stringify(mapped));
+  console.log("[mapPost]", mapped.title, "/ type:", mapped.type, "/ slug:", mapped.slug);
   return mapped;
-}
-
-// ─── 디버그용: 필터 없이 DB 전체를 1건 조회해서 실제 컬럼명 확인 ───
-async function debugPrintRawRow(dbId: string) {
-  try {
-    const res = await notion.databases.query({ database_id: dbId, page_size: 1 });
-    if (res.results.length === 0) {
-      console.log("[DEBUG] ❌ DB 자체가 비어 있습니다.");
-      return;
-    }
-    const row = res.results[0];
-    console.log("[DEBUG] 실제 프로퍼티 키 목록:", Object.keys(row.properties));
-    for (const [key, val] of Object.entries(row.properties as any)) {
-      const v = val as any;
-      console.log(`  - ${key} (${v.type}):`, JSON.stringify(v[v.type]));
-    }
-  } catch (e: any) {
-    console.error("[DEBUG] 전체 조회 실패:", e.message);
-  }
 }
 
 // ─── getFeaturedQuote ───
 export async function getFeaturedQuote(): Promise<PostItem | null> {
   console.log("▶ [getFeaturedQuote] 시작");
   try {
-    const dbId = getDatabaseId();
-    const response = await notion.databases.query({
-      database_id: dbId,
+    const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
@@ -95,15 +91,19 @@ export async function getFeaturedQuote(): Promise<PostItem | null> {
       page_size: 1,
     });
 
-    console.log("[getFeaturedQuote] 결과 수:", response.results.length);
-    if (response.results.length === 0) {
-      console.log("[getFeaturedQuote] ⚠️ 결과 없음 → 전체 row 확인 시작");
-      await debugPrintRawRow(dbId);
+    if (!data.results?.length) {
+      console.log("[getFeaturedQuote] ⚠️ 결과 없음");
+
+      // 디버그: 필터 없이 전체 조회해서 실제 컬럼명 확인
+      const all = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, { page_size: 1 });
+      if (all.results?.length) {
+        console.log("[DEBUG] 실제 프로퍼티 키:", Object.keys(all.results[0].properties));
+      }
       return null;
     }
-    return mapPost(response.results[0]);
+    return mapPost(data.results[0]);
   } catch (e: any) {
-    console.error("[getFeaturedQuote] ❌ 오류:", e.message);
+    console.error("[getFeaturedQuote] ❌", e.message);
     return null;
   }
 }
@@ -112,9 +112,7 @@ export async function getFeaturedQuote(): Promise<PostItem | null> {
 export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
   console.log("▶ [getArticlePosts] 시작");
   try {
-    const dbId = getDatabaseId();
-    const response = await notion.databases.query({
-      database_id: dbId,
+    const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
@@ -125,15 +123,25 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
       page_size: limit,
     });
 
-    console.log("[getArticlePosts] 결과 수:", response.results.length);
-    if (response.results.length === 0) {
-      console.log("[getArticlePosts] ⚠️ 결과 없음 → 전체 row 확인 시작");
-      await debugPrintRawRow(dbId);
+    if (!data.results?.length) {
+      console.log("[getArticlePosts] ⚠️ 결과 없음");
+
+      // 디버그: 필터 없이 전체 조회해서 실제 컬럼명 확인
+      const all = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, { page_size: 1 });
+      if (all.results?.length) {
+        console.log("[DEBUG] 실제 프로퍼티 키:", Object.keys(all.results[0].properties));
+        for (const [key, val] of Object.entries(all.results[0].properties as any)) {
+          const v = val as any;
+          console.log(`  - ${key} (${v.type}):`, JSON.stringify(v[v.type]));
+        }
+      } else {
+        console.log("[DEBUG] ❌ DB 자체가 비어 있음");
+      }
       return [];
     }
-    return response.results.map(mapPost);
+    return data.results.map(mapPost);
   } catch (e: any) {
-    console.error("[getArticlePosts] ❌ 오류:", e.message);
+    console.error("[getArticlePosts] ❌", e.message);
     return [];
   }
 }
@@ -142,8 +150,7 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
 export async function getPostBySlug(slug: string) {
   console.log("▶ [getPostBySlug] slug:", slug);
   try {
-    const response = await notion.databases.query({
-      database_id: getDatabaseId(),
+    const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox:  { equals: true } },
@@ -153,27 +160,30 @@ export async function getPostBySlug(slug: string) {
       page_size: 1,
     });
 
-    console.log("[getPostBySlug] 결과 수:", response.results.length);
-    const page = response.results[0];
+    const page = data.results?.[0];
     if (!page) return null;
     return { ...mapPost(page), blocks: await getAllBlocks(page.id) };
   } catch (e: any) {
-    console.error("[getPostBySlug] ❌ 오류:", e.message);
+    console.error("[getPostBySlug] ❌", e.message);
     return null;
   }
 }
 
+// ─── getAllBlocks ───
 export async function getAllBlocks(blockId: string): Promise<any[]> {
-  let cursor: string | undefined;
   const all: any[] = [];
+  let cursor: string | undefined;
+
   do {
-    const res = await notion.blocks.children.list({ block_id: blockId, start_cursor: cursor, page_size: 100 });
-    for (const block of res.results as any[]) {
+    const url = `/blocks/${blockId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ""}`;
+    const data = await notionFetch(url);
+    for (const block of data.results ?? []) {
       if (block.has_children) block.children = await getAllBlocks(block.id);
       all.push(block);
     }
-    cursor = res.has_more ? res.next_cursor ?? undefined : undefined;
+    cursor = data.has_more ? data.next_cursor : undefined;
   } while (cursor);
+
   return all;
 }
 
