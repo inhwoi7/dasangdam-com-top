@@ -7,9 +7,9 @@ export const revalidate = 0;
 export default async function BlogPostPage({
   params,
 }: {
-  params: { id: string };  // ← slug → id 로 수정
+  params: { slug: string };
 }) {
-  const post = await getPostBySlug(params.id);  // ← slug → id 로 수정
+  const post = await getPostBySlug(params.slug);
 
   if (!post) return notFound();
 
@@ -88,7 +88,11 @@ function BlockRenderer({ block }: { block: any }) {
 
   switch (block.type) {
     case "paragraph":
-      return <p style={{ marginBottom: "16px", whiteSpace: "pre-wrap" }}>{text || <br />}</p>;
+      return (
+        <p style={{ marginBottom: "16px", whiteSpace: "pre-wrap" }}>
+          {text || <br />}
+        </p>
+      );
     case "heading_1":
       return <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#3d2f22", margin: "32px 0 12px" }}>{text}</h1>;
     case "heading_2":
@@ -115,7 +119,9 @@ function BlockRenderer({ block }: { block: any }) {
       return <hr style={{ border: "none", borderTop: "1px solid #e8e0d5", margin: "32px 0" }} />;
     case "image": {
       const url = block.image?.file?.url || block.image?.external?.url;
-      return url ? <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: "8px", margin: "24px 0" }} /> : null;
+      return url ? (
+        <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: "8px", margin: "24px 0" }} />
+      ) : null;
     }
     default:
       return text ? <p style={{ marginBottom: "16px" }}>{text}</p> : null;
