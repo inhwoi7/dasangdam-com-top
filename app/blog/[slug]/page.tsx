@@ -1,100 +1,134 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import GiscusComments from "@/components/GiscusComments";
-import NotionBlockRenderer from "@/components/NotionBlockRenderer";
 import { getPostBySlug } from "@/lib/notion";
+import { notFound } from "next/navigation";
+import Link from "next/link";
 
-type PageProps = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
+export const revalidate = 0;
 
-function formatDate(dateString: string) {
-  if (!dateString) return "";
-
-  const date = new Date(dateString);
-
-  if (Number.isNaN(date.getTime())) {
-    return dateString;
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
-
-export async function generateMetadata({
+export default async function BlogPostPage({
   params,
-}: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getPostBySlug(slug);
+}: {
+  params: { slug: string };
+}) {
+  const post = await getPostBySlug(params.slug);
 
-  if (!post) {
-    return {
-      title: "글을 찾을 수 없습니다 | 다상담",
-      description: "요청하신 글을 찾을 수 없습니다.",
-    };
-  }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dasangdam.com";
-
-  return {
-    title: `${post.title} | 다상담`,
-    description: post.excerpt || "다상담 글 상세 페이지",
-    alternates: {
-      canonical: `${siteUrl}/blog/${post.slug}`,
-    },
-    openGraph: {
-      title: `${post.title} | 다상담`,
-      description: post.excerpt || "다상담 글 상세 페이지",
-      url: `${siteUrl}/blog/${post.slug}`,
-      siteName: "다상담",
-      locale: "ko_KR",
-      type: "article",
-    },
-  };
-}
-
-export default async function BlogDetailPage({ params }: PageProps) {
-  const { slug } = await params;
-  const post = await getPostBySlug(slug);
-
-  if (!post) {
-    notFound();
-  }
+  if (!post) return notFound();
 
   return (
-    <main className="postPage">
-      <div className="container">
-        <article className="postArticle">
-          <div className="postHeaderCard">
-            <div className="postMeta">
-              <span className="categoryTag">{post.category || "다상담"}</span>
-              <span className="postDate">
-                {formatDate(post.publishedDate)}
-              </span>
-            </div>
+    <main style={{ maxWidth: "720px", margin: "0 auto", padding: "60px 24px" }}>
+      {/* 뒤로가기 */}
+      <Link
+        href="/"
+        style={{
+          display: "inline-block",
+          marginBottom: "32px",
+          color: "#8c7b6b",
+          fontSize: "14px",
+          textDecoration: "none",
+        }}
+      >
+        ← 홈으로
+      </Link>
 
-            <h1 className="postTitle">{post.title}</h1>
+      {/* 카테고리 + 날짜 */}
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "12px" }}>
+        {post.category && (
+          <span style={{
+            background: "#f0e8df",
+            color: "#8c7b6b",
+            fontSize: "12px",
+            padding: "3px 10px",
+            borderRadius: "20px",
+          }}>
+            {post.category}
+          </span>
+        )}
+        {post.publishedDate && (
+          <span style={{ color: "#b0a090", fontSize: "13px" }}>
+            {new Intl.DateTimeFormat("ko-KR", {
+              year: "numeric", month: "2-digit", day: "2-digit",
+            }).format(new Date(post.publishedDate))}
+          </span>
+        )}
+      </div>
 
-            {post.excerpt ? (
-              <p className="postExcerpt">{post.excerpt}</p>
-            ) : null}
-          </div>
+      {/* 제목 */}
+      <h1 style={{
+        fontSize: "28px",
+        fontWeight: "700",
+        color: "#3d2f22",
+        lineHeight: "1.5",
+        marginBottom: "12px",
+      }}>
+        {post.title}
+      </h1>
 
-          <div className="postBodyCard">
-            <NotionBlockRenderer blocks={post.blocks} />
-          </div>
+      {/* 요약 */}
+      {post.excerpt && (
+        <p style={{
+          fontSize: "16px",
+          color: "#8c7b6b",
+          lineHeight: "1.8",
+          marginBottom: "40px",
+          paddingBottom: "32px",
+          borderBottom: "1px solid #e8e0d5",
+        }}>
+          {post.excerpt}
+        </p>
+      )}
 
-          <div className="commentsCard">
-            <h2>댓글</h2>
-            <GiscusComments />
-          </div>
-        </article>
+      {/* 본문 블록 렌더링 */}
+      <div style={{ fontSize: "16px", color: "#4a3b2e", lineHeight: "1.9" }}>
+        {post.blocks?.map((block: any) => (
+          <BlockRenderer key={block.id} block={block} />
+        ))}
       </div>
     </main>
   );
+}
+
+function BlockRenderer({ block }: { block: any }) {
+  const text = block[block.type]?.rich_text
+    ?.map((t: any) => t.plain_text)
+    .join("") ?? "";
+
+  switch (block.type) {
+    case "paragraph":
+      return (
+        <p style={{ marginBottom: "16px", whiteSpace: "pre-wrap" }}>
+          {text || <br />}
+        </p>
+      );
+    case "heading_1":
+      return <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#3d2f22", margin: "32px 0 12px" }}>{text}</h1>;
+    case "heading_2":
+      return <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#3d2f22", margin: "28px 0 10px" }}>{text}</h2>;
+    case "heading_3":
+      return <h3 style={{ fontSize: "17px", fontWeight: "600", color: "#3d2f22", margin: "24px 0 8px" }}>{text}</h3>;
+    case "bulleted_list_item":
+      return <li style={{ marginBottom: "8px", paddingLeft: "4px" }}>{text}</li>;
+    case "numbered_list_item":
+      return <li style={{ marginBottom: "8px", paddingLeft: "4px" }}>{text}</li>;
+    case "quote":
+      return (
+        <blockquote style={{
+          borderLeft: "3px solid #c8a882",
+          paddingLeft: "16px",
+          margin: "24px 0",
+          color: "#6b5c4e",
+          fontStyle: "italic",
+        }}>
+          {text}
+        </blockquote>
+      );
+    case "divider":
+      return <hr style={{ border: "none", borderTop: "1px solid #e8e0d5", margin: "32px 0" }} />;
+    case "image": {
+      const url = block.image?.file?.url || block.image?.external?.url;
+      return url ? (
+        <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: "8px", margin: "24px 0" }} />
+      ) : null;
+    }
+    default:
+      return text ? <p style={{ marginBottom: "16px" }}>{text}</p> : null;
+  }
 }
