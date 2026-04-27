@@ -7,15 +7,14 @@ export const revalidate = 0;
 export default async function BlogPostPage({
   params,
 }: {
-  params: { slug: string };
+  params: { id: string };  // ← slug → id 로 수정
 }) {
-  const post = await getPostBySlug(params.slug);
+  const post = await getPostBySlug(params.id);  // ← slug → id 로 수정
 
   if (!post) return notFound();
 
   return (
     <main style={{ maxWidth: "720px", margin: "0 auto", padding: "60px 24px" }}>
-      {/* 뒤로가기 */}
       <Link
         href="/"
         style={{
@@ -29,7 +28,6 @@ export default async function BlogPostPage({
         ← 홈으로
       </Link>
 
-      {/* 카테고리 + 날짜 */}
       <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "12px" }}>
         {post.category && (
           <span style={{
@@ -51,7 +49,6 @@ export default async function BlogPostPage({
         )}
       </div>
 
-      {/* 제목 */}
       <h1 style={{
         fontSize: "28px",
         fontWeight: "700",
@@ -62,7 +59,6 @@ export default async function BlogPostPage({
         {post.title}
       </h1>
 
-      {/* 요약 */}
       {post.excerpt && (
         <p style={{
           fontSize: "16px",
@@ -76,7 +72,6 @@ export default async function BlogPostPage({
         </p>
       )}
 
-      {/* 본문 블록 렌더링 */}
       <div style={{ fontSize: "16px", color: "#4a3b2e", lineHeight: "1.9" }}>
         {post.blocks?.map((block: any) => (
           <BlockRenderer key={block.id} block={block} />
@@ -93,11 +88,7 @@ function BlockRenderer({ block }: { block: any }) {
 
   switch (block.type) {
     case "paragraph":
-      return (
-        <p style={{ marginBottom: "16px", whiteSpace: "pre-wrap" }}>
-          {text || <br />}
-        </p>
-      );
+      return <p style={{ marginBottom: "16px", whiteSpace: "pre-wrap" }}>{text || <br />}</p>;
     case "heading_1":
       return <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#3d2f22", margin: "32px 0 12px" }}>{text}</h1>;
     case "heading_2":
@@ -124,9 +115,7 @@ function BlockRenderer({ block }: { block: any }) {
       return <hr style={{ border: "none", borderTop: "1px solid #e8e0d5", margin: "32px 0" }} />;
     case "image": {
       const url = block.image?.file?.url || block.image?.external?.url;
-      return url ? (
-        <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: "8px", margin: "24px 0" }} />
-      ) : null;
+      return url ? <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: "8px", margin: "24px 0" }} /> : null;
     }
     default:
       return text ? <p style={{ marginBottom: "16px" }}>{text}</p> : null;
