@@ -149,7 +149,7 @@ export default async function HomePage() {
         <section className="librarySection">
           <div className="sectionHeader">
             <span className="sectionMini">BLOG &amp; CONSULT</span>
-            <h2>다상담 서재</h2>
+            <h2>써니의 기록</h2>
           </div>
 
           {/* 에러 표시 */}
