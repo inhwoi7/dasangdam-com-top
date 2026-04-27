@@ -1,7 +1,7 @@
 import "server-only";
 import { Client } from "@notionhq/client";
 
-const notion = new Client({ auth: process.env.NOTION_TOKEN });
+const notion = new Client({ auth: process.env.NOTION_TOKEN }) as any;
 
 function getDatabaseId() {
   const databaseId = process.env.NOTION_DATABASE_ID;
