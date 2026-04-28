@@ -1,3 +1,4 @@
+import Comments from "@/components/Comments";
 import { getPostBySlug } from "../../../lib/notion";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -48,6 +49,7 @@ export default async function BlogPostPage({
           <BlockRenderer key={block.id} block={block} />
         ))}
       </div>
+      <Comments slug={slug} />
     </main>
   );
 }
