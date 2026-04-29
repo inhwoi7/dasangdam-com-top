@@ -442,7 +442,8 @@ export default function Page() {
   const [infoOpen, setInfoOpen] = useState(false);
 
   const isLunar = birthData.isLunar === "lunar";
-  const unknownTime = birthData.unknownTime === "true";
+  // 시간 미입력 시 자동으로 unknownTime 처리
+  const unknownTime = birthData.unknownTime === "true" || !birthData.hour;
 
   const days = useMemo(() => {
     if (!birthData.year || !birthData.month) return [];
@@ -482,13 +483,12 @@ export default function Page() {
     birthData.unknownTime,
   ]);
 
+  // 시간 몰라도 년/월/일/달력기준만 있으면 계산 가능
   const canCalculate =
     !!birthData.year &&
     !!birthData.month &&
     !!birthData.day &&
     !!birthData.isLunar &&
-    !!birthData.unknownTime &&
-    (birthData.unknownTime === "true" || !!birthData.hour) &&
     (birthData.isLunar === "solar" || !!birthData.isLeapMonth);
 
   const handleCalculate = useCallback(() => {
@@ -669,7 +669,7 @@ export default function Page() {
               <div>
                 <div className="text-lg font-extrabold">출생 정보</div>
                 <div className="mt-1 text-sm leading-relaxed text-zinc-500">
-                  모바일에서는 선택창이 스크롤 형태로 열립니다
+                  태어난 시간을 모르셔도 괜찮아요
                 </div>
               </div>
               <div className="rounded-full bg-yellow-300 px-4 py-2 text-xs font-extrabold text-zinc-900">
@@ -734,7 +734,7 @@ export default function Page() {
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <SelectField
-                label="태어난 시간"
+                label="태어난 시간 (선택)"
                 value={birthData.hour}
                 onChange={(value) =>
                   setBirthData((prev) => ({
@@ -744,9 +744,8 @@ export default function Page() {
                   }))
                 }
                 icon={<Clock3 className="h-3.5 w-3.5" />}
-                disabled={unknownTime}
               >
-                <option value="">선택</option>
+                <option value="">모름 / 선택안함</option>
                 {hours.map((h) => (
                   <option key={h} value={String(h)}>
                     {String(h).padStart(2, "0")}시
@@ -780,23 +779,7 @@ export default function Page() {
               </SelectField>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <SelectField
-                label="출생 시간"
-                value={birthData.unknownTime}
-                onChange={(value) =>
-                  setBirthData((prev) => ({
-                    ...prev,
-                    unknownTime: value as "" | "false" | "true",
-                    hour: value === "true" ? "" : prev.hour,
-                  }))
-                }
-              >
-                <option value="">선택</option>
-                <option value="false">알고 있음</option>
-                <option value="true">모름</option>
-              </SelectField>
-
+            <div className="mt-4">
               {birthData.isLunar === "lunar" ? (
                 <SelectField
                   label="윤달 여부"
@@ -812,13 +795,10 @@ export default function Page() {
                   <option value="false">일반월</option>
                   <option value="true">윤달</option>
                 </SelectField>
-              ) : (
+              ) : birthData.isLunar === "solar" ? null : (
                 <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-4">
-                  <div className="text-[11px] font-medium text-zinc-400">안내</div>
-                  <div className="mt-1 text-sm font-semibold leading-relaxed text-zinc-700">
-                    {birthData.isLunar === "solar"
-                      ? "양력 선택 시 윤달 입력은 필요 없어요"
-                      : "달력 기준을 먼저 선택해주세요"}
+                  <div className="text-sm font-semibold leading-relaxed text-zinc-500">
+                    달력 기준(양력/음력)을 선택해주세요
                   </div>
                 </div>
               )}
@@ -1236,7 +1216,7 @@ export default function Page() {
               <div className="rounded-3xl bg-blue-50 p-4 ring-1 ring-blue-100">
                 <div className="text-sm font-extrabold text-zinc-900">입력 팁</div>
                 <div className="mt-1 text-sm leading-6 text-zinc-600">
-                  년, 월, 일을 먼저 고른 뒤 달력 기준과 출생 시간을 선택하면 더 자연스럽게 입력할 수 있어요.
+                  년, 월, 일을 먼저 고른 뒤 달력 기준을 선택하면 바로 분석할 수 있어요. 시간은 알면 입력하고, 몰라도 괜찮아요.
                 </div>
               </div>
             </div>
