@@ -12,12 +12,12 @@ type ServiceItem = {
 };
 
 const SERVICES: ServiceItem[] = [
-  { title: "사주",          description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.",      href: "https://my-saju-app.vercel.app/",          icon: "saju" },
-  { title: "MBTI 매칭",     description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.",     href: "https://dasangdam-mbti-sunny.vercel.app/", icon: "mbti" },
-  { title: "사주 궁합",     description: "우리 둘의 성향 차이와 조화를 확인해보세요.",          href: "https://dasangdam-chemi-app.vercel.app/",  icon: "compatibility" },
-  { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "https://ipip50-rho.vercel.app/",            icon: "ipip" },
-  { title: "행운의 숫자",   description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lotto",                         icon: "lucky" },
-  { title: "오늘의 운세",   description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.",   href: "/services/today-fortune",                  icon: "fortune" },
+  { title: "사주", description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
+  { title: "MBTI 매칭", description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
+  { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
+  { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "/services/ipip", icon: "ipip" },
+  { title: "행운의 숫자",   description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
+ { title: "오늘의 운세", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
 ];
 
 function formatDate(dateString: string) {
