@@ -16,8 +16,8 @@ const SERVICES: ServiceItem[] = [
   { title: "MBTI 매칭", description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
   { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
   { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "/services/ipip", icon: "ipip" },
-  { title: "행운의 숫자",   description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
- { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+  { title: "행운의 숫자", description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
+  { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
 ];
 
 function formatDate(dateString: string) {
@@ -102,7 +102,7 @@ export default async function HomePage() {
 
         <section className="serviceSection">
           <div className="sectionHeader">
-            <span className="sectionMini">PLAYGROUND</span>
+            <span className="sectionMini">내면의 여정</span>
             <h2>지금 나에게 필요한 게 뭘까요?</h2>
           </div>
           <div className="serviceGrid">
