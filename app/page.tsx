@@ -17,7 +17,7 @@ const SERVICES: ServiceItem[] = [
   { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
   { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "/services/ipip", icon: "ipip" },
   { title: "행운의 숫자",   description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
- { title: "오늘의 운세", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+ { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
 ];
 
 function formatDate(dateString: string) {
