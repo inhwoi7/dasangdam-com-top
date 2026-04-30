@@ -826,8 +826,8 @@ export default function Page() {
                 <SummaryCard icon={<Info className="h-5 w-5" />} value={compatibility.confidenceLabel.split(" · ")[0]} title="해석 신뢰도" sub={compatibility.confidenceLabel} />
               </section>
 
-              <PersonResultCard title="첫 번째 사람 원국" result={resultA} />
-              <PersonResultCard title="두 번째 사람 원국" result={resultB} />
+              <PersonResultCard title="본인 원국" result={resultA} />
+              <PersonResultCard title="상대방 원국" result={resultB} />
               <EnergyCompareSection a={resultA} b={resultB} combined={compatibility.combinedEnergy} />
 
               <section className="rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
