@@ -8,7 +8,7 @@ type ServiceItem = {
   title: string;
   description: string;
   href: string;
-  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune";
+  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder";
 };
 
 const SERVICES: ServiceItem[] = [
@@ -18,6 +18,7 @@ const SERVICES: ServiceItem[] = [
   { title: "IPIP-50 성격검사", description: "과학적인 5대 성격 요인을 정밀하게 측정합니다.", href: "/services/ipip", icon: "ipip" },
   { title: "행운의 숫자", description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
   { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+  { title: "사다리 게임", description: "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
 ];
 
 function formatDate(dateString: string) {

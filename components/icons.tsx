@@ -7,7 +7,8 @@ type ServiceIconType =
   | "today-fortune"
   | "lotto"
   | "iching"
-  | "tarot";
+  | "tarot"
+  | "ladder";
 
 export function SunLogo() {
   return (
@@ -180,6 +181,24 @@ export function ServiceIcon({
             strokeWidth="2.3"
             strokeLinecap="round"
           />
+        </svg>
+      );
+
+    case "ladder":
+      return (
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          {/* 왼쪽 세로대 */}
+          <path d="M16 8V40" stroke={stroke} strokeWidth="2.8" strokeLinecap="round" />
+          {/* 오른쪽 세로대 */}
+          <path d="M32 8V40" stroke={stroke} strokeWidth="2.8" strokeLinecap="round" />
+          {/* 가로 발판 4개 */}
+          <path d="M16 16H32" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M16 24H32" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M16 32H32" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
+          {/* 상단 발 */}
+          <path d="M13 8H19M29 8H35" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+          {/* 하단 발 */}
+          <path d="M13 40H19M29 40H35" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
         </svg>
       );
 
