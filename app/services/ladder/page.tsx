@@ -324,7 +324,7 @@ export default function LadderPage() {
           {phase === 'play' && (
             <button onClick={revealAll}
               className="w-full py-3.5 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 active:scale-95 transition-all">
-              전체 공개 🎊
+              결과 공개 🎊
             </button>
           )}
           {phase === 'done' && (
