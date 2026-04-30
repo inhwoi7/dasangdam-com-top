@@ -67,7 +67,7 @@ export default async function HomePage() {
                       {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
                     </div>
                     <div className="recommendAction">
-                      <span>문장 보러가기</span>
+                      <span>전체 글 보기</span>
                       <ArrowRightIcon />
                     </div>
                   </div>
@@ -91,7 +91,7 @@ export default async function HomePage() {
                   fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
                   fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px"
                 }}>
-                  지난 문장 모두 보기 →
+                  지난 글 모두 보기 →
                 </Link>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default async function HomePage() {
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">BLOG &amp; CONSULT</span>
-              <h2>써니의 기록</h2>
+              <h2>써니의 다양한 생각들</h2>
             </div>
             <Link href="/blog" style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
