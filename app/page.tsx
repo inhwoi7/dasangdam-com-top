@@ -54,37 +54,47 @@ export default async function HomePage() {
 
         <section className="recommendSection">
           {todayPick ? (
-            hasTodayPickLink ? (
-              <Link href={`/blog/${todayPick.slug}`} className="recommendCard">
-                <div className="recommendTop">
-                  <span className="recommendMini">TODAY&apos;S PICK</span>
-                  <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
-                </div>
-                <div className="recommendBody">
-                  <div className="recommendCopy">
-                    <h2>{todayPick.title}</h2>
-                    {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+            <div>
+              {hasTodayPickLink ? (
+                <Link href={`/blog/${todayPick.slug}`} className="recommendCard">
+                  <div className="recommendTop">
+                    <span className="recommendMini">TODAY&apos;S PICK</span>
+                    <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
                   </div>
-                  <div className="recommendAction">
-                    <span>문장 보러가기</span>
-                    <ArrowRightIcon />
+                  <div className="recommendBody">
+                    <div className="recommendCopy">
+                      <h2>{todayPick.title}</h2>
+                      {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                    </div>
+                    <div className="recommendAction">
+                      <span>문장 보러가기</span>
+                      <ArrowRightIcon />
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="recommendCard">
+                  <div className="recommendTop">
+                    <span className="recommendMini">TODAY&apos;S PICK</span>
+                    <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+                  </div>
+                  <div className="recommendBody">
+                    <div className="recommendCopy">
+                      <h2>{todayPick.title}</h2>
+                      {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                    </div>
                   </div>
                 </div>
-              </Link>
-            ) : (
-              <div className="recommendCard">
-                <div className="recommendTop">
-                  <span className="recommendMini">TODAY&apos;S PICK</span>
-                  <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
-                </div>
-                <div className="recommendBody">
-                  <div className="recommendCopy">
-                    <h2>{todayPick.title}</h2>
-                    {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
-                  </div>
-                </div>
+              )}
+              <div style={{ textAlign: "right", marginTop: "10px" }}>
+                <Link href="/blog/quotes" style={{
+                  fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
+                  fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px"
+                }}>
+                  지난 문장 모두 보기 →
+                </Link>
               </div>
-            )
+            </div>
           ) : (
             <div className="recommendCard">
               <div className="recommendTop">
@@ -123,9 +133,17 @@ export default async function HomePage() {
         </section>
 
         <section className="librarySection">
-          <div className="sectionHeader">
-            <span className="sectionMini">BLOG &amp; CONSULT</span>
-            <h2>써니의 기록</h2>
+          <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <div>
+              <span className="sectionMini">BLOG &amp; CONSULT</span>
+              <h2>써니의 기록</h2>
+            </div>
+            <Link href="/blog" style={{
+              fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
+              fontWeight: "600", marginBottom: "2px", display: "inline-flex", alignItems: "center", gap: "4px"
+            }}>
+              전체 보기 →
+            </Link>
           </div>
           <div className="postList">
             {articlePosts.length > 0 ? (

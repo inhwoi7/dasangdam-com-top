@@ -56,7 +56,7 @@ function mapPost(page: any): PostItem {
   return {
     id:            page.id,
     title:         getTitle(p.Title),
-    slug:          slug || page.id, // slug가 없으면 page.id를 fallback으로 사용
+    slug:          slug || page.id,
     excerpt:       getRichText(p.Excerpt),
     category:      getSelect(p.Category),
     type:          getSelect(p.Type),
@@ -104,9 +104,56 @@ export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
   }
 }
 
+export async function getQuotePosts(limit = 100): Promise<PostItem[]> {
+  try {
+    const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
+      filter: {
+        and: [
+          { property: "Published", checkbox: { equals: true } },
+          { property: "Type", select: { equals: "quote" } },
+        ],
+      },
+      sorts: [{ property: "PublishedDate", direction: "descending" }],
+      page_size: limit,
+    });
+    return data.results?.map(mapPost) ?? [];
+  } catch (e: any) {
+    console.error("[getQuotePosts]", e.message);
+    return [];
+  }
+}
+
+export async function getArticlePostsPaginated(
+  page = 1,
+  pageSize = 10
+): Promise<{ posts: PostItem[]; totalCount: number; hasMore: boolean }> {
+  try {
+    const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
+      filter: {
+        and: [
+          { property: "Published", checkbox: { equals: true } },
+          { property: "Type", select: { equals: "article" } },
+        ],
+      },
+      sorts: [{ property: "PublishedDate", direction: "descending" }],
+      page_size: 100,
+    });
+    const all: PostItem[] = data.results?.map(mapPost) ?? [];
+    const start = (page - 1) * pageSize;
+    const posts = all.slice(start, start + pageSize);
+    return {
+      posts,
+      totalCount: all.length,
+      hasMore: start + pageSize < all.length,
+    };
+  } catch (e: any) {
+    console.error("[getArticlePostsPaginated]", e.message);
+    return { posts: [], totalCount: 0, hasMore: false };
+  }
+}
+
 export async function getPostBySlug(slug: string) {
   try {
-    // 1차: Slug 프로퍼티로 검색
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         property: "Slug",
@@ -117,7 +164,6 @@ export async function getPostBySlug(slug: string) {
 
     let page = data.results?.[0];
 
-    // 2차: slug가 page.id인 경우 직접 조회
     if (!page) {
       try {
         const pageData = await notionFetch(`/pages/${slug}`);
