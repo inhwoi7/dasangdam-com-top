@@ -113,7 +113,7 @@ export default async function HomePage() {
 
         <section className="serviceSection">
           <div className="sectionHeader">
-            <span className="sectionMini">내면의 여정</span>
+            <span className="sectionMini">지혜로운 선택</span>
             <h2>지금 나에게 필요한 게 뭘까요?</h2>
           </div>
           <div className="serviceGrid">
@@ -135,7 +135,7 @@ export default async function HomePage() {
         <section className="librarySection">
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <span className="sectionMini">BLOG &amp; CONSULT</span>
+              <span className="sectionMini">생각의 흔적</span>
               <h2>써니의 다양한 생각들</h2>
             </div>
             <Link href="/blog" style={{
