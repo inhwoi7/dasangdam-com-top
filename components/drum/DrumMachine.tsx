@@ -143,7 +143,7 @@ export default function DrumMachine() {
           overflow: "hidden",
         }}
       >
-        {/* 베이지 영역 */
+        {/* 베이지 영역 */}
         <div style={{ padding: "32px 28px 24px" }}>
           <div style={{ textAlign: "center", marginBottom: "24px" }}>
             <div style={{ fontSize: "22px", marginBottom: "6px" }}>☀</div>
