@@ -49,15 +49,25 @@ export function useKakaoShare() {
       const { infos } = await (window as any).Kakao.Share.uploadImage({
         file: [imageFile],
       });
+
+      const link = { mobileWebUrl: pageUrl, webUrl: pageUrl };
+
       (window as any).Kakao.Share.sendDefault({
         objectType: "feed",
         content: {
           title,
           description,
           imageUrl: infos.original.url,
-          link: { mobileWebUrl: pageUrl, webUrl: pageUrl },
+          imageWidth: 800,
+          imageHeight: 600,
+          link,                  // 이미지/제목 클릭 시 이동
         },
-        buttons: [{ title: buttonText, link: { mobileWebUrl: pageUrl, webUrl: pageUrl } }],
+        buttons: [
+          {
+            title: buttonText,
+            link,
+          },
+        ],
       });
     } catch (err) {
       console.error("카카오 공유 실패:", err);
