@@ -56,11 +56,11 @@ export function useKakaoShare() {
         objectType: "feed",
         content: {
           title,
-          description,
+          description: `${description}\n\n👉 ${pageUrl}`,
           imageUrl: infos.original.url,
           imageWidth: 800,
           imageHeight: 600,
-          link,                  // 이미지/제목 클릭 시 이동
+          link,
         },
         buttons: [
           {
