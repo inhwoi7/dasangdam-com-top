@@ -341,16 +341,7 @@ export default function DrumMachine() {
           <button className={styles.btnSub} onClick={handleReset}>처음으로 돌아가기</button>
           <div className={styles.actions}>
             <button className={styles.btnAct} onClick={copyNums}>📋 복사</button>
-            <button
-              className={styles.btnAct}
-              onClick={() => {
-                navigator.clipboard.writeText("https://www.dasangdam.com/services/lucky");
-                alert("링크가 복사됐어요! 카카오톡에 붙여넣기 해주세요 😊");
-              }}
-            >
-              🔗 링크 복사
-            </button>
-            <button
+<button
               className={styles.btnAct}
               onClick={() =>
                 shareWithCapture({
