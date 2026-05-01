@@ -137,62 +137,95 @@ export default function DrumMachine() {
         id="lucky-capture"
         style={{
           position: "fixed", left: "-9999px", top: 0,
-          width: "360px", padding: "32px 28px",
+          width: "400px",
           background: "#F5F0E8", borderRadius: "20px",
           fontFamily: "sans-serif",
+          overflow: "hidden",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div style={{ fontSize: "22px", marginBottom: "6px" }}>☀</div>
-          <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#A07C1A", marginBottom: "4px", fontWeight: 700 }}>
-            WISE REST WITH SUNNY · 다상담
+        {/* 베이지 영역 */}
+        <div style={{ padding: "32px 28px 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: "24px" }}>
+            <div style={{ fontSize: "22px", marginBottom: "6px" }}>☀</div>
+            <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#A07C1A", marginBottom: "4px", fontWeight: 700 }}>
+              WISE REST WITH SUNNY · 다상담
+            </div>
+            <div style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "3px", color: "#2A1C00", marginBottom: "4px" }}>
+              행운의 숫자
+            </div>
+            <div style={{ fontSize: "12px", color: "#8A7A62" }}>{today}</div>
           </div>
-          <div style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "3px", color: "#2A1C00", marginBottom: "4px" }}>
-            행운의 숫자
-          </div>
-          <div style={{ fontSize: "12px", color: "#8A7A62" }}>{today}</div>
-        </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "24px", flexWrap: "nowrap" }}>
-          {resultBalls.map((b) => {
-            const bs = BALL_STYLES[ballColor(b.num)] ?? BALL_STYLES["ball-y"];
-            return (
-              <div key={b.num} style={{
-                width: "52px", height: "52px", borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "18px", fontWeight: 900,
-                color: bs.color, background: bs.background,
-                boxShadow: "inset 0 -2px 4px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.2)",
-              }}>
-                {b.num}
-              </div>
-            );
-          })}
-        </div>
-
-        {hexagram && (
+          {/* 구슬 - 정원 보장 */}
           <div style={{
-            background: "#FDFAF5", borderLeft: "3px solid #C9A84C",
-            borderRadius: "0 12px 12px 0", padding: "14px 16px", marginBottom: "20px",
-            border: "1px solid rgba(201,168,76,0.3)", borderLeftWidth: "3px",
+            display: "flex", justifyContent: "center",
+            gap: "8px", marginBottom: "24px",
+            flexWrap: "nowrap",
           }}>
-            <div style={{
-              display: "inline-block", background: "#EDD97A", borderRadius: "20px",
-              padding: "3px 12px", fontSize: "11px", color: "#5A3C00",
-              fontWeight: 700, marginBottom: "8px",
-            }}>
-              {hexagram.sym} {hexagram.name}
-            </div>
-            <div style={{ fontSize: "14px", lineHeight: 1.8, color: "#2A1C00", fontWeight: 500 }}>
-              "{hexagram.quote}"
-            </div>
-            <div style={{ fontSize: "11px", color: "#8A6830", marginTop: "4px" }}>{hexagram.src}</div>
+            {resultBalls.map((b) => {
+              const bs = BALL_STYLES[ballColor(b.num)] ?? BALL_STYLES["ball-y"];
+              return (
+                <div key={b.num} style={{
+                  width: "52px",
+                  height: "52px",
+                  minWidth: "52px",
+                  minHeight: "52px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  fontWeight: 900,
+                  color: bs.color,
+                  background: bs.background,
+                  boxShadow: "inset 0 -2px 4px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.2)",
+                  flexShrink: 0,
+                }}>
+                  {b.num}
+                </div>
+              );
+            })}
           </div>
-        )}
 
-        <div style={{ textAlign: "center", fontSize: "13px", color: "#A07C1A", letterSpacing: "0.05em", fontWeight: 600 }}>
-  🔗 dasangdam.com/services/lucky
-</div>
+          {/* 주역 카드 */}
+          {hexagram && (
+            <div style={{
+              background: "#FDFAF5",
+              borderLeft: "3px solid #C9A84C",
+              borderRadius: "0 12px 12px 0",
+              padding: "14px 16px",
+              border: "1px solid rgba(201,168,76,0.3)",
+              borderLeftWidth: "3px",
+            }}>
+              <div style={{
+                display: "inline-block", background: "#EDD97A", borderRadius: "20px",
+                padding: "3px 12px", fontSize: "11px", color: "#5A3C00",
+                fontWeight: 700, marginBottom: "8px",
+              }}>
+                {hexagram.sym} {hexagram.name}
+              </div>
+              <div style={{ fontSize: "14px", lineHeight: 1.8, color: "#2A1C00", fontWeight: 500 }}>
+                "{hexagram.quote}"
+              </div>
+              <div style={{ fontSize: "11px", color: "#8A6830", marginTop: "4px" }}>{hexagram.src}</div>
+            </div>
+          )}
+        </div>
+
+        {/* 하단 흰색 영역 - 링크 */}
+        <div style={{
+          background: "#FDFAF5",
+          borderTop: "1px solid rgba(201,168,76,0.3)",
+          padding: "12px 28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#2A1C00" }}>다상담</div>
+          <div style={{ fontSize: "12px", color: "#A07C1A", fontWeight: 600 }}>
+            🔗 dasangdam.com/services/lucky
+          </div>
+        </div>
       </div>
 
       {/* ── 실제 화면 UI ── */}
@@ -315,8 +348,8 @@ export default function DrumMachine() {
                   captureId: "lucky-capture",
                   title: `오늘의 행운 번호: ${resultBalls.map((b) => b.num).join(", ")}`,
                   description: hexagram
-  ? `${hexagram.sym} ${hexagram.name} - "${hexagram.quote}"\n\n🔗 dasangdam.com/services/lucky`
-  : "다상담에서 나의 행운 번호를 뽑아보세요!\n\n🔗 dasangdam.com/services/lucky",
+                    ? `${hexagram.sym} ${hexagram.name} - "${hexagram.quote}"`
+                    : "다상담에서 나의 행운 번호를 뽑아보세요!",
                   buttonText: "나도 뽑아보기 →",
                   pageUrl: "https://dasangdam.com/services/lucky",
                 })
