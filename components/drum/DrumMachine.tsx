@@ -140,7 +140,6 @@ export default function DrumMachine() {
           width: "400px",
           background: "#F5F0E8", borderRadius: "20px",
           fontFamily: "sans-serif",
-          overflow: "hidden",
         }}
       >
         {/* 베이지 영역 */}
@@ -216,7 +215,7 @@ export default function DrumMachine() {
         <div style={{
           background: "#FDFAF5",
           borderTop: "1px solid rgba(201,168,76,0.3)",
-          padding: "16px 28px",
+          padding: "12px 28px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
