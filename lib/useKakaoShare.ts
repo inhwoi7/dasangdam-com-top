@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from "react";
 import html2canvas from "html2canvas";
 
-const KAKAO_JS_KEY = "2f7599bb9a00a15503122eb08f83d6a4";
+const KAKAO_JS_KEY = "60eb58888334fc1d1771a472c2730fb0";
 
 export function useKakaoShare() {
   useEffect(() => {
