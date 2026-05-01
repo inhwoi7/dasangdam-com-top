@@ -121,7 +121,7 @@ export default function DrumMachine() {
   const advisory = analyzeFixed([...fixed]);
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} id="lucky-capture">
       <header className={styles.header}>
         <div className={styles.sun}>☀</div>
         <p className={styles.eyebrow}>Wise Rest with Sunny · 다상담</p>
@@ -204,7 +204,7 @@ export default function DrumMachine() {
         <p className={styles.advisory}>{advisory}</p>
       </section>
 
-      <section className={styles.wrap} id="lucky-capture">
+      <section className={styles.resultSection}>
         <span className={styles.chip}>추출 결과</span>
         <h2 className={styles.resultTitle}>오늘의 행운 번호</h2>
         <div className={styles.resultRow}>
