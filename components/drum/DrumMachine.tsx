@@ -190,9 +190,9 @@ export default function DrumMachine() {
           </div>
         )}
 
-        <div style={{ textAlign: "center", fontSize: "11px", color: "#C5AA80", letterSpacing: "0.08em" }}>
-          dasangdam.com
-        </div>
+        <div style={{ textAlign: "center", fontSize: "13px", color: "#A07C1A", letterSpacing: "0.05em", fontWeight: 600 }}>
+  🔗 dasangdam.com/services/lucky
+</div>
       </div>
 
       {/* ── 실제 화면 UI ── */}
@@ -315,8 +315,8 @@ export default function DrumMachine() {
                   captureId: "lucky-capture",
                   title: `오늘의 행운 번호: ${resultBalls.map((b) => b.num).join(", ")}`,
                   description: hexagram
-                    ? `${hexagram.sym} ${hexagram.name} - "${hexagram.quote}"`
-                    : "다상담에서 나의 행운 번호를 뽑아보세요!",
+  ? `${hexagram.sym} ${hexagram.name} - "${hexagram.quote}"\n\n🔗 dasangdam.com/services/lucky`
+  : "다상담에서 나의 행운 번호를 뽑아보세요!\n\n🔗 dasangdam.com/services/lucky",
                   buttonText: "나도 뽑아보기 →",
                   pageUrl: "https://dasangdam.com/services/lucky",
                 })
