@@ -153,7 +153,7 @@ export default function DrumMachine() {
           <div style={{ fontSize: "12px", color: "#8A7A62" }}>{today}</div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "24px", flexWrap: "nowrap" }}>
           {resultBalls.map((b) => {
             const bs = BALL_STYLES[ballColor(b.num)] ?? BALL_STYLES["ball-y"];
             return (
