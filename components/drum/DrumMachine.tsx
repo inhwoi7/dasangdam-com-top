@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
+import { useKakaoShare } from "@/lib/useKakaoShare";
 import { useDrum } from "@/lib/useDrum";
 import { analyzeFixed, ballColor, drawNumbers, Hexagram } from "@/lib/luckyEngine";
 import styles from "./DrumMachine.module.css";
@@ -32,6 +33,7 @@ export default function DrumMachine() {
   const [isDone, setIsDone] = useState(false);
   const [hoveredBall, setHoveredBall] = useState<number | null>(null);
   const { drumAngle, spinAndStop, startIdle } = useDrum();
+  const { shareWithCapture } = useKakaoShare();
 
   const toggleFixed = useCallback(
     (n: number) => {
@@ -202,7 +204,7 @@ export default function DrumMachine() {
         <p className={styles.advisory}>{advisory}</p>
       </section>
 
-      <section className={styles.resultSection}>
+      <section className={styles.resultSection} id="lucky-capture">
         <span className={styles.chip}>추출 결과</span>
         <h2 className={styles.resultTitle}>오늘의 행운 번호</h2>
         <div className={styles.resultRow}>
@@ -247,17 +249,24 @@ export default function DrumMachine() {
             처음으로 돌아가기
           </button>
           <div className={styles.actions}>
-            <button className={styles.btnAct} onClick={copyNums}>📋 복사</button>
+            <button className={styles.btnAct} onClick={copyNums}>
+              📋 복사
+            </button>
             <button
               className={styles.btnAct}
               onClick={() =>
-                navigator.share?.({
-                  title: "행운의 숫자",
-                  text: `[다상담] ${resultBalls.map((b) => b.num).join(", ")}`,
+                shareWithCapture({
+                  captureId: "lucky-capture",
+                  title: `오늘의 행운 번호: ${resultBalls.map((b) => b.num).join(", ")}`,
+                  description: hexagram
+                    ? `${hexagram.sym} ${hexagram.name} - "${hexagram.quote}"`
+                    : "다상담에서 나의 행운 번호를 뽑아보세요!",
+                  buttonText: "나도 뽑아보기 →",
+                  pageUrl: "https://dasangdam.com/services/lucky",
                 })
               }
             >
-              📤 공유
+              🟡 카카오 공유
             </button>
           </div>
         </>
