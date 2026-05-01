@@ -24,6 +24,14 @@ interface ResultBall {
   visible: boolean;
 }
 
+const BALL_STYLES: Record<string, { background: string; color: string }> = {
+  "ball-y": { background: "radial-gradient(circle at 35% 32%,#FFE97A,#C89010 70%)", color: "#3A2000" },
+  "ball-b": { background: "radial-gradient(circle at 35% 32%,#7EC0F0,#1A6AA0 70%)", color: "#fff" },
+  "ball-r": { background: "radial-gradient(circle at 35% 32%,#F07060,#A02020 70%)", color: "#fff" },
+  "ball-s": { background: "radial-gradient(circle at 35% 32%,#8A9098,#384050 70%)", color: "#fff" },
+  "ball-g": { background: "radial-gradient(circle at 35% 32%,#90CC70,#2A7020 70%)", color: "#fff" },
+};
+
 export default function DrumMachine() {
   const [fixed, setFixed] = useState<Set<number>>(new Set());
   const [resultBalls, setResultBalls] = useState<ResultBall[]>([]);
@@ -119,9 +127,75 @@ export default function DrumMachine() {
   }, [resultBalls]);
 
   const advisory = analyzeFixed([...fixed]);
+  const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <div className={styles.wrap} id="lucky-capture">
+    <div className={styles.wrap}>
+
+      {/* ── 캡처 전용 카드 (화면에 안 보임) ── */}
+      <div
+        id="lucky-capture"
+        style={{
+          position: "fixed", left: "-9999px", top: 0,
+          width: "360px", padding: "32px 28px",
+          background: "#F5F0E8", borderRadius: "20px",
+          fontFamily: "sans-serif",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <div style={{ fontSize: "22px", marginBottom: "6px" }}>☀</div>
+          <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#A07C1A", marginBottom: "4px", fontWeight: 700 }}>
+            WISE REST WITH SUNNY · 다상담
+          </div>
+          <div style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "3px", color: "#2A1C00", marginBottom: "4px" }}>
+            행운의 숫자
+          </div>
+          <div style={{ fontSize: "12px", color: "#8A7A62" }}>{today}</div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+          {resultBalls.map((b) => {
+            const bs = BALL_STYLES[ballColor(b.num)] ?? BALL_STYLES["ball-y"];
+            return (
+              <div key={b.num} style={{
+                width: "52px", height: "52px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "18px", fontWeight: 900,
+                color: bs.color, background: bs.background,
+                boxShadow: "inset 0 -2px 4px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.2)",
+              }}>
+                {b.num}
+              </div>
+            );
+          })}
+        </div>
+
+        {hexagram && (
+          <div style={{
+            background: "#FDFAF5", borderLeft: "3px solid #C9A84C",
+            borderRadius: "0 12px 12px 0", padding: "14px 16px", marginBottom: "20px",
+            border: "1px solid rgba(201,168,76,0.3)", borderLeftWidth: "3px",
+          }}>
+            <div style={{
+              display: "inline-block", background: "#EDD97A", borderRadius: "20px",
+              padding: "3px 12px", fontSize: "11px", color: "#5A3C00",
+              fontWeight: 700, marginBottom: "8px",
+            }}>
+              {hexagram.sym} {hexagram.name}
+            </div>
+            <div style={{ fontSize: "14px", lineHeight: 1.8, color: "#2A1C00", fontWeight: 500 }}>
+              "{hexagram.quote}"
+            </div>
+            <div style={{ fontSize: "11px", color: "#8A6830", marginTop: "4px" }}>{hexagram.src}</div>
+          </div>
+        )}
+
+        <div style={{ textAlign: "center", fontSize: "11px", color: "#C5AA80", letterSpacing: "0.08em" }}>
+          dasangdam.com
+        </div>
+      </div>
+
+      {/* ── 실제 화면 UI ── */}
       <header className={styles.header}>
         <div className={styles.sun}>☀</div>
         <p className={styles.eyebrow}>Wise Rest with Sunny · 다상담</p>
@@ -157,11 +231,7 @@ export default function DrumMachine() {
                   isFixed ? styles.fixedSel : "",
                   isHovered ? styles.magnified : "",
                 ].join(" ")}
-                style={{
-                  left: x,
-                  top: y,
-                  zIndex: isHovered ? 100 : isFixed ? 10 : 1,
-                }}
+                style={{ left: x, top: y, zIndex: isHovered ? 100 : isFixed ? 10 : 1 }}
                 aria-label={`숫자 ${n}${isFixed ? " (고정됨)" : ""}`}
               >
                 <span className={styles.ballNum}>{n}</span>
@@ -178,10 +248,7 @@ export default function DrumMachine() {
             const tipX = cx + (dx / dist) * 72;
             const tipY = cy + (dy / dist) * 72;
             return (
-              <div
-                className={styles.magnifierBubble}
-                style={{ left: tipX - 26, top: tipY - 26, pointerEvents: "none" }}
-              >
+              <div className={styles.magnifierBubble} style={{ left: tipX - 26, top: tipY - 26, pointerEvents: "none" }}>
                 {hoveredBall}
               </div>
             );
@@ -191,16 +258,12 @@ export default function DrumMachine() {
             <span className={styles.centerSym}>{hexagram?.sym ?? "☰"}</span>
             <span className={styles.centerMsg}>{centerMsg}</span>
             {fixed.size > 0 && (
-              <span className={styles.centerCount}>
-                {fixed.size} fixed · {6 - fixed.size} random
-              </span>
+              <span className={styles.centerCount}>{fixed.size} fixed · {6 - fixed.size} random</span>
             )}
           </div>
         </div>
 
-        <p className={styles.tally}>
-          고정 숫자 <strong>{fixed.size}</strong> / 5개
-        </p>
+        <p className={styles.tally}>고정 숫자 <strong>{fixed.size}</strong> / 5개</p>
         <p className={styles.advisory}>{advisory}</p>
       </section>
 
@@ -216,8 +279,7 @@ export default function DrumMachine() {
                 <div
                   key={b.num}
                   className={[
-                    styles.resBall,
-                    styles[ballColor(b.num)],
+                    styles.resBall, styles[ballColor(b.num)],
                     b.visible ? styles.pop : styles.hidden,
                     b.isFixed ? styles.fixedSel : "",
                   ].join(" ")}
@@ -230,9 +292,7 @@ export default function DrumMachine() {
 
         {hexagram && isDone && (
           <div className={styles.philCard}>
-            <span className={styles.hexaBadge}>
-              {hexagram.sym} {hexagram.name}
-            </span>
+            <span className={styles.hexaBadge}>{hexagram.sym} {hexagram.name}</span>
             <p className={styles.philQ}>"{hexagram.quote}"</p>
             <p className={styles.philS}>{hexagram.src}</p>
           </div>
@@ -245,13 +305,9 @@ export default function DrumMachine() {
 
       {isDone && (
         <>
-          <button className={styles.btnSub} onClick={handleReset}>
-            처음으로 돌아가기
-          </button>
+          <button className={styles.btnSub} onClick={handleReset}>처음으로 돌아가기</button>
           <div className={styles.actions}>
-            <button className={styles.btnAct} onClick={copyNums}>
-              📋 복사
-            </button>
+            <button className={styles.btnAct} onClick={copyNums}>📋 복사</button>
             <button
               className={styles.btnAct}
               onClick={() =>
