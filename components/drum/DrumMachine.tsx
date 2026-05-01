@@ -216,7 +216,7 @@ export default function DrumMachine() {
         <div style={{
           background: "#FDFAF5",
           borderTop: "1px solid rgba(201,168,76,0.3)",
-          padding: "12px 28px",
+          padding: "16px 28px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
