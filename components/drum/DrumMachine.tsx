@@ -156,25 +156,25 @@ export default function DrumMachine() {
             <div style={{ fontSize: "12px", color: "#8A7A62" }}>{today}</div>
           </div>
 
-          {/* 구슬 - 정원 보장 */}
+          {/* 구슬 */}
           <div style={{
             display: "flex", justifyContent: "center",
-            gap: "8px", marginBottom: "24px",
+            gap: "6px", marginBottom: "24px",
             flexWrap: "nowrap",
           }}>
             {resultBalls.map((b) => {
               const bs = BALL_STYLES[ballColor(b.num)] ?? BALL_STYLES["ball-y"];
               return (
                 <div key={b.num} style={{
-                  width: "52px",
-                  height: "52px",
-                  minWidth: "52px",
-                  minHeight: "52px",
+                  width: "44px",
+                  height: "44px",
+                  minWidth: "44px",
+                  minHeight: "44px",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "18px",
+                  fontSize: "16px",
                   fontWeight: 900,
                   color: bs.color,
                   background: bs.background,
@@ -191,11 +191,11 @@ export default function DrumMachine() {
           {hexagram && (
             <div style={{
               background: "#FDFAF5",
-              borderLeft: "3px solid #C9A84C",
-              borderRadius: "0 12px 12px 0",
-              padding: "14px 16px",
               border: "1px solid rgba(201,168,76,0.3)",
               borderLeftWidth: "3px",
+              borderLeftColor: "#C9A84C",
+              borderRadius: "0 12px 12px 0",
+              padding: "14px 16px",
             }}>
               <div style={{
                 display: "inline-block", background: "#EDD97A", borderRadius: "20px",
@@ -212,7 +212,7 @@ export default function DrumMachine() {
           )}
         </div>
 
-        {/* 하단 흰색 영역 - 링크 */}
+        {/* 하단 흰색 영역 */}
         <div style={{
           background: "#FDFAF5",
           borderTop: "1px solid rgba(201,168,76,0.3)",
