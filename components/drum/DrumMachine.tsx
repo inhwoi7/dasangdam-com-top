@@ -204,7 +204,7 @@ export default function DrumMachine() {
         <p className={styles.advisory}>{advisory}</p>
       </section>
 
-      <section className={styles.resultSection} id="lucky-capture">
+      <section className={styles.wrap} id="lucky-capture">
         <span className={styles.chip}>추출 결과</span>
         <h2 className={styles.resultTitle}>오늘의 행운 번호</h2>
         <div className={styles.resultRow}>
