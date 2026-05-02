@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useKakaoShare } from '@/lib/useKakaoShare'
 
 const ALL_ANIMALS = [
   { id: 'lion',   emoji: '🦁', name: '사자' },
@@ -61,6 +62,8 @@ export default function LadderPage() {
   const [editingCol, setEditingCol] = useState<number | null>(null)
   const [revealed, setRevealed] = useState<Record<string, number[]>>({})
 
+  const { shareWithCapture } = useKakaoShare() // ✅ 카카오 공유 훅
+
   const startGame = useCallback(() => {
     const chosen = ALL_ANIMALS.slice(0, count)
     setAnimals(chosen)
@@ -84,6 +87,24 @@ export default function LadderPage() {
   }, [animals, rungs])
 
   const reset = () => { setPhase('setup'); setRevealed({}); setEditingCol(null) }
+
+  // ✅ 카카오 공유 핸들러
+  const handleKakaoShare = useCallback(() => {
+    // 결과 요약 텍스트 만들기
+    const resultLines = resultSlots.map((label, col) => {
+      const winner = Object.entries(revealed).find(([, path]) => path[LADDER_ROWS] === col)
+      const winAnimal = winner ? animals.find(a => a.id === winner[0]) : null
+      return `${winAnimal ? winAnimal.emoji + ' ' + winAnimal.name : '❓'} → ${label}`
+    }).join(' | ')
+
+    shareWithCapture({
+      captureId: 'ladder-capture',
+      title: '🪜 사다리 게임 결과!',
+      description: resultLines,
+      buttonText: '나도 사다리 타기 →',
+      pageUrl: 'https://dasangdam.com/services/ladder',
+    })
+  }, [resultSlots, revealed, animals, shareWithCapture])
 
   const SVG_TOTAL_W = 320
   const PAD_X = 24
@@ -169,13 +190,11 @@ export default function LadderPage() {
         {/* 사다리 SVG */}
         <div className="rounded-2xl overflow-hidden bg-amber-50/40">
           <svg width="100%" viewBox={`0 0 ${SVG_TOTAL_W} ${svgH}`}>
-            {/* 세로대 */}
             {animals.map((_, col) => (
               <line key={col}
                 x1={cx(col)} y1={cy(0)} x2={cx(col)} y2={cy(LADDER_ROWS)}
                 stroke="#C4874A" strokeWidth="4.5" strokeLinecap="round" />
             ))}
-            {/* 가로대 */}
             {rungs.map((rowRungs, row) =>
               rowRungs.map((hasRung, col) => {
                 if (!hasRung) return null
@@ -193,7 +212,6 @@ export default function LadderPage() {
                 )
               })
             )}
-            {/* 경로 점선 */}
             {Object.entries(revealed).map(([animalId, path]) => {
               const animal = animals.find(a => a.id === animalId)!
               const pts = path.map((col, row) => `${cx(col)},${cy(row)}`).join(' ')
@@ -207,7 +225,6 @@ export default function LadderPage() {
                   strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
               )
             })}
-            {/* 안개 */}
             {phase !== 'done' && (
               <rect x="0" y={cy(1)} width={SVG_TOTAL_W} height={svgH}
                 fill="url(#fog)" pointerEvents="none" />
@@ -223,9 +240,8 @@ export default function LadderPage() {
           </svg>
         </div>
 
-        {/* ── 결과 슬롯 하단 ── */}
+        {/* 결과 슬롯 하단 */}
         {phase !== 'done' ? (
-          // 게임 중: 작은 버튼으로 결과값 설정
           <>
             <div className="relative flex mt-1 mb-2" style={{ height: 52 }}>
               {resultSlots.map((label, col) => {
@@ -252,7 +268,6 @@ export default function LadderPage() {
             </p>
           </>
         ) : (
-          // 결과 공개 후: 크게 동물 + 결과 카드
           <div className="mt-3 mb-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(count, 4)}, 1fr)` }}>
             {resultSlots.map((label, col) => {
               const winner = Object.entries(revealed).find(([, path]) => path[LADDER_ROWS] === col)
@@ -264,14 +279,12 @@ export default function LadderPage() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ delay: col * 0.07, type: 'spring', stiffness: 260, damping: 18 }}
                   className="bg-white rounded-2xl p-3 shadow-md flex flex-col items-center gap-1.5 border border-amber-100">
-                  {/* 동물 크게 */}
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-4xl bg-amber-50 shadow-sm">
                     {winAnimal ? winAnimal.emoji : '❓'}
                   </div>
                   <span className="text-xs font-bold text-amber-800">
                     {winAnimal ? winAnimal.name : '미결'}
                   </span>
-                  {/* 결과값 */}
                   <div className="w-full bg-amber-400 rounded-xl py-1.5 flex flex-col items-center">
                     <span className="text-lg leading-none">{parts[0]}</span>
                     <span className="text-[10px] font-bold text-white mt-0.5">{parts.slice(1).join(' ')}</span>
@@ -320,7 +333,7 @@ export default function LadderPage() {
         </AnimatePresence>
 
         {/* 버튼 */}
-        <div className="mb-8">
+        <div className="mb-4">
           {phase === 'play' && (
             <button onClick={revealAll}
               className="w-full py-3.5 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 active:scale-95 transition-all">
@@ -328,10 +341,28 @@ export default function LadderPage() {
             </button>
           )}
           {phase === 'done' && (
-            <button onClick={reset}
-              className="w-full py-3.5 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 active:scale-95 transition-all">
-              🔄 다시 하기
-            </button>
+            <div className="flex flex-col gap-2">
+              {/* ✅ 카카오 공유 버튼 */}
+              <button onClick={handleKakaoShare}
+                className="w-full py-3.5 bg-[#FEE500] text-zinc-900 rounded-2xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
+                </svg>
+                카카오톡으로 공유하기
+              </button>
+
+              {/* 다상담 링크 */}
+              <p className="text-center text-xs text-amber-700/50">
+                다상담{' '}
+                <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer"
+                  className="underline underline-offset-2">dasangdam.com</a>
+              </p>
+
+              <button onClick={reset}
+                className="w-full py-3.5 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 active:scale-95 transition-all">
+                🔄 다시 하기
+              </button>
+            </div>
           )}
         </div>
 
