@@ -1,11 +1,59 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { castHexagram, generateReading, lineValueName } from './lib/iching-logic';
 import type { Line, ReadingResult } from './lib/iching-logic';
 import hexagramsData from './data/hexagrams.json';
-import { useKakaoShare } from '@/lib/useKakaoShare'; // ✅ 추가
+
+// ✅ useKakaoShare 인라인 (독립 앱이라 @/lib 경로 없음)
+const KAKAO_JS_KEY = '60eb58888334fc1d1771a472c2730fb0';
+
+function useKakaoShare() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (document.getElementById('kakao-sdk')) return;
+    const script = document.createElement('script');
+    script.id = 'kakao-sdk';
+    script.src = 'https://developers.kakao.com/sdk/js/kakao.min.js';
+    script.async = true;
+    script.onload = () => {
+      const kakao = (window as any).Kakao;
+      if (kakao && !kakao.isInitialized()) kakao.init(KAKAO_JS_KEY);
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  const shareWithCapture = useCallback(async ({
+    title, description, buttonText = '나도 확인하기 →', pageUrl,
+  }: {
+    captureId: string; title: string; description: string;
+    buttonText?: string; pageUrl: string; imageUrl?: string;
+  }) => {
+    try {
+      const kakao = (window as any).Kakao;
+      if (!kakao) throw new Error('카카오 SDK 미로드');
+      if (!kakao.isInitialized()) kakao.init(KAKAO_JS_KEY);
+      const thumbnail =
+        (typeof window !== 'undefined'
+          ? (document.querySelector('meta[property="og:image"]') as HTMLMetaElement)?.content
+          : undefined) || 'https://dasangdam.com/og-image.png';
+      kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title, description, imageUrl: thumbnail,
+          link: { mobileWebUrl: pageUrl, webUrl: pageUrl },
+        },
+        buttons: [{ title: buttonText, link: { mobileWebUrl: pageUrl, webUrl: pageUrl } }],
+      });
+    } catch (err) {
+      console.error('카카오 공유 실패:', err);
+      alert('공유에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  }, []);
+
+  return { shareWithCapture };
+}
 
 interface HexagramData {
   number: number;
@@ -32,39 +80,16 @@ function HexagramLine({ line, index, animate }: { line: Line; index: number; ani
     >
       <div className="w-4 flex justify-center flex-shrink-0">
         {isChanging && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.18 + 0.4 }}
-            className="w-3 h-3 rounded-full bg-amber-600"
-          />
+          <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: index * 0.18 + 0.4 }} className="w-3 h-3 rounded-full bg-amber-600" />
         )}
       </div>
       <div className="flex items-center gap-1.5 w-32 sm:w-44">
         {line.isYang ? (
-          <motion.div
-            className={`h-3 w-full rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`}
-            initial={animate ? { scaleX: 0 } : false}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: index * 0.18 + 0.1, duration: 0.4, ease: 'easeOut' }}
-            style={{ transformOrigin: 'center' }}
-          />
+          <motion.div className={`h-3 w-full rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`} initial={animate ? { scaleX: 0 } : false} animate={{ scaleX: 1 }} transition={{ delay: index * 0.18 + 0.1, duration: 0.4, ease: 'easeOut' }} style={{ transformOrigin: 'center' }} />
         ) : (
           <>
-            <motion.div
-              className={`h-3 w-[46%] rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`}
-              initial={animate ? { scaleX: 0 } : false}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: index * 0.18 + 0.1, duration: 0.4, ease: 'easeOut' }}
-              style={{ transformOrigin: 'right' }}
-            />
-            <motion.div
-              className={`h-3 w-[46%] rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`}
-              initial={animate ? { scaleX: 0 } : false}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: index * 0.18 + 0.15, duration: 0.4, ease: 'easeOut' }}
-              style={{ transformOrigin: 'left' }}
-            />
+            <motion.div className={`h-3 w-[46%] rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`} initial={animate ? { scaleX: 0 } : false} animate={{ scaleX: 1 }} transition={{ delay: index * 0.18 + 0.1, duration: 0.4, ease: 'easeOut' }} style={{ transformOrigin: 'right' }} />
+            <motion.div className={`h-3 w-[46%] rounded ${isChanging ? 'bg-amber-600' : 'bg-stone-800'}`} initial={animate ? { scaleX: 0 } : false} animate={{ scaleX: 1 }} transition={{ delay: index * 0.18 + 0.15, duration: 0.4, ease: 'easeOut' }} style={{ transformOrigin: 'left' }} />
           </>
         )}
       </div>
@@ -105,12 +130,8 @@ function CastingAnimation() {
   );
 }
 
-// ✅ question prop 추가
 function ResultCard({ reading, onReset, question, onShare }: {
-  reading: ReadingResult;
-  onReset: () => void;
-  question: string;
-  onShare: () => void;
+  reading: ReadingResult; onReset: () => void; question: string; onShare: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<'original' | 'changed' | 'lines'>('original');
   const hexData = (num: number): HexagramData | undefined => hexagramsData.hexagrams.find((h) => h.number === num) as HexagramData | undefined;
@@ -127,7 +148,6 @@ function ResultCard({ reading, onReset, question, onShare }: {
   return (
     <motion.div className="w-full" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
 
-      {/* 본괘 / 지괘 */}
       <div className={`flex ${reading.hasChangingLines && chan ? 'flex-col sm:flex-row' : 'flex-col'} items-center justify-center gap-6 mb-8`}>
         <div className="text-center">
           <div className="text-sm text-stone-700 tracking-widest mb-2 font-medium">本卦 본괘</div>
@@ -136,13 +156,11 @@ function ResultCard({ reading, onReset, question, onShare }: {
           <div className="text-base text-stone-800 font-medium mt-1">{orig.koreanName} · {orig.meaning}</div>
           <div className="text-sm text-stone-600 mt-1">第{orig.number}卦</div>
         </div>
-
         {reading.hasChangingLines && chan && (
           <>
             <div className="flex sm:flex-col items-center justify-center gap-1">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-stone-700 text-2xl font-bold">
-                <span className="hidden sm:block">↓</span>
-                <span className="block sm:hidden">→</span>
+                <span className="hidden sm:block">↓</span><span className="block sm:hidden">→</span>
               </motion.div>
               <div className="text-xs text-amber-700 tracking-widest font-medium">변효</div>
             </div>
@@ -157,7 +175,6 @@ function ResultCard({ reading, onReset, question, onShare }: {
         )}
       </div>
 
-      {/* 탭 */}
       <div className="flex border-b-2 border-stone-300 mb-6">
         {tabs.map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-4 py-3 text-sm sm:text-base tracking-wide transition-all duration-200 border-b-2 font-medium ${activeTab === tab.key ? 'border-stone-900 text-stone-900' : 'border-transparent text-stone-600 hover:text-stone-800'}`}>
@@ -226,10 +243,8 @@ function ResultCard({ reading, onReset, question, onShare }: {
 
       {/* ✅ 카카오 공유 버튼 */}
       <div className="mt-8 flex flex-col items-center gap-3">
-        <button
-          onClick={onShare}
-          className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#FEE500] text-zinc-900 rounded-full font-bold text-sm tracking-wide shadow-md active:scale-95 transition-all w-full max-w-xs"
-        >
+        <button onClick={onShare}
+          className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#FEE500] text-zinc-900 rounded-full font-bold text-sm tracking-wide shadow-md active:scale-95 transition-all w-full max-w-xs">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
           </svg>
@@ -237,9 +252,7 @@ function ResultCard({ reading, onReset, question, onShare }: {
         </button>
         <p className="text-xs text-stone-500">
           다상담{' '}
-          <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
-            dasangdam.com
-          </a>
+          <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">dasangdam.com</a>
         </p>
       </div>
 
@@ -279,7 +292,7 @@ export default function IChingPage() {
   const [selectedHistory, setSelectedHistory] = useState<(ReadingResult & { timestamp: Date }) | null>(null);
   const castTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { shareWithCapture } = useKakaoShare(); // ✅ 훅
+  const { shareWithCapture } = useKakaoShare(); // ✅ 인라인 훅 사용
 
   const handleCast = useCallback(() => {
     if (appState === 'casting') return;
@@ -306,7 +319,6 @@ export default function IChingPage() {
   const handleShare = useCallback(() => {
     const reading = selectedHistory ?? currentReading;
     if (!reading) return;
-
     const hexData = (num: number) => hexagramsData.hexagrams.find((h) => h.number === num);
     const orig = hexData(reading.original.hexagramNumber);
     const chan = reading.changed ? hexData(reading.changed.hexagramNumber) : null;
@@ -315,10 +327,7 @@ export default function IChingPage() {
     const title = chan
       ? `주역점 ${orig.chineseName}(${orig.koreanName}) → ${chan.chineseName}(${chan.koreanName})`
       : `주역점 第${orig.number}卦 ${orig.chineseName} · ${orig.koreanName}`;
-
-    const description = question
-      ? `"${question}" · ${orig.meaning}`
-      : orig.meaning;
+    const description = question ? `"${question}" · ${orig.meaning}` : orig.meaning;
 
     shareWithCapture({
       captureId: 'iching-capture',
@@ -382,11 +391,9 @@ export default function IChingPage() {
                     <span className="text-stone-700">천지는 성심으로 구하는 자에게 응합니다.</span>
                   </motion.p>
                 </div>
-
                 <motion.div className="w-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                   <textarea value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="점을 치고자 하는 질문을 적어보세요 (선택사항)" className="w-full px-4 py-3 bg-white border-2 border-stone-400 rounded-xl text-base text-stone-900 placeholder-stone-500 resize-none focus:outline-none focus:border-stone-700 transition-colors" rows={2} />
                 </motion.div>
-
                 <motion.div className="w-full" style={{display:'grid', gridTemplateColumns:'repeat(8,1fr)', gap:'2px', fontSize:'12px', textAlign:'center'}} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
                   {hexagramsData.hexagrams.slice(0, 64).map((h) => (
                     <div key={h.number} title={`${h.number}. ${h.chineseName}(${h.koreanName}) - ${h.meaning}`} className="aspect-square flex items-center justify-center text-xs text-stone-600 hover:text-stone-900 hover:bg-stone-300 rounded transition-colors cursor-default font-medium">
@@ -394,11 +401,9 @@ export default function IChingPage() {
                     </div>
                   ))}
                 </motion.div>
-
                 <motion.button onClick={handleCast} className="px-12 py-4 bg-stone-900 text-stone-100 rounded-full text-base font-medium tracking-[0.3em] hover:bg-stone-800 active:scale-95 transition-all duration-300 shadow-lg" whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                   占 · 점을 치다
                 </motion.button>
-
                 <motion.div className="text-center text-sm text-stone-700 font-medium" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
                   擲錢法 척전법 · 동전 세 개를 여섯 번 던집니다
                 </motion.div>
@@ -432,7 +437,6 @@ export default function IChingPage() {
                   )}
                 </motion.div>
                 <motion.div className="bg-white rounded-2xl p-5 border-2 border-stone-300 shadow-sm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                  {/* ✅ question, onShare prop 전달 */}
                   <ResultCard
                     reading={displayReading}
                     onReset={handleReset}
