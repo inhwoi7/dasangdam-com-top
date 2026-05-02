@@ -12,6 +12,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation"; // ✅ URL 파라미터 읽기
 import { calculateSajuSimple, lunarToSolar } from "@fullstackfamily/manseryeok";
 import { useKakaoShare } from "@/lib/useKakaoShare";
 
@@ -289,8 +290,7 @@ function getFortuneContent(result: ResultType) {
     relationship: relationshipMap[dayMasterElement] || "관계 흐름 해석을 불러오지 못했습니다.",
     balance: balanceText,
     lifestyleTips,
-    closing:
-      "정리하면, 이 구조는 자신의 강점을 억누르기보다 제대로 활용하는 쪽에서 힘이 납니다. 다만 오행 분포상 약한 부분을 생활 습관으로 천천히 보완해주면, 성향의 장점은 살리고 피로도는 줄이는 방향으로 흐름을 만들기 좋습니다.",
+    closing: "정리하면, 이 구조는 자신의 강점을 억누르기보다 제대로 활용하는 쪽에서 힘이 납니다. 다만 오행 분포상 약한 부분을 생활 습관으로 천천히 보완해주면, 성향의 장점은 살리고 피로도는 줄이는 방향으로 흐름을 만들기 좋습니다.",
   };
 }
 
@@ -353,119 +353,65 @@ function PillarBlock({ item }: { item: PillarItem }) {
   );
 }
 
-function SajuCaptureCard({ result }: { result: ResultType }) {
-  const dominantMeta = ELEMENT_META[result.dominantElement] ?? ELEMENT_META["수"];
-  const animal = BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", emoji: "✨" };
-  const today = new Date().toLocaleDateString("ko-KR", {
-    year: "numeric", month: "long", day: "numeric",
-  });
+// ── 사주 계산 함수 (handleCalculate와 동일한 로직, URL 파라미터 자동계산에서 재사용) ──
+function computeSaju(birthData: BirthDataType): ResultType | null {
+  try {
+    const year = parseInt(birthData.year, 10);
+    const month = parseInt(birthData.month, 10);
+    const day = parseInt(birthData.day, 10);
+    const isLunar = birthData.isLunar === "lunar";
+    const unknownTime = birthData.unknownTime === "true" || !birthData.hour;
+    const hour = birthData.hour ? parseInt(birthData.hour, 10) : 12;
+    const isLeapMonth = birthData.isLeapMonth === "true";
 
-  const energyItems = [
-    { label: "목", hanja: "木", value: result.energy.wood },
-    { label: "화", hanja: "火", value: result.energy.fire },
-    { label: "토", hanja: "土", value: result.energy.earth },
-    { label: "금", hanja: "金", value: result.energy.metal },
-    { label: "수", hanja: "水", value: result.energy.water },
-  ];
-  const maxEnergy = Math.max(...energyItems.map((e) => e.value), 1);
+    let solarYear = year, solarMonth = month, solarDay = day;
+    if (isLunar) {
+      const solar = lunarToSolar(year, month, day, isLeapMonth);
+      solarYear = solar.solar.year;
+      solarMonth = solar.solar.month;
+      solarDay = solar.solar.day;
+    }
 
-  return (
-    <div
-      id="saju-capture"
-      style={{
-        position: "fixed", left: "-9999px", top: 0,
-        width: "400px", background: "#F6F4EF",
-        borderRadius: "24px",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        overflow: "hidden",
-      }}
-    >
-      <div style={{ padding: "28px 28px 20px", background: "#F6F4EF" }}>
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#71717A", fontWeight: 700, marginBottom: "6px" }}>
-            WISE REST WITH SUNNY · 다상담
-          </div>
-          <div style={{ fontSize: "26px", fontWeight: 800, color: "#18181B", letterSpacing: "2px", marginBottom: "4px" }}>
-            정통사주
-          </div>
-          <div style={{ fontSize: "12px", color: "#A1A1AA" }}>{today}</div>
-        </div>
+    const saju = calculateSajuSimple(solarYear, solarMonth, solarDay, unknownTime ? 12 : hour);
+    const yearPillarText = saju.yearPillar ?? "--";
+    const monthPillarText = saju.monthPillar ?? "--";
+    const dayPillarText = saju.dayPillar ?? "--";
+    const safeHourPillar = saju.hourPillar ?? "--";
+    const hourPillarText = unknownTime ? "시간 모름" : safeHourPillar;
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "16px" }}>
-          {result.pillars.map((item) => {
-            const ganStyle = getElementCardStyle(item.gan);
-            const jiStyle = getElementCardStyle(item.ji);
-            return (
-              <div key={item.label} style={{
-                background: "#FFFFFF", borderRadius: "16px", padding: "12px 8px",
-                textAlign: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              }}>
-                <div style={{ fontSize: "10px", color: "#A1A1AA", fontWeight: 600, marginBottom: "8px" }}>{item.label}</div>
-                <div style={{
-                  width: "40px", height: "40px", borderRadius: "12px", margin: "0 auto 4px",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "20px", fontWeight: 900,
-                  background: ganStyle.bg, color: ganStyle.text, border: `1px solid ${ganStyle.border}`,
-                }}>{item.gan}</div>
-                <div style={{ fontSize: "10px", color: "#A1A1AA", marginBottom: "6px" }}>{item.ganElement}</div>
-                <div style={{
-                  width: "40px", height: "40px", borderRadius: "12px", margin: "0 auto 4px",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "20px", fontWeight: 900,
-                  background: jiStyle.bg, color: jiStyle.text, border: `1px solid ${jiStyle.border}`,
-                }}>{item.ji}</div>
-                <div style={{ fontSize: "10px", color: "#A1A1AA" }}>{item.jiElement}</div>
-              </div>
-            );
-          })}
-        </div>
+    const pillars: PillarItem[] = [
+      pillarTextToItem("년주", yearPillarText),
+      pillarTextToItem("월주", monthPillarText),
+      pillarTextToItem("일주", dayPillarText),
+      pillarTextToItem("시주", unknownTime ? "--" : safeHourPillar),
+    ];
 
-        <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-          <div style={{ background: "#18181B", color: "#FFFFFF", borderRadius: "20px", padding: "6px 14px", fontSize: "12px", fontWeight: 700 }}>
-            일간 {result.dayMaster}
-          </div>
-          <div style={{ background: "#FFFFFF", color: "#18181B", borderRadius: "20px", padding: "6px 14px", fontSize: "12px", fontWeight: 700, border: "1px solid #E4E4E7" }}>
-            {dominantMeta.emoji} 대표오행 {dominantMeta.label}
-          </div>
-          <div style={{ background: "#FFFFFF", color: "#18181B", borderRadius: "20px", padding: "6px 14px", fontSize: "12px", fontWeight: 700, border: "1px solid #E4E4E7" }}>
-            {animal.emoji} {animal.label}띠
-          </div>
-        </div>
-      </div>
+    const energy: EnergyType = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+    pillars.forEach((item) => {
+      if (item.gan !== "-") addElementCount(energy, item.ganElement);
+      if (item.ji !== "-") addElementCount(energy, item.jiElement);
+    });
 
-      <div style={{ background: "#FFFFFF", margin: "0 16px", borderRadius: "16px", padding: "16px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#A1A1AA", marginBottom: "12px" }}>오행 에너지 분포</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {energyItems.map((item) => {
-            const barColors: Record<string, string> = {
-              목: "#10B981", 화: "#F43F5E", 토: "#F59E0B", 금: "#71717A", 수: "#3B82F6",
-            };
-            const pct = Math.round((item.value / maxEnergy) * 100);
-            return (
-              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "24px", fontSize: "13px", fontWeight: 700, color: "#52525B" }}>{item.hanja}</div>
-                <div style={{ flex: 1, height: "8px", background: "#F4F4F5", borderRadius: "99px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${pct}%`, background: barColors[item.label], borderRadius: "99px", minWidth: item.value > 0 ? "8px" : "0" }} />
-                </div>
-                <div style={{ width: "16px", textAlign: "right", fontSize: "12px", fontWeight: 600, color: "#71717A" }}>{item.value}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    const dominantElement = getDominantElement(energy);
+    const inputDateText = `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")} ${isLunar ? "(음력)" : "(양력)"}`;
+    const solarDateText = `${solarYear}년 ${solarMonth}월 ${solarDay}일`;
+    const basisText = isLunar ? "음력 입력값을 양력으로 변환한 뒤 사주를 계산했어요" : "입력한 양력 기준으로 사주를 계산했어요";
+    const dayMaster = dayPillarText[0] ?? "-";
+    const dayBranch = dayPillarText[1] ?? "-";
+    const summaryText = `${yearPillarText}년 · ${monthPillarText}월 · ${dayPillarText}일${unknownTime ? " · 시주 미입력" : ` · ${hourPillarText}시`}`;
 
-      <div style={{ padding: "16px 28px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: "13px", fontWeight: 800, color: "#18181B" }}>다상담</div>
-        <div style={{ fontSize: "11px", color: "#A1A1AA", fontWeight: 600 }}>🔗 dasangdam.com/services/saju</div>
-      </div>
-    </div>
-  );
+    return { pillars, energy, dayMaster, dayBranch, dominantElement, solarDateText, inputDateText, basisText, summaryText, yearPillarText, monthPillarText, dayPillarText, hourPillarText };
+  } catch {
+    return null;
+  }
 }
 
 export default function Page() {
   const years = useMemo(() => Array.from({ length: 2040 - 1930 + 1 }, (_, i) => 1930 + i), []);
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
+
+  const searchParams = useSearchParams(); // ✅ URL 파라미터 읽기
 
   const [birthData, setBirthData] = useState<BirthDataType>({
     year: "", month: "", day: "", hour: "",
@@ -477,6 +423,31 @@ export default function Page() {
   const [infoOpen, setInfoOpen] = useState(false);
 
   const { shareWithCapture } = useKakaoShare();
+
+  // ✅ URL 파라미터로 들어온 경우 자동으로 폼 채우고 계산
+  useEffect(() => {
+    const year = searchParams.get("year");
+    const month = searchParams.get("month");
+    const day = searchParams.get("day");
+    const hour = searchParams.get("hour") ?? "";
+    const lunar = (searchParams.get("lunar") ?? "") as "" | "solar" | "lunar";
+    const leap = (searchParams.get("leap") ?? "false") as "false" | "true";
+
+    if (year && month && day && lunar) {
+      const data: BirthDataType = {
+        year,
+        month,
+        day,
+        hour,
+        isLunar: lunar,
+        isLeapMonth: leap,
+        unknownTime: hour ? "false" : "true",
+      };
+      setBirthData(data);
+      const computed = computeSaju(data);
+      if (computed) setResult(computed);
+    }
+  }, [searchParams]);
 
   const isLunar = birthData.isLunar === "lunar";
   const unknownTime = birthData.unknownTime === "true" || !birthData.hour;
@@ -493,12 +464,6 @@ export default function Page() {
     if (selectedDay > maxDay) setBirthData((prev) => ({ ...prev, day: String(maxDay) }));
   }, [days, birthData.day]);
 
-  useEffect(() => {
-    setResult(null);
-    setErrorMessage("");
-    setOpenedPanel(null);
-  }, [birthData.year, birthData.month, birthData.day, birthData.hour, birthData.isLunar, birthData.isLeapMonth, birthData.unknownTime]);
-
   const canCalculate =
     !!birthData.year && !!birthData.month && !!birthData.day && !!birthData.isLunar &&
     (birthData.isLunar === "solar" || !!birthData.isLeapMonth);
@@ -512,73 +477,56 @@ export default function Page() {
         setErrorMessage("출생 정보를 모두 선택해주세요.");
         return;
       }
-
-      const year = parseInt(birthData.year, 10);
-      const month = parseInt(birthData.month, 10);
-      const day = parseInt(birthData.day, 10);
-      const hour = birthData.hour ? parseInt(birthData.hour, 10) : 12;
-      const isLeapMonth = birthData.isLeapMonth === "true";
-
-      let solarYear = year, solarMonth = month, solarDay = day;
-      if (isLunar) {
-        const solar = lunarToSolar(year, month, day, isLeapMonth);
-        solarYear = solar.solar.year;
-        solarMonth = solar.solar.month;
-        solarDay = solar.solar.day;
+      const computed = computeSaju(birthData);
+      if (computed) {
+        setOpenedPanel(null);
+        setResult(computed);
       }
-
-      const saju = calculateSajuSimple(solarYear, solarMonth, solarDay, unknownTime ? 12 : hour);
-      const yearPillarText = saju.yearPillar ?? "--";
-      const monthPillarText = saju.monthPillar ?? "--";
-      const dayPillarText = saju.dayPillar ?? "--";
-      const safeHourPillar = saju.hourPillar ?? "--";
-      const hourPillarText = unknownTime ? "시간 모름" : safeHourPillar;
-
-      const pillars: PillarItem[] = [
-        pillarTextToItem("년주", yearPillarText),
-        pillarTextToItem("월주", monthPillarText),
-        pillarTextToItem("일주", dayPillarText),
-        pillarTextToItem("시주", unknownTime ? "--" : safeHourPillar),
-      ];
-
-      const energy: EnergyType = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
-      pillars.forEach((item) => {
-        if (item.gan !== "-") addElementCount(energy, item.ganElement);
-        if (item.ji !== "-") addElementCount(energy, item.jiElement);
-      });
-
-      const dominantElement = getDominantElement(energy);
-      const inputDateText = `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")} ${isLunar ? "(음력)" : "(양력)"}`;
-      const solarDateText = `${solarYear}년 ${solarMonth}월 ${solarDay}일`;
-      const basisText = isLunar ? "음력 입력값을 양력으로 변환한 뒤 사주를 계산했어요" : "입력한 양력 기준으로 사주를 계산했어요";
-      const dayMaster = dayPillarText[0] ?? "-";
-      const dayBranch = dayPillarText[1] ?? "-";
-      const summaryText = `${yearPillarText}년 · ${monthPillarText}월 · ${dayPillarText}일${unknownTime ? " · 시주 미입력" : ` · ${hourPillarText}시`}`;
-
-      setOpenedPanel(null);
-      setResult({ pillars, energy, dayMaster, dayBranch, dominantElement, solarDateText, inputDateText, basisText, summaryText, yearPillarText, monthPillarText, dayPillarText, hourPillarText });
     } catch (error) {
       console.error(error);
       setResult(null);
       setOpenedPanel(null);
       setErrorMessage("계산 중 오류가 발생했습니다. 날짜 또는 음력/윤달 입력값을 다시 확인해주세요.");
     }
-  }, [birthData, canCalculate, isLunar, unknownTime]);
+  }, [birthData, canCalculate]);
+
+  // 입력값 바뀌면 결과 초기화 (URL 파라미터로 온 게 아닐 때)
+  useEffect(() => {
+    const fromUrl = searchParams.get("year");
+    if (!fromUrl) {
+      setResult(null);
+      setErrorMessage("");
+      setOpenedPanel(null);
+    }
+  }, [birthData.year, birthData.month, birthData.day, birthData.hour, birthData.isLunar, birthData.isLeapMonth]);
 
   const handleBack = () => { if (typeof window !== "undefined") window.history.back(); };
 
+  // ✅ URL 파라미터 포함한 공유 링크 생성
   const handleKakaoShare = useCallback(() => {
     if (!result) return;
     const dominantMeta = ELEMENT_META[result.dominantElement] ?? ELEMENT_META["수"];
     const animal = BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", emoji: "✨" };
+
+    // 공유 URL에 생년월일 파라미터 포함
+    const params = new URLSearchParams({
+      year: birthData.year,
+      month: birthData.month,
+      day: birthData.day,
+      lunar: birthData.isLunar,
+      ...(birthData.hour ? { hour: birthData.hour } : {}),
+      ...(birthData.isLunar === "lunar" ? { leap: birthData.isLeapMonth } : {}),
+    });
+    const shareUrl = `https://dasangdam.com/services/saju?${params.toString()}`;
+
     shareWithCapture({
       captureId: "saju-capture",
       title: `나의 사주 — 일간 ${result.dayMaster} · ${dominantMeta.emoji} ${dominantMeta.label}`,
-      description: `${animal.emoji} ${animal.label}띠 · ${result.summaryText}\n다상담에서 나의 사주를 확인해보세요!`,
+      description: `${animal.emoji} ${animal.label}띠 · ${result.summaryText}`,
       buttonText: "나도 사주 보기 →",
-      pageUrl: "https://dasangdam.com/services/saju",
+      pageUrl: shareUrl, // ✅ 파라미터 포함된 URL
     });
-  }, [result, shareWithCapture]);
+  }, [result, birthData, shareWithCapture]);
 
   const dominantMeta = result ? ELEMENT_META[result.dominantElement] : ELEMENT_META["수"];
   const animal = result ? BRANCH_ANIMALS[result.dayBranch] : BRANCH_ANIMALS["해"];
@@ -586,8 +534,6 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-zinc-900">
-      {result && <SajuCaptureCard result={result} />}
-
       <div className="mx-auto max-w-md pb-28">
         <header className="sticky top-0 z-20 border-b border-black/5 bg-[#f6f4ef]/90 backdrop-blur">
           <div className="flex items-center justify-between px-4 py-4">
@@ -765,12 +711,7 @@ export default function Page() {
               {/* 다상담 링크 */}
               <p className="mt-3 text-center text-xs text-zinc-400">
                 다상담{" "}
-                <a
-                  href="https://dasangdam.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-2"
-                >
+                <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                   dasangdam.com
                 </a>
               </p>

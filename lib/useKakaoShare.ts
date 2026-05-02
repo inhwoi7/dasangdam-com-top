@@ -33,7 +33,7 @@ export function useKakaoShare() {
     title: string;
     description: string;
     buttonText?: string;
-    pageUrl: string;
+    pageUrl: string;  // 이미 파라미터가 포함된 URL을 받음
     imageUrl?: string;
   }) => {
     try {
@@ -48,14 +48,11 @@ export function useKakaoShare() {
           : undefined) ||
         "https://dasangdam.com/og-image.png";
 
-      // description 안에 URL을 직접 포함 → 카카오 카드에 노출됨
-      const descriptionWithUrl = `${description}\n👉 dasangdam.com`;
-
       kakao.Share.sendDefault({
         objectType: "feed",
         content: {
           title,
-          description: descriptionWithUrl,
+          description,
           imageUrl: thumbnail,
           link: {
             mobileWebUrl: pageUrl,
