@@ -65,9 +65,35 @@ const allQuestions: Question[] = [
   { id: 50, text: '아이디어가 풍부하다.', factor: '개방성' },
 ];
 
-// 빠른 검사 10문항 (각 요인당 2개, 변별력 높은 것)
-const quickQuestionIds = [1, 21, 7, 27, 3, 33, 4, 14, 5, 15];
-const quickQuestions = allQuestions.filter(q => quickQuestionIds.includes(q.id));
+// ── Mini-IPIP 20문항 (학술적으로 검증된 버전, 각 요인당 정방향 2 + 역방향 2)
+// 출처: Donnellan et al. (2006) Mini-IPIP
+const quickQuestions: Question[] = [
+  // 외향성
+  { id: 101, text: '나는 파티에서 분위기를 주도한다.', factor: '외향성' },
+  { id: 102, text: '나는 모임에서 많은 사람들과 대화한다.', factor: '외향성' },
+  { id: 103, text: '나는 말을 많이 하지 않는 편이다.', factor: '외향성', reverse: true },
+  { id: 104, text: '나는 가급적 뒤에 있으려 한다(나서지 않는다).', factor: '외향성', reverse: true },
+  // 친화성
+  { id: 105, text: '나는 다른 사람들의 감정에 공감한다.', factor: '친화성' },
+  { id: 106, text: '나는 타인의 감정을 함께 느낀다.', factor: '친화성' },
+  { id: 107, text: '나는 다른 사람들에게 별로 관심이 없다.', factor: '친화성', reverse: true },
+  { id: 108, text: '나는 타인의 문제에 관심이 없다.', factor: '친화성', reverse: true },
+  // 성실성
+  { id: 109, text: '나는 집안일이나 할 일을 바로바로 처리한다.', factor: '성실성' },
+  { id: 110, text: '나는 질서와 정돈을 좋아한다.', factor: '성실성' },
+  { id: 111, text: '나는 물건을 제자리에 두지 않는 편이다.', factor: '성실성', reverse: true },
+  { id: 112, text: '나는 일을 엉망으로 만드는 경향이 있다.', factor: '성실성', reverse: true },
+  // 신경증
+  { id: 113, text: '나는 기분이 자주 바뀐다.', factor: '신경증' },
+  { id: 114, text: '나는 쉽게 속상해하거나 기분이 상한다.', factor: '신경증' },
+  { id: 115, text: '나는 대부분의 시간 동안 편안함을 느낀다.', factor: '신경증', reverse: true },
+  { id: 116, text: '나는 우울함을 잘 느끼지 않는다.', factor: '신경증', reverse: true },
+  // 개방성
+  { id: 117, text: '나는 상상력이 풍부하다.', factor: '개방성' },
+  { id: 118, text: '나는 어려운 개념이나 추상적인 아이디어를 즐긴다.', factor: '개방성' },
+  { id: 119, text: '나는 추상적인 개념을 이해하는 데 어려움을 겪는다.', factor: '개방성', reverse: true },
+  { id: 120, text: '나는 새로운 아이디어에 별로 관심이 없다.', factor: '개방성', reverse: true },
+];
 
 const choices = [
   { value: 1, label: '전혀 아니다' },
@@ -201,55 +227,48 @@ export default function IpipPage() {
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.25),_transparent_22%),radial-gradient(circle_at_top_right,_rgba(244,114,182,0.20),_transparent_24%),linear-gradient(180deg,_#fff8fb_0%,_#f5f7ff_38%,_#eefaf7_100%)]">
         <div className="mx-auto max-w-2xl px-4 py-16 space-y-8">
-
           <div className="text-center">
             <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold tracking-wide text-slate-500 shadow-sm mb-4">
-              IPIP-50 × MBTI 성향 분석
+              IPIP × MBTI 성향 분석
             </div>
             <h1 className="text-4xl font-black tracking-tight text-slate-900">
               나의 성격 유형 찾기
             </h1>
             <p className="mt-2 text-xl font-semibold text-slate-400">feat. MBTI</p>
-            <p className="mt-4 text-sm leading-7 text-slate-500">
-              검사 방식을 선택해주세요
-            </p>
+            <p className="mt-4 text-sm leading-7 text-slate-500">검사 방식을 선택해주세요</p>
           </div>
 
-          {/* 빠른 검사 카드 */}
+          {/* 빠른 검사 */}
           <button
             onClick={() => setMode('quick')}
             className="w-full text-left rounded-[28px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-orange-300"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700 mb-3">
-                  ⚡ 추천
-                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700 mb-3">⚡ 추천</div>
                 <h2 className="text-2xl font-black text-slate-900">빠른 검사</h2>
-                <p className="mt-1 text-sm font-semibold text-orange-600">10문항 · 약 2분</p>
+                <p className="mt-1 text-sm font-semibold text-orange-600">20문항 · 약 3분</p>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  핵심 문항만 골라 빠르게 나의 성격 유형을 확인해보세요. 간단하지만 충분히 유의미한 결과를 드립니다.
+                  학술적으로 검증된 Mini-IPIP 문항으로 구성된 빠른 검사예요. 각 요인당 4문항(정방향 2 + 역방향 2)으로 신뢰도 높은 결과를 드립니다.
                 </p>
               </div>
-              <div className="text-4xl">🚀</div>
+              <div className="text-4xl">⚡</div>
             </div>
             <div className="mt-4 flex gap-2 flex-wrap">
-              {['외향성 2문항', '친화성 2문항', '성실성 2문항', '신경증 2문항', '개방성 2문항'].map(t => (
+              {['외향성 4문항', '친화성 4문항', '성실성 4문항', '신경증 4문항', '개방성 4문항'].map(t => (
                 <span key={t} className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">{t}</span>
               ))}
             </div>
           </button>
 
-          {/* 정밀 검사 카드 */}
+          {/* 정밀 검사 */}
           <button
             onClick={() => setMode('full')}
             className="w-full text-left rounded-[28px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-violet-300"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 mb-3">
-                  🔬 정밀
-                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 mb-3">🔬 정밀</div>
                 <h2 className="text-2xl font-black text-slate-900">정밀 검사</h2>
                 <p className="mt-1 text-sm font-semibold text-violet-600">50문항 · 약 10분</p>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -266,7 +285,8 @@ export default function IpipPage() {
           </button>
 
           <p className="text-center text-xs text-slate-400">
-            ※ IPIP는 공개된 학술 검사도구이며, 결과는 참고용입니다.
+            ※ IPIP는 공개된 학술 검사도구이며, 결과는 참고용입니다.<br />
+            빠른 검사는 Mini-IPIP (Donnellan et al., 2006) 기반입니다.
           </p>
         </div>
       </main>
@@ -287,7 +307,7 @@ export default function IpipPage() {
               <div className="flex items-center gap-2 mb-2">
                 <button onClick={handleReset} className="text-xs text-slate-400 hover:text-slate-600 transition">← 검사 선택으로</button>
                 <span className={cls('inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm', mode === 'quick' ? 'bg-orange-100 text-orange-700' : 'bg-violet-100 text-violet-700')}>
-                  {mode === 'quick' ? '⚡ 빠른 검사' : '🔬 정밀 검사'}
+                  {mode === 'quick' ? '⚡ 빠른 검사 (20문항)' : '🔬 정밀 검사 (50문항)'}
                 </span>
               </div>
               <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
@@ -367,7 +387,7 @@ export default function IpipPage() {
               </div>
             </div>
 
-            {/* 빠른 검사 → 정밀 검사 유도 */}
+            {/* 빠른 → 정밀 유도 */}
             {mode === 'quick' && (
               <div className="mt-6 rounded-[24px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-5 flex flex-col md:flex-row items-center gap-4">
                 <div className="flex-1">
@@ -423,7 +443,7 @@ export default function IpipPage() {
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white shadow-sm">{q.id}번</span>
+                        <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white shadow-sm">{questions.indexOf(q) + 1}번</span>
                         <span className={cls('rounded-full px-3 py-1 text-xs font-bold shadow-sm', style.chip)}>{q.factor}</span>
                         {q.reverse && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">역채점</span>}
                       </div>
