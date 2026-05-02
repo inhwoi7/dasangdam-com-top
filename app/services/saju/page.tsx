@@ -5,16 +5,17 @@ import {
   ArrowLeft,
   ChevronDown,
   Info,
-  Share2,
-  Sparkles,
   CalendarDays,
   Clock3,
   MoonStar,
   SunMedium,
   X,
+  Sparkles,
 } from "lucide-react";
 import { calculateSajuSimple, lunarToSolar } from "@fullstackfamily/manseryeok";
+import { useKakaoShare } from "@/lib/useKakaoShare"; // ✅ 추가
 
+// ── 타입 정의 (기존 동일) ───────────────────────────────────────
 type EnergyType = {
   wood: number;
   fire: number;
@@ -57,6 +58,7 @@ type BirthDataType = {
   unknownTime: "" | "false" | "true";
 };
 
+// ── 상수 (기존 동일) ────────────────────────────────────────────
 const ELEMENT_META: Record<
   string,
   {
@@ -126,69 +128,53 @@ const BRANCH_ANIMALS: Record<string, { label: string; emoji: string }> = {
 };
 
 const STEM_ELEMENT_MAP: Record<string, string> = {
-  갑: "목",
-  을: "목",
-  병: "화",
-  정: "화",
-  무: "토",
-  기: "토",
-  경: "금",
-  신: "금",
-  임: "수",
-  계: "수",
+  갑: "목", 을: "목", 병: "화", 정: "화",
+  무: "토", 기: "토", 경: "금", 신: "금",
+  임: "수", 계: "수",
 };
 
 const BRANCH_ELEMENT_MAP: Record<string, string> = {
-  자: "수",
-  축: "토",
-  인: "목",
-  묘: "목",
-  진: "토",
-  사: "화",
-  오: "화",
-  미: "토",
-  신: "금",
-  유: "금",
-  술: "토",
-  해: "수",
+  자: "수", 축: "토", 인: "목", 묘: "목",
+  진: "토", 사: "화", 오: "화", 미: "토",
+  신: "금", 유: "금", 술: "토", 해: "수",
 };
 
+// ── 오행 색상 (캡처 카드용 인라인 스타일) ───────────────────────
+const ELEMENT_CARD_COLOR: Record<string, { bg: string; text: string; border: string }> = {
+  목: { bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0" },
+  화: { bg: "#FFF1F2", text: "#9F1239", border: "#FECDD3" },
+  토: { bg: "#FFFBEB", text: "#92400E", border: "#FDE68A" },
+  금: { bg: "#F4F4F5", text: "#3F3F46", border: "#D4D4D8" },
+  수: { bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
+  "-": { bg: "#F9FAFB", text: "#6B7280", border: "#E5E7EB" },
+};
+
+function getElementCardStyle(char: string) {
+  if ("갑을인묘".includes(char)) return ELEMENT_CARD_COLOR["목"];
+  if ("병정사오".includes(char)) return ELEMENT_CARD_COLOR["화"];
+  if ("무기진술축미".includes(char)) return ELEMENT_CARD_COLOR["토"];
+  if ("경신유".includes(char)) return ELEMENT_CARD_COLOR["금"];
+  if ("임계해자".includes(char)) return ELEMENT_CARD_COLOR["수"];
+  return ELEMENT_CARD_COLOR["-"];
+}
+
+// ── 기존 헬퍼 함수들 (변경 없음) ────────────────────────────────
 function getElementStyles(char: string) {
-  if ("갑을인묘".includes(char)) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  }
-  if ("병정사오".includes(char)) {
-    return "bg-rose-50 text-rose-700 border-rose-200";
-  }
-  if ("무기진술축미".includes(char)) {
-    return "bg-amber-50 text-amber-700 border-amber-200";
-  }
-  if ("경신유".includes(char)) {
-    return "bg-zinc-100 text-zinc-700 border-zinc-200";
-  }
-  if ("임계해자".includes(char)) {
-    return "bg-blue-50 text-blue-700 border-blue-200";
-  }
+  if ("갑을인묘".includes(char)) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if ("병정사오".includes(char)) return "bg-rose-50 text-rose-700 border-rose-200";
+  if ("무기진술축미".includes(char)) return "bg-amber-50 text-amber-700 border-amber-200";
+  if ("경신유".includes(char)) return "bg-zinc-100 text-zinc-700 border-zinc-200";
+  if ("임계해자".includes(char)) return "bg-blue-50 text-blue-700 border-blue-200";
   return "bg-white text-zinc-700 border-zinc-200";
 }
 
 function addElementCount(energy: EnergyType, element?: string) {
   switch (element) {
-    case "목":
-      energy.wood += 1;
-      break;
-    case "화":
-      energy.fire += 1;
-      break;
-    case "토":
-      energy.earth += 1;
-      break;
-    case "금":
-      energy.metal += 1;
-      break;
-    case "수":
-      energy.water += 1;
-      break;
+    case "목": energy.wood += 1; break;
+    case "화": energy.fire += 1; break;
+    case "토": energy.earth += 1; break;
+    case "금": energy.metal += 1; break;
+    case "수": energy.water += 1; break;
   }
 }
 
@@ -200,16 +186,12 @@ function getDominantElement(energy: EnergyType) {
     { key: "금", value: energy.metal },
     { key: "수", value: energy.water },
   ];
-
   list.sort((a, b) => b.value - a.value);
   return list[0]?.key ?? "수";
 }
 
 function getDaysInMonth(year: number, month: number, isLunar: boolean) {
-  if (isLunar) {
-    return Array.from({ length: 30 }, (_, i) => i + 1);
-  }
-
+  if (isLunar) return Array.from({ length: 30 }, (_, i) => i + 1);
   const lastDay = new Date(year, month, 0).getDate();
   return Array.from({ length: lastDay }, (_, i) => i + 1);
 }
@@ -217,7 +199,6 @@ function getDaysInMonth(year: number, month: number, isLunar: boolean) {
 function pillarTextToItem(label: string, pillarText?: string | null): PillarItem {
   const safeText = pillarText ?? "--";
   const [gan = "-", ji = "-"] = safeText.split("");
-
   return {
     label,
     gan,
@@ -235,7 +216,6 @@ function getWeakElements(energy: EnergyType) {
     { key: "금", value: energy.metal },
     { key: "수", value: energy.water },
   ];
-
   const min = Math.min(...items.map((item) => item.value));
   return items.filter((item) => item.value === min).map((item) => item.key);
 }
@@ -248,7 +228,6 @@ function getZeroElements(energy: EnergyType) {
     { key: "금", value: energy.metal },
     { key: "수", value: energy.water },
   ];
-
   return items.filter((item) => item.value === 0).map((item) => item.key);
 }
 
@@ -308,18 +287,10 @@ function getFortuneContent(result: ResultType) {
     overview:
       `이 사주는 일간 ${result.dayMaster}를 중심으로 볼 때 ${dayMasterElement}의 성향이 바탕을 이루고, 전체적으로는 ${result.dominantElement} 기운이 비교적 두드러지는 구조입니다. ` +
       `즉, 기본 성향과 실제로 밖으로 드러나는 힘이 어느 정도 연결되어 작동할 가능성이 있으며, 강한 기운을 어떻게 안정적으로 쓰느냐가 전체 흐름의 핵심이 됩니다.`,
-    personality:
-      personalityMap[dayMasterElement] ||
-      "일간 기준 성향 해석을 불러오지 못했습니다.",
-    strength:
-      strengthMap[result.dominantElement] ||
-      "대표 오행 중심의 강점 해석을 불러오지 못했습니다.",
-    work:
-      workMap[result.dominantElement] ||
-      "일과 진로 흐름 해석을 불러오지 못했습니다.",
-    relationship:
-      relationshipMap[dayMasterElement] ||
-      "관계 흐름 해석을 불러오지 못했습니다.",
+    personality: personalityMap[dayMasterElement] || "일간 기준 성향 해석을 불러오지 못했습니다.",
+    strength: strengthMap[result.dominantElement] || "대표 오행 중심의 강점 해석을 불러오지 못했습니다.",
+    work: workMap[result.dominantElement] || "일과 진로 흐름 해석을 불러오지 못했습니다.",
+    relationship: relationshipMap[dayMasterElement] || "관계 흐름 해석을 불러오지 못했습니다.",
     balance: balanceText,
     lifestyleTips,
     closing:
@@ -327,26 +298,17 @@ function getFortuneContent(result: ResultType) {
   };
 }
 
+// ── 서브 컴포넌트 (기존 동일) ────────────────────────────────────
 function SelectField({
-  label,
-  value,
-  onChange,
-  children,
-  icon,
-  disabled = false,
+  label, value, onChange, children, icon, disabled = false,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-  disabled?: boolean;
+  label: string; value: string; onChange: (value: string) => void;
+  children: React.ReactNode; icon?: React.ReactNode; disabled?: boolean;
 }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
-        {icon}
-        {label}
+        {icon}{label}
       </div>
       <div className="relative">
         <select
@@ -365,16 +327,8 @@ function SelectField({
   );
 }
 
-function SummaryCard({
-  icon,
-  title,
-  value,
-  sub,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  value: string;
-  sub: string;
+function SummaryCard({ icon, title, value, sub }: {
+  icon: React.ReactNode; title: string; value: string; sub: string;
 }) {
   return (
     <div className="rounded-[28px] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.05)] ring-1 ring-zinc-100">
@@ -392,23 +346,11 @@ function PillarBlock({ item }: { item: PillarItem }) {
   return (
     <div className="flex flex-col items-center">
       <div className="mb-2 text-xs font-semibold text-zinc-400">{item.label}</div>
-
-      <div
-        className={`mb-2 flex h-16 w-16 items-center justify-center rounded-3xl border text-3xl font-bold shadow-sm ${getElementStyles(
-          item.gan
-        )}`}
-      >
+      <div className={`mb-2 flex h-16 w-16 items-center justify-center rounded-3xl border text-3xl font-bold shadow-sm ${getElementStyles(item.gan)}`}>
         {item.gan}
       </div>
-      <div className="mb-3 text-[11px] font-medium text-zinc-500">
-        {item.ganElement || "-"}
-      </div>
-
-      <div
-        className={`mb-2 flex h-16 w-16 items-center justify-center rounded-3xl border text-3xl font-bold shadow-sm ${getElementStyles(
-          item.ji
-        )}`}
-      >
+      <div className="mb-3 text-[11px] font-medium text-zinc-500">{item.ganElement || "-"}</div>
+      <div className={`mb-2 flex h-16 w-16 items-center justify-center rounded-3xl border text-3xl font-bold shadow-sm ${getElementStyles(item.ji)}`}>
         {item.ji}
       </div>
       <div className="text-[11px] font-medium text-zinc-500">{item.jiElement || "-"}</div>
@@ -416,6 +358,186 @@ function PillarBlock({ item }: { item: PillarItem }) {
   );
 }
 
+// ── 캡처 카드 컴포넌트 ✅ 신규 추가 ─────────────────────────────
+function SajuCaptureCard({ result }: { result: ResultType }) {
+  const dominantMeta = ELEMENT_META[result.dominantElement] ?? ELEMENT_META["수"];
+  const animal = BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", emoji: "✨" };
+  const today = new Date().toLocaleDateString("ko-KR", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+
+  const energyItems = [
+    { label: "목", hanja: "木", value: result.energy.wood },
+    { label: "화", hanja: "火", value: result.energy.fire },
+    { label: "토", hanja: "土", value: result.energy.earth },
+    { label: "금", hanja: "金", value: result.energy.metal },
+    { label: "수", hanja: "水", value: result.energy.water },
+  ];
+  const maxEnergy = Math.max(...energyItems.map((e) => e.value), 1);
+
+  return (
+    <div
+      id="saju-capture"
+      style={{
+        position: "fixed",
+        left: "-9999px",
+        top: 0,
+        width: "400px",
+        background: "#F6F4EF",
+        borderRadius: "24px",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        overflow: "hidden",
+      }}
+    >
+      {/* 헤더 */}
+      <div style={{ padding: "28px 28px 20px", background: "#F6F4EF" }}>
+        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#71717A", fontWeight: 700, marginBottom: "6px" }}>
+            WISE REST WITH SUNNY · 다상담
+          </div>
+          <div style={{ fontSize: "26px", fontWeight: 800, color: "#18181B", letterSpacing: "2px", marginBottom: "4px" }}>
+            정통사주
+          </div>
+          <div style={{ fontSize: "12px", color: "#A1A1AA" }}>{today}</div>
+        </div>
+
+        {/* 사주 4주 */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "8px",
+          marginBottom: "16px",
+        }}>
+          {result.pillars.map((item) => {
+            const ganStyle = getElementCardStyle(item.gan);
+            const jiStyle = getElementCardStyle(item.ji);
+            return (
+              <div key={item.label} style={{
+                background: "#FFFFFF",
+                borderRadius: "16px",
+                padding: "12px 8px",
+                textAlign: "center",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              }}>
+                <div style={{ fontSize: "10px", color: "#A1A1AA", fontWeight: 600, marginBottom: "8px" }}>
+                  {item.label}
+                </div>
+                {/* 천간 */}
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "12px", margin: "0 auto 4px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "20px", fontWeight: 900,
+                  background: ganStyle.bg, color: ganStyle.text,
+                  border: `1px solid ${ganStyle.border}`,
+                }}>
+                  {item.gan}
+                </div>
+                <div style={{ fontSize: "10px", color: "#A1A1AA", marginBottom: "6px" }}>
+                  {item.ganElement}
+                </div>
+                {/* 지지 */}
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "12px", margin: "0 auto 4px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "20px", fontWeight: 900,
+                  background: jiStyle.bg, color: jiStyle.text,
+                  border: `1px solid ${jiStyle.border}`,
+                }}>
+                  {item.ji}
+                </div>
+                <div style={{ fontSize: "10px", color: "#A1A1AA" }}>
+                  {item.jiElement}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 요약 배지 행 */}
+        <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{
+            background: "#18181B", color: "#FFFFFF",
+            borderRadius: "20px", padding: "6px 14px",
+            fontSize: "12px", fontWeight: 700,
+          }}>
+            일간 {result.dayMaster}
+          </div>
+          <div style={{
+            background: "#FFFFFF", color: "#18181B",
+            borderRadius: "20px", padding: "6px 14px",
+            fontSize: "12px", fontWeight: 700,
+            border: "1px solid #E4E4E7",
+          }}>
+            {dominantMeta.emoji} 대표오행 {dominantMeta.label}
+          </div>
+          <div style={{
+            background: "#FFFFFF", color: "#18181B",
+            borderRadius: "20px", padding: "6px 14px",
+            fontSize: "12px", fontWeight: 700,
+            border: "1px solid #E4E4E7",
+          }}>
+            {animal.emoji} {animal.label}띠
+          </div>
+        </div>
+      </div>
+
+      {/* 오행 분포 바 */}
+      <div style={{
+        background: "#FFFFFF",
+        margin: "0 16px",
+        borderRadius: "16px",
+        padding: "16px",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+      }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#A1A1AA", marginBottom: "12px" }}>
+          오행 에너지 분포
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {energyItems.map((item) => {
+            const meta = ELEMENT_META[item.label];
+            const barColors: Record<string, string> = {
+              목: "#10B981", 화: "#F43F5E", 토: "#F59E0B", 금: "#71717A", 수: "#3B82F6",
+            };
+            const pct = Math.round((item.value / maxEnergy) * 100);
+            return (
+              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "24px", fontSize: "13px", fontWeight: 700, color: "#52525B" }}>
+                  {item.hanja}
+                </div>
+                <div style={{ flex: 1, height: "8px", background: "#F4F4F5", borderRadius: "99px", overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${pct}%`,
+                    background: barColors[item.label],
+                    borderRadius: "99px",
+                    minWidth: item.value > 0 ? "8px" : "0",
+                  }} />
+                </div>
+                <div style={{ width: "16px", textAlign: "right", fontSize: "12px", fontWeight: 600, color: "#71717A" }}>
+                  {item.value}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 푸터 */}
+      <div style={{
+        padding: "16px 28px 20px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ fontSize: "13px", fontWeight: 800, color: "#18181B" }}>다상담</div>
+        <div style={{ fontSize: "11px", color: "#A1A1AA", fontWeight: 600 }}>
+          🔗 dasangdam.com/services/saju
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 메인 페이지 ─────────────────────────────────────────────────
 export default function Page() {
   const years = useMemo(
     () => Array.from({ length: 2040 - 1930 + 1 }, (_, i) => 1930 + i),
@@ -425,29 +547,23 @@ export default function Page() {
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
 
   const [birthData, setBirthData] = useState<BirthDataType>({
-    year: "",
-    month: "",
-    day: "",
-    hour: "",
-    isLunar: "",
-    isLeapMonth: "",
-    unknownTime: "",
+    year: "", month: "", day: "", hour: "",
+    isLunar: "", isLeapMonth: "", unknownTime: "",
   });
 
   const [result, setResult] = useState<ResultType | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [openedPanel, setOpenedPanel] = useState<"manseryeok" | "fortune" | null>(
-    null
-  );
+  const [openedPanel, setOpenedPanel] = useState<"manseryeok" | "fortune" | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
 
+  // ✅ 카카오 공유 훅
+  const { shareWithCapture } = useKakaoShare();
+
   const isLunar = birthData.isLunar === "lunar";
-  // 시간 미입력 시 자동으로 unknownTime 처리
   const unknownTime = birthData.unknownTime === "true" || !birthData.hour;
 
   const days = useMemo(() => {
     if (!birthData.year || !birthData.month) return [];
-
     return getDaysInMonth(
       parseInt(birthData.year, 10),
       parseInt(birthData.month, 10),
@@ -457,15 +573,10 @@ export default function Page() {
 
   useEffect(() => {
     if (!birthData.day || days.length === 0) return;
-
     const selectedDay = parseInt(birthData.day, 10);
     const maxDay = days[days.length - 1] ?? 1;
-
     if (selectedDay > maxDay) {
-      setBirthData((prev) => ({
-        ...prev,
-        day: String(maxDay),
-      }));
+      setBirthData((prev) => ({ ...prev, day: String(maxDay) }));
     }
   }, [days, birthData.day]);
 
@@ -474,27 +585,17 @@ export default function Page() {
     setErrorMessage("");
     setOpenedPanel(null);
   }, [
-    birthData.year,
-    birthData.month,
-    birthData.day,
-    birthData.hour,
-    birthData.isLunar,
-    birthData.isLeapMonth,
-    birthData.unknownTime,
+    birthData.year, birthData.month, birthData.day, birthData.hour,
+    birthData.isLunar, birthData.isLeapMonth, birthData.unknownTime,
   ]);
 
-  // 시간 몰라도 년/월/일/달력기준만 있으면 계산 가능
   const canCalculate =
-    !!birthData.year &&
-    !!birthData.month &&
-    !!birthData.day &&
-    !!birthData.isLunar &&
+    !!birthData.year && !!birthData.month && !!birthData.day && !!birthData.isLunar &&
     (birthData.isLunar === "solar" || !!birthData.isLeapMonth);
 
   const handleCalculate = useCallback(() => {
     try {
       setErrorMessage("");
-
       if (!canCalculate) {
         setResult(null);
         setOpenedPanel(null);
@@ -508,10 +609,7 @@ export default function Page() {
       const hour = birthData.hour ? parseInt(birthData.hour, 10) : 12;
       const isLeapMonth = birthData.isLeapMonth === "true";
 
-      let solarYear = year;
-      let solarMonth = month;
-      let solarDay = day;
-
+      let solarYear = year, solarMonth = month, solarDay = day;
       if (isLunar) {
         const solar = lunarToSolar(year, month, day, isLeapMonth);
         solarYear = solar.solar.year;
@@ -519,12 +617,7 @@ export default function Page() {
         solarDay = solar.solar.day;
       }
 
-      const saju = calculateSajuSimple(
-        solarYear,
-        solarMonth,
-        solarDay,
-        unknownTime ? 12 : hour
-      );
+      const saju = calculateSajuSimple(solarYear, solarMonth, solarDay, unknownTime ? 12 : hour);
 
       const yearPillarText = saju.yearPillar ?? "--";
       const monthPillarText = saju.monthPillar ?? "--";
@@ -539,89 +632,56 @@ export default function Page() {
         pillarTextToItem("시주", unknownTime ? "--" : safeHourPillar),
       ];
 
-      const energy: EnergyType = {
-        wood: 0,
-        fire: 0,
-        earth: 0,
-        metal: 0,
-        water: 0,
-      };
-
+      const energy: EnergyType = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
       pillars.forEach((item) => {
         if (item.gan !== "-") addElementCount(energy, item.ganElement);
         if (item.ji !== "-") addElementCount(energy, item.jiElement);
       });
 
       const dominantElement = getDominantElement(energy);
-
-      const inputDateText = `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(
-        2,
-        "0"
-      )} ${isLunar ? "(음력)" : "(양력)"}`;
-
+      const inputDateText = `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")} ${isLunar ? "(음력)" : "(양력)"}`;
       const solarDateText = `${solarYear}년 ${solarMonth}월 ${solarDay}일`;
-
       const basisText = isLunar
         ? "음력 입력값을 양력으로 변환한 뒤 사주를 계산했어요"
         : "입력한 양력 기준으로 사주를 계산했어요";
-
       const dayMaster = dayPillarText[0] ?? "-";
       const dayBranch = dayPillarText[1] ?? "-";
-
       const summaryText = `${yearPillarText}년 · ${monthPillarText}월 · ${dayPillarText}일${
         unknownTime ? " · 시주 미입력" : ` · ${hourPillarText}시`
       }`;
 
       setOpenedPanel(null);
       setResult({
-        pillars,
-        energy,
-        dayMaster,
-        dayBranch,
-        dominantElement,
-        solarDateText,
-        inputDateText,
-        basisText,
-        summaryText,
-        yearPillarText,
-        monthPillarText,
-        dayPillarText,
-        hourPillarText,
+        pillars, energy, dayMaster, dayBranch, dominantElement,
+        solarDateText, inputDateText, basisText, summaryText,
+        yearPillarText, monthPillarText, dayPillarText, hourPillarText,
       });
     } catch (error) {
       console.error(error);
       setResult(null);
       setOpenedPanel(null);
-      setErrorMessage(
-        "계산 중 오류가 발생했습니다. 날짜 또는 음력/윤달 입력값을 다시 확인해주세요."
-      );
+      setErrorMessage("계산 중 오류가 발생했습니다. 날짜 또는 음력/윤달 입력값을 다시 확인해주세요.");
     }
   }, [birthData, canCalculate, isLunar, unknownTime]);
 
   const handleBack = () => {
-    if (typeof window !== "undefined") {
-      window.history.back();
-    }
+    if (typeof window !== "undefined") window.history.back();
   };
 
-  const handleShare = async () => {
-    try {
-      if (!result) return;
+  // ✅ 카카오 공유 핸들러 (기존 handleShare 대체)
+  const handleKakaoShare = useCallback(() => {
+    if (!result) return;
+    const dominantMeta = ELEMENT_META[result.dominantElement] ?? ELEMENT_META["수"];
+    const animal = BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", emoji: "✨" };
 
-      const text = `정통사주 결과\n${result.summaryText}\n대표 오행: ${result.dominantElement}`;
-      if (navigator.share) {
-        await navigator.share({
-          title: "정통사주 결과",
-          text,
-        });
-      } else {
-        await navigator.clipboard.writeText(text);
-        window.alert("결과 요약이 클립보드에 복사되었습니다.");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    shareWithCapture({
+      captureId: "saju-capture",
+      title: `나의 사주 — 일간 ${result.dayMaster} · ${dominantMeta.emoji} ${dominantMeta.label}`,
+      description: `${animal.emoji} ${animal.label}띠 · ${result.summaryText}\n다상담에서 나의 사주를 확인해보세요!`,
+      buttonText: "나도 사주 보기 →",
+      pageUrl: "https://dasangdam.com/services/saju",
+    });
+  }, [result, shareWithCapture]);
 
   const dominantMeta = result ? ELEMENT_META[result.dominantElement] : ELEMENT_META["수"];
   const animal = result ? BRANCH_ANIMALS[result.dayBranch] : BRANCH_ANIMALS["해"];
@@ -629,6 +689,10 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-zinc-900">
+
+      {/* ✅ 캡처 카드 — 화면 밖 렌더링, result 있을 때만 */}
+      {result && <SajuCaptureCard result={result} />}
+
       <div className="mx-auto max-w-md pb-28">
         <header className="sticky top-0 z-20 border-b border-black/5 bg-[#f6f4ef]/90 backdrop-blur">
           <div className="flex items-center justify-between px-4 py-4">
@@ -651,19 +715,32 @@ export default function Page() {
               >
                 <Info className="h-5 w-5" />
               </button>
+              {/* ✅ 카카오 공유 버튼 — result 없으면 비활성화 */}
               <button
                 type="button"
-                onClick={handleShare}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200"
-                aria-label="공유"
+                onClick={handleKakaoShare}
+                disabled={!result}
+                className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 transition ${
+                  result
+                    ? "bg-[#FEE500] ring-[#F0D800] hover:scale-105"
+                    : "bg-zinc-100 ring-zinc-200 opacity-40 cursor-not-allowed"
+                }`}
+                aria-label="카카오 공유"
               >
-                <Share2 className="h-5 w-5" />
+                {/* 카카오 말풍선 아이콘 */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z"
+                    fill="#3C1E1E"
+                  />
+                </svg>
               </button>
             </div>
           </div>
         </header>
 
         <div className="px-4 pt-4">
+          {/* 입력 섹션 (기존 동일) */}
           <section className="rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
@@ -679,83 +756,44 @@ export default function Page() {
 
             <div className="grid grid-cols-3 gap-3">
               <SelectField
-                label="태어난 년"
-                value={birthData.year}
-                onChange={(value) =>
-                  setBirthData((prev) => ({
-                    ...prev,
-                    year: value,
-                    day: "",
-                  }))
-                }
+                label="태어난 년" value={birthData.year}
+                onChange={(value) => setBirthData((prev) => ({ ...prev, year: value, day: "" }))}
                 icon={<CalendarDays className="h-3.5 w-3.5" />}
               >
                 <option value="">선택</option>
-                {years.map((y) => (
-                  <option key={y} value={String(y)}>
-                    {y}년
-                  </option>
-                ))}
+                {years.map((y) => <option key={y} value={String(y)}>{y}년</option>)}
               </SelectField>
 
               <SelectField
-                label="태어난 월"
-                value={birthData.month}
-                onChange={(value) =>
-                  setBirthData((prev) => ({
-                    ...prev,
-                    month: value,
-                    day: "",
-                  }))
-                }
+                label="태어난 월" value={birthData.month}
+                onChange={(value) => setBirthData((prev) => ({ ...prev, month: value, day: "" }))}
               >
                 <option value="">선택</option>
-                {months.map((m) => (
-                  <option key={m} value={String(m)}>
-                    {m}월
-                  </option>
-                ))}
+                {months.map((m) => <option key={m} value={String(m)}>{m}월</option>)}
               </SelectField>
 
               <SelectField
-                label="태어난 일"
-                value={birthData.day}
+                label="태어난 일" value={birthData.day}
                 onChange={(value) => setBirthData((prev) => ({ ...prev, day: value }))}
                 disabled={!birthData.year || !birthData.month}
               >
                 <option value="">선택</option>
-                {days.map((d) => (
-                  <option key={d} value={String(d)}>
-                    {d}일
-                  </option>
-                ))}
+                {days.map((d) => <option key={d} value={String(d)}>{d}일</option>)}
               </SelectField>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <SelectField
-                label="태어난 시간 (선택)"
-                value={birthData.hour}
-                onChange={(value) =>
-                  setBirthData((prev) => ({
-                    ...prev,
-                    hour: value,
-                    unknownTime: "false",
-                  }))
-                }
+                label="태어난 시간 (선택)" value={birthData.hour}
+                onChange={(value) => setBirthData((prev) => ({ ...prev, hour: value, unknownTime: "false" }))}
                 icon={<Clock3 className="h-3.5 w-3.5" />}
               >
                 <option value="">모름 / 선택안함</option>
-                {hours.map((h) => (
-                  <option key={h} value={String(h)}>
-                    {String(h).padStart(2, "0")}시
-                  </option>
-                ))}
+                {hours.map((h) => <option key={h} value={String(h)}>{String(h).padStart(2, "0")}시</option>)}
               </SelectField>
 
               <SelectField
-                label="달력 기준"
-                value={birthData.isLunar}
+                label="달력 기준" value={birthData.isLunar}
                 onChange={(value) =>
                   setBirthData((prev) => ({
                     ...prev,
@@ -764,13 +802,9 @@ export default function Page() {
                   }))
                 }
                 icon={
-                  birthData.isLunar === "solar" ? (
-                    <SunMedium className="h-3.5 w-3.5" />
-                  ) : birthData.isLunar === "lunar" ? (
-                    <MoonStar className="h-3.5 w-3.5" />
-                  ) : (
-                    <CalendarDays className="h-3.5 w-3.5" />
-                  )
+                  birthData.isLunar === "solar" ? <SunMedium className="h-3.5 w-3.5" /> :
+                  birthData.isLunar === "lunar" ? <MoonStar className="h-3.5 w-3.5" /> :
+                  <CalendarDays className="h-3.5 w-3.5" />
                 }
               >
                 <option value="">선택</option>
@@ -782,13 +816,9 @@ export default function Page() {
             <div className="mt-4">
               {birthData.isLunar === "lunar" ? (
                 <SelectField
-                  label="윤달 여부"
-                  value={birthData.isLeapMonth}
+                  label="윤달 여부" value={birthData.isLeapMonth}
                   onChange={(value) =>
-                    setBirthData((prev) => ({
-                      ...prev,
-                      isLeapMonth: value as "" | "false" | "true",
-                    }))
+                    setBirthData((prev) => ({ ...prev, isLeapMonth: value as "" | "false" | "true" }))
                   }
                 >
                   <option value="">선택</option>
@@ -834,10 +864,8 @@ export default function Page() {
                   <div>
                     <div className="text-sm font-extrabold text-zinc-900">기준 안내</div>
                     <div className="mt-1 text-sm leading-relaxed text-zinc-600">
-                      입력: {result.inputDateText}
-                      <br />
-                      기준 양력: {result.solarDateText}
-                      <br />
+                      입력: {result.inputDateText}<br />
+                      기준 양력: {result.solarDateText}<br />
                       {result.basisText}
                     </div>
                   </div>
@@ -868,23 +896,18 @@ export default function Page() {
               <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
                 <div className="text-lg font-extrabold">사주 구조</div>
                 <div className="mt-1 text-sm leading-relaxed text-zinc-500">{result.summaryText}</div>
-
                 <div className="mt-5 grid grid-cols-4 gap-2">
-                  {result.pillars.map((item) => (
-                    <PillarBlock key={item.label} item={item} />
-                  ))}
+                  {result.pillars.map((item) => <PillarBlock key={item.label} item={item} />)}
                 </div>
-
                 <div className="mt-5 rounded-3xl bg-zinc-50 p-4">
                   <div className="text-xs font-bold text-zinc-400">한 줄 요약</div>
                   <div className="mt-2 text-sm leading-relaxed text-zinc-700">
-                    이 사주는 <span className="font-extrabold">{result.yearPillarText}년주</span>,{" "}
+                    이 사주는{" "}
+                    <span className="font-extrabold">{result.yearPillarText}년주</span>,{" "}
                     <span className="font-extrabold">{result.monthPillarText}월주</span>,{" "}
                     <span className="font-extrabold">{result.dayPillarText}일주</span>,{" "}
                     <span className="font-extrabold">
-                      {result.hourPillarText === "시간 모름"
-                        ? "시주 미입력"
-                        : `${result.hourPillarText}시주`}
+                      {result.hourPillarText === "시간 모름" ? "시주 미입력" : `${result.hourPillarText}시주`}
                     </span>
                     로 구성됩니다.
                   </div>
@@ -893,10 +916,7 @@ export default function Page() {
 
               <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
                 <div className="text-lg font-extrabold">오행 에너지</div>
-                <div className="mt-1 text-sm text-zinc-500">
-                  네 기둥의 천간·지지 기준 단순 분포
-                </div>
-
+                <div className="mt-1 text-sm text-zinc-500">네 기둥의 천간·지지 기준 단순 분포</div>
                 <div className="mt-6 flex h-44 items-end justify-between gap-3 rounded-3xl bg-zinc-50 px-4 pb-4 pt-6">
                   {[
                     { label: "목", value: result.energy.wood },
@@ -907,10 +927,7 @@ export default function Page() {
                   ].map((item) => {
                     const meta = ELEMENT_META[item.label];
                     return (
-                      <div
-                        key={item.label}
-                        className="flex w-full flex-col items-center justify-end gap-2"
-                      >
+                      <div key={item.label} className="flex w-full flex-col items-center justify-end gap-2">
                         <div className="text-[11px] font-bold text-zinc-500">{item.value}</div>
                         <div
                           className={`w-9 rounded-t-2xl ${meta.barClass}`}
@@ -921,7 +938,6 @@ export default function Page() {
                     );
                   })}
                 </div>
-
                 <div className={`mt-4 rounded-3xl border p-4 ${dominantMeta.chipClass}`}>
                   <div className="text-xs font-bold opacity-70">가장 강한 기운</div>
                   <div className="mt-1 text-base font-extrabold">
@@ -930,24 +946,32 @@ export default function Page() {
                 </div>
               </section>
 
+              {/* ✅ 카카오 공유 배너 버튼 (결과 섹션 내) */}
+              <button
+                type="button"
+                onClick={handleKakaoShare}
+                className="mt-4 w-full rounded-[24px] bg-[#FEE500] px-5 py-4 text-sm font-extrabold text-zinc-900 shadow-[0_8px_24px_rgba(254,229,0,0.4)] transition hover:translate-y-[-1px] flex items-center justify-center gap-2"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z"
+                    fill="#3C1E1E"
+                  />
+                </svg>
+                카카오톡으로 공유하기
+              </button>
+
               <section className="mt-4 space-y-3">
                 <button
                   type="button"
-                  onClick={() =>
-                    setOpenedPanel((prev) =>
-                      prev === "manseryeok" ? null : "manseryeok"
-                    )
-                  }
+                  onClick={() => setOpenedPanel((prev) => prev === "manseryeok" ? null : "manseryeok")}
                   className="w-full rounded-[24px] bg-white px-5 py-4 text-sm font-bold text-zinc-900 shadow-[0_8px_24px_rgba(0,0,0,0.05)] ring-1 ring-zinc-100 transition hover:translate-y-[-1px]"
                 >
                   {openedPanel === "manseryeok" ? "만세력 닫기" : "만세력 보기"}
                 </button>
-
                 <button
                   type="button"
-                  onClick={() =>
-                    setOpenedPanel((prev) => (prev === "fortune" ? null : "fortune"))
-                  }
+                  onClick={() => setOpenedPanel((prev) => prev === "fortune" ? null : "fortune")}
                   className="w-full rounded-[24px] bg-zinc-900 px-5 py-4 text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(0,0,0,0.16)] transition hover:translate-y-[-1px]"
                 >
                   {openedPanel === "fortune" ? "운세 풀이 닫기" : "운세 풀이 보기"}
@@ -959,138 +983,84 @@ export default function Page() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-lg font-extrabold">만세력 상세</div>
-                      <div className="mt-1 text-sm text-zinc-500">
-                        사주 원국을 표 형태로 한눈에 볼 수 있어요
-                      </div>
+                      <div className="mt-1 text-sm text-zinc-500">사주 원국을 표 형태로 한눈에 볼 수 있어요</div>
                     </div>
                     <div className="rounded-full bg-zinc-100 px-3 py-1.5 text-[11px] font-bold text-zinc-600">
                       {result.summaryText}
                     </div>
                   </div>
-
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl bg-zinc-50 p-4">
                       <div className="text-[11px] font-bold text-zinc-400">입력일</div>
-                      <div className="mt-1 text-sm font-bold text-zinc-900">
-                        {result.inputDateText}
-                      </div>
+                      <div className="mt-1 text-sm font-bold text-zinc-900">{result.inputDateText}</div>
                     </div>
                     <div className="rounded-2xl bg-zinc-50 p-4">
                       <div className="text-[11px] font-bold text-zinc-400">기준 양력</div>
-                      <div className="mt-1 text-sm font-bold text-zinc-900">
-                        {result.solarDateText}
-                      </div>
+                      <div className="mt-1 text-sm font-bold text-zinc-900">{result.solarDateText}</div>
                     </div>
                   </div>
-
                   <div className="mt-4 overflow-hidden rounded-3xl border border-zinc-200">
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-collapse text-center">
                         <thead className="bg-zinc-50">
                           <tr>
-                            <th className="px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              구분
-                            </th>
+                            <th className="px-3 py-3 text-[11px] font-bold text-zinc-400">구분</th>
                             {result.pillars.map((item) => (
-                              <th
-                                key={item.label}
-                                className="px-3 py-3 text-[11px] font-bold text-zinc-500"
-                              >
-                                {item.label}
-                              </th>
+                              <th key={item.label} className="px-3 py-3 text-[11px] font-bold text-zinc-500">{item.label}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              천간
-                            </td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">천간</td>
                             {result.pillars.map((item) => (
                               <td key={`${item.label}-gan`} className="px-3 py-3">
-                                <span
-                                  className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(
-                                    item.gan
-                                  )}`}
-                                >
+                                <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(item.gan)}`}>
                                   {item.gan}
                                 </span>
                               </td>
                             ))}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              천간 오행
-                            </td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">천간 오행</td>
                             {result.pillars.map((item) => (
-                              <td
-                                key={`${item.label}-gan-element`}
-                                className="px-3 py-3 text-sm font-semibold text-zinc-700"
-                              >
-                                {item.ganElement}
-                              </td>
+                              <td key={`${item.label}-gan-element`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{item.ganElement}</td>
                             ))}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              지지
-                            </td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">지지</td>
                             {result.pillars.map((item) => (
                               <td key={`${item.label}-ji`} className="px-3 py-3">
-                                <span
-                                  className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(
-                                    item.ji
-                                  )}`}
-                                >
+                                <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(item.ji)}`}>
                                   {item.ji}
                                 </span>
                               </td>
                             ))}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              지지 오행
-                            </td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">지지 오행</td>
                             {result.pillars.map((item) => (
-                              <td
-                                key={`${item.label}-ji-element`}
-                                className="px-3 py-3 text-sm font-semibold text-zinc-700"
-                              >
-                                {item.jiElement}
-                              </td>
+                              <td key={`${item.label}-ji-element`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{item.jiElement}</td>
                             ))}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">
-                              기둥
-                            </td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">기둥</td>
                             {result.pillars.map((item) => (
-                              <td
-                                key={`${item.label}-full`}
-                                className="px-3 py-3 text-base font-extrabold text-zinc-900"
-                              >
-                                {item.gan}
-                                {item.ji}
-                              </td>
+                              <td key={`${item.label}-full`} className="px-3 py-3 text-base font-extrabold text-zinc-900">{item.gan}{item.ji}</td>
                             ))}
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </div>
-
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
                       <div className="text-[11px] font-bold text-blue-400">일간</div>
-                      <div className="mt-1 text-base font-extrabold text-zinc-900">
-                        {result.dayMaster}
-                      </div>
+                      <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayMaster}</div>
                     </div>
                     <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
                       <div className="text-[11px] font-bold text-amber-500">일지</div>
-                      <div className="mt-1 text-base font-extrabold text-zinc-900">
-                        {result.dayBranch} {animal.emoji} {animal.label}
-                      </div>
+                      <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayBranch} {animal.emoji} {animal.label}</div>
                     </div>
                   </div>
                 </section>
@@ -1102,28 +1072,18 @@ export default function Page() {
                   <div className="mt-1 text-sm text-zinc-500">
                     일간과 오행 분포를 바탕으로 성향과 흐름을 자연스럽게 풀어봤어요
                   </div>
-
                   <div className={`mt-4 rounded-3xl border p-4 ${dominantMeta.chipClass}`}>
                     <div className="text-xs font-bold opacity-70">전체 흐름 요약</div>
-                    <div className="mt-2 text-sm leading-relaxed">
-                      {fortuneContent.overview}
-                    </div>
+                    <div className="mt-2 text-sm leading-relaxed">{fortuneContent.overview}</div>
                   </div>
-
                   <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
                     <div className="text-[11px] font-bold text-zinc-400">기본 성향</div>
-                    <div className="mt-2 text-sm leading-7 text-zinc-700">
-                      {fortuneContent.personality}
-                    </div>
+                    <div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.personality}</div>
                   </div>
-
                   <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
                     <div className="text-[11px] font-bold text-zinc-400">강하게 드러나는 장점</div>
-                    <div className="mt-2 text-sm leading-7 text-zinc-700">
-                      {fortuneContent.strength}
-                    </div>
+                    <div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.strength}</div>
                   </div>
-
                   <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
                     <div className="text-[11px] font-bold text-zinc-400">일과 관계 흐름</div>
                     <div className="mt-2 space-y-3 text-sm leading-7 text-zinc-700">
@@ -1131,33 +1091,23 @@ export default function Page() {
                       <p>{fortuneContent.relationship}</p>
                     </div>
                   </div>
-
                   <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
                     <div className="text-[11px] font-bold text-zinc-400">균형과 보완 포인트</div>
-                    <div className="mt-2 text-sm leading-7 text-zinc-700">
-                      {fortuneContent.balance}
-                    </div>
+                    <div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.balance}</div>
                   </div>
-
                   <div className="mt-3 rounded-3xl bg-white p-4 ring-1 ring-zinc-100">
                     <div className="text-[11px] font-bold text-zinc-400">생활 속 보완 힌트</div>
                     <div className="mt-3 space-y-2.5">
                       {fortuneContent.lifestyleTips.map((tip, index) => (
-                        <div
-                          key={`${tip}-${index}`}
-                          className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700"
-                        >
+                        <div key={`${tip}-${index}`} className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700">
                           {tip}
                         </div>
                       ))}
                     </div>
                   </div>
-
                   <div className="mt-4 rounded-3xl bg-zinc-900 p-4 text-white">
                     <div className="text-xs font-bold text-white/60">마무리 해석</div>
-                    <div className="mt-2 text-sm leading-7 text-white/90">
-                      {fortuneContent.closing}
-                    </div>
+                    <div className="mt-2 text-sm leading-7 text-white/90">{fortuneContent.closing}</div>
                   </div>
                 </section>
               )}
@@ -1166,11 +1116,9 @@ export default function Page() {
         </div>
       </div>
 
+      {/* 안내 모달 (기존 동일) */}
       {infoOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/40 px-4 py-6"
-          onClick={() => setInfoOpen(false)}
-        >
+        <div className="fixed inset-0 z-50 bg-black/40 px-4 py-6" onClick={() => setInfoOpen(false)}>
           <div
             className="mx-auto mt-10 max-w-md rounded-[32px] bg-white p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -1178,9 +1126,7 @@ export default function Page() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-lg font-extrabold text-zinc-900">이용 안내</div>
-                <div className="mt-1 text-sm text-zinc-500">
-                  입력 전 알아두면 좋은 기준을 정리했어요
-                </div>
+                <div className="mt-1 text-sm text-zinc-500">입력 전 알아두면 좋은 기준을 정리했어요</div>
               </div>
               <button
                 type="button"
@@ -1190,37 +1136,24 @@ export default function Page() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-
             <div className="mt-4 space-y-3">
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <div className="text-sm font-extrabold text-zinc-900">달력 기준</div>
-                <div className="mt-1 text-sm leading-6 text-zinc-600">
-                  양력은 입력한 날짜 그대로 계산하고, 음력은 먼저 양력으로 변환한 뒤 계산합니다.
-                </div>
+                <div className="mt-1 text-sm leading-6 text-zinc-600">양력은 입력한 날짜 그대로 계산하고, 음력은 먼저 양력으로 변환한 뒤 계산합니다.</div>
               </div>
-
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <div className="text-sm font-extrabold text-zinc-900">출생 시간</div>
-                <div className="mt-1 text-sm leading-6 text-zinc-600">
-                  시간을 모르면 시주는 제외한 흐름으로 보고, 시간을 알면 시주까지 포함해 계산합니다.
-                </div>
+                <div className="mt-1 text-sm leading-6 text-zinc-600">시간을 모르면 시주는 제외한 흐름으로 보고, 시간을 알면 시주까지 포함해 계산합니다.</div>
               </div>
-
               <div className="rounded-3xl bg-zinc-50 p-4">
                 <div className="text-sm font-extrabold text-zinc-900">결과 해석 기준</div>
-                <div className="mt-1 text-sm leading-6 text-zinc-600">
-                  만세력은 연·월·일·시 기둥과 오행 분포를 보여주고, 운세 풀이는 그 구조를 바탕으로 성향과 흐름을 읽기 쉽게 정리한 요약 해석입니다.
-                </div>
+                <div className="mt-1 text-sm leading-6 text-zinc-600">만세력은 연·월·일·시 기둥과 오행 분포를 보여주고, 운세 풀이는 그 구조를 바탕으로 성향과 흐름을 읽기 쉽게 정리한 요약 해석입니다.</div>
               </div>
-
               <div className="rounded-3xl bg-blue-50 p-4 ring-1 ring-blue-100">
                 <div className="text-sm font-extrabold text-zinc-900">입력 팁</div>
-                <div className="mt-1 text-sm leading-6 text-zinc-600">
-                  년, 월, 일을 먼저 고른 뒤 달력 기준을 선택하면 바로 분석할 수 있어요. 시간은 알면 입력하고, 몰라도 괜찮아요.
-                </div>
+                <div className="mt-1 text-sm leading-6 text-zinc-600">년, 월, 일을 먼저 고른 뒤 달력 기준을 선택하면 바로 분석할 수 있어요. 시간은 알면 입력하고, 몰라도 괜찮아요.</div>
               </div>
             </div>
-
             <button
               type="button"
               onClick={() => setInfoOpen(false)}
