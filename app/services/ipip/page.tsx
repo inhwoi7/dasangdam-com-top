@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 type Factor = '외향성' | '친화성' | '성실성' | '신경증' | '개방성';
+type Mode = 'select' | 'quick' | 'full';
 
 type Question = {
   id: number;
@@ -11,7 +12,7 @@ type Question = {
   reverse?: boolean;
 };
 
-const questions: Question[] = [
+const allQuestions: Question[] = [
   { id: 1, text: '파티의 분위기 메이커다.', factor: '외향성' },
   { id: 2, text: '타인에 대해 별로 관심이 없다.', factor: '친화성', reverse: true },
   { id: 3, text: '업무를 준비할 때 늘 철저하다.', factor: '성실성' },
@@ -64,6 +65,10 @@ const questions: Question[] = [
   { id: 50, text: '아이디어가 풍부하다.', factor: '개방성' },
 ];
 
+// 빠른 검사 10문항 (각 요인당 2개, 변별력 높은 것)
+const quickQuestionIds = [1, 21, 7, 27, 3, 33, 4, 14, 5, 15];
+const quickQuestions = allQuestions.filter(q => quickQuestionIds.includes(q.id));
+
 const choices = [
   { value: 1, label: '전혀 아니다' },
   { value: 2, label: '아니다' },
@@ -88,17 +93,7 @@ const factorStyles: Record<Factor, { glow: string; ring: string; card: string; c
   개방성: { glow: 'from-emerald-400 via-lime-400 to-green-500', ring: 'ring-emerald-200', card: 'from-emerald-50 via-lime-50 to-green-50', chip: 'bg-emerald-100 text-emerald-700', bar: 'from-emerald-400 via-lime-500 to-green-500', text: 'text-emerald-700' },
 };
 
-// ── MBTI 매핑 ──
-// E/I ← 외향성, N/S ← 개방성, F/T ← 친화성, J/P ← 성실성
-type MBTIType = {
-  type: string;
-  nickname: string;
-  desc: string;
-  color: string;
-  bg: string;
-};
-
-const mbtiData: Record<string, MBTIType> = {
+const mbtiData: Record<string, { type: string; nickname: string; desc: string; color: string; bg: string }> = {
   ENFJ: { type: 'ENFJ', nickname: '선도자', desc: '카리스마 있는 리더. 사람들을 이끌고 영감을 주는 것을 즐깁니다.', color: 'text-emerald-700', bg: 'from-emerald-50 to-teal-50' },
   ENFP: { type: 'ENFP', nickname: '활동가', desc: '열정적인 자유로운 영혼. 창의적이고 사교적이며 새로운 가능성을 탐구합니다.', color: 'text-orange-700', bg: 'from-orange-50 to-amber-50' },
   ENTJ: { type: 'ENTJ', nickname: '통솔자', desc: '대담한 전략가. 목표 지향적이고 효율을 중시하며 리더십이 강합니다.', color: 'text-red-700', bg: 'from-red-50 to-rose-50' },
@@ -117,7 +112,7 @@ const mbtiData: Record<string, MBTIType> = {
   ISTP: { type: 'ISTP', nickname: '만능재주꾼', desc: '대담한 실험가. 논리적이고 실용적이며 문제 해결을 즐깁니다.', color: 'text-zinc-700', bg: 'from-zinc-50 to-gray-50' },
 };
 
-function getMBTI(scoreMap: Record<string, number>): MBTIType {
+function getMBTI(scoreMap: Record<string, number>) {
   const E = scoreMap['외향성'] >= 3 ? 'E' : 'I';
   const N = scoreMap['개방성'] >= 3 ? 'N' : 'S';
   const F = scoreMap['친화성'] >= 3 ? 'F' : 'T';
@@ -130,41 +125,42 @@ function cls(...names: Array<string | false | null | undefined>) {
   return names.filter(Boolean).join(' ');
 }
 
-export default function BigFiveTestPage() {
+function computeScores(answers: Record<number, number>, questions: Question[]) {
+  const grouped: Record<Factor, number[]> = { 외향성: [], 친화성: [], 성실성: [], 신경증: [], 개방성: [] };
+  questions.forEach((q) => {
+    const raw = answers[q.id];
+    if (!raw) return;
+    const scored = q.reverse ? 6 - raw : raw;
+    grouped[q.factor].push(scored);
+  });
+  return (Object.entries(grouped) as Array<[Factor, number[]]>)
+    .map(([factor, arr]) => {
+      const sum = arr.reduce((a, b) => a + b, 0);
+      const avg = arr.length ? sum / arr.length : 0;
+      const percent = avg ? ((avg - 1) / 4) * 100 : 0;
+      let level = '낮음';
+      if (avg >= 4) level = '매우 높음';
+      else if (avg >= 3.4) level = '높음';
+      else if (avg >= 2.6) level = '보통';
+      else if (avg >= 1.8) level = '낮음';
+      else level = '매우 낮음';
+      return { factor, sum, avg, percent, level };
+    })
+    .sort((a, b) => b.avg - a.avg);
+}
+
+export default function IpipPage() {
+  const [mode, setMode] = useState<Mode>('select');
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const totalAnswered = Object.keys(answers).length;
+  const questions = mode === 'quick' ? quickQuestions : allQuestions;
+  const totalAnswered = Object.keys(answers).filter(id => questions.find(q => q.id === Number(id))).length;
   const allAnswered = totalAnswered === questions.length;
   const progress = (totalAnswered / questions.length) * 100;
 
-  const scores = useMemo(() => {
-    const grouped: Record<Factor, number[]> = { 외향성: [], 친화성: [], 성실성: [], 신경증: [], 개방성: [] };
-    questions.forEach((q) => {
-      const raw = answers[q.id];
-      if (!raw) return;
-      const scored = q.reverse ? 6 - raw : raw;
-      grouped[q.factor].push(scored);
-    });
-    return (Object.entries(grouped) as Array<[Factor, number[]]>)
-      .map(([factor, arr]) => {
-        const sum = arr.reduce((a, b) => a + b, 0);
-        const avg = arr.length ? sum / arr.length : 0;
-        const percent = avg ? ((avg - 1) / 4) * 100 : 0;
-        let level = '낮음';
-        if (avg >= 4) level = '매우 높음';
-        else if (avg >= 3.4) level = '높음';
-        else if (avg >= 2.6) level = '보통';
-        else if (avg >= 1.8) level = '낮음';
-        else level = '매우 낮음';
-        return { factor, sum, avg, percent, count: arr.length, level };
-      })
-      .sort((a, b) => b.avg - a.avg);
-  }, [answers]);
-
+  const scores = useMemo(() => computeScores(answers, questions), [answers, questions]);
   const topFactor = scores[0];
-
-  // MBTI 계산
   const mbtiResult = useMemo(() => {
     const scoreMap: Record<string, number> = {};
     scores.forEach((s) => { scoreMap[s.factor] = s.avg; });
@@ -181,15 +177,103 @@ export default function BigFiveTestPage() {
       return;
     }
     setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleReset = () => {
     setAnswers({});
     setSubmitted(false);
+    setMode('select');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleUpgrade = () => {
+    setAnswers({});
+    setSubmitted(false);
+    setMode('full');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ── 모드 선택 화면 ──
+  if (mode === 'select') {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.25),_transparent_22%),radial-gradient(circle_at_top_right,_rgba(244,114,182,0.20),_transparent_24%),linear-gradient(180deg,_#fff8fb_0%,_#f5f7ff_38%,_#eefaf7_100%)]">
+        <div className="mx-auto max-w-2xl px-4 py-16 space-y-8">
+
+          <div className="text-center">
+            <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold tracking-wide text-slate-500 shadow-sm mb-4">
+              IPIP-50 × MBTI 성향 분석
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900">
+              나의 성격 유형 찾기
+            </h1>
+            <p className="mt-2 text-xl font-semibold text-slate-400">feat. MBTI</p>
+            <p className="mt-4 text-sm leading-7 text-slate-500">
+              검사 방식을 선택해주세요
+            </p>
+          </div>
+
+          {/* 빠른 검사 카드 */}
+          <button
+            onClick={() => setMode('quick')}
+            className="w-full text-left rounded-[28px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-orange-300"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700 mb-3">
+                  ⚡ 추천
+                </div>
+                <h2 className="text-2xl font-black text-slate-900">빠른 검사</h2>
+                <p className="mt-1 text-sm font-semibold text-orange-600">10문항 · 약 2분</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  핵심 문항만 골라 빠르게 나의 성격 유형을 확인해보세요. 간단하지만 충분히 유의미한 결과를 드립니다.
+                </p>
+              </div>
+              <div className="text-4xl">🚀</div>
+            </div>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              {['외향성 2문항', '친화성 2문항', '성실성 2문항', '신경증 2문항', '개방성 2문항'].map(t => (
+                <span key={t} className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">{t}</span>
+              ))}
+            </div>
+          </button>
+
+          {/* 정밀 검사 카드 */}
+          <button
+            onClick={() => setMode('full')}
+            className="w-full text-left rounded-[28px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-violet-300"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 mb-3">
+                  🔬 정밀
+                </div>
+                <h2 className="text-2xl font-black text-slate-900">정밀 검사</h2>
+                <p className="mt-1 text-sm font-semibold text-violet-600">50문항 · 약 10분</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  IPIP-50 전체 문항으로 더 정확하고 상세한 성격 분석 결과를 확인하세요. 각 요인별 세밀한 점수를 제공합니다.
+                </p>
+              </div>
+              <div className="text-4xl">🔬</div>
+            </div>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              {['외향성 10문항', '친화성 10문항', '성실성 10문항', '신경증 10문항', '개방성 10문항'].map(t => (
+                <span key={t} className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">{t}</span>
+              ))}
+            </div>
+          </button>
+
+          <p className="text-center text-xs text-slate-400">
+            ※ IPIP는 공개된 학술 검사도구이며, 결과는 참고용입니다.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // ── 검사 + 결과 화면 ──
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.25),_transparent_22%),radial-gradient(circle_at_top_right,_rgba(244,114,182,0.20),_transparent_24%),radial-gradient(circle_at_bottom_left,_rgba(192,132,252,0.18),_transparent_24%),linear-gradient(180deg,_#fff8fb_0%,_#f5f7ff_38%,_#eefaf7_100%)]">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -199,30 +283,27 @@ export default function BigFiveTestPage() {
           <div className="absolute -left-10 top-0 h-40 w-40 rounded-full bg-sky-300/20 blur-3xl" />
           <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-fuchsia-300/20 blur-3xl" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold tracking-wide text-slate-500 shadow-sm">
-                IPIP-50 × MBTI 성향 분석
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <button onClick={handleReset} className="text-xs text-slate-400 hover:text-slate-600 transition">← 검사 선택으로</button>
+                <span className={cls('inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm', mode === 'quick' ? 'bg-orange-100 text-orange-700' : 'bg-violet-100 text-violet-700')}>
+                  {mode === 'quick' ? '⚡ 빠른 검사' : '🔬 정밀 검사'}
+                </span>
               </div>
-             <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-5xl">
-               나의 성격 유형 찾기
-               <span className="mt-2 block text-xl font-semibold text-slate-400">feat. MBTI</span>
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+                나의 성격 유형 찾기
+                <span className="mt-1 block text-lg font-semibold text-slate-400">feat. MBTI</span>
               </h1>
-              <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base">
-                50개 문항으로 Big Five 성향을 측정하고, 유사 MBTI 유형까지 도출합니다. 역문항은 자동 계산됩니다.
-              </p>
             </div>
             <div className="rounded-[24px] border border-white/70 bg-white/80 px-5 py-4 text-right shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Progress</div>
-              <div className="mt-2 text-3xl font-black text-slate-900">{totalAnswered}<span className="text-lg text-slate-400"> / 50</span></div>
-              <div className="mt-1 text-sm text-slate-500">응답 진행률 {progress.toFixed(0)}%</div>
+              <div className="mt-2 text-3xl font-black text-slate-900">{totalAnswered}<span className="text-lg text-slate-400"> / {questions.length}</span></div>
+              <div className="mt-1 text-sm text-slate-500">진행률 {progress.toFixed(0)}%</div>
             </div>
           </div>
           <div className="relative mt-6">
             <div className="h-5 overflow-hidden rounded-full bg-white/70 p-1 shadow-inner ring-1 ring-slate-200">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-pink-500 shadow-[0_8px_20px_rgba(99,102,241,0.45)] transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+              <div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-pink-500 shadow-[0_8px_20px_rgba(99,102,241,0.45)] transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </section>
@@ -236,29 +317,21 @@ export default function BigFiveTestPage() {
               <div>
                 <div className="inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow-lg">결과 분석 완료</div>
                 <h2 className="mt-4 text-3xl font-black text-slate-900">당신의 성향 프로파일</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  가장 두드러진 성향은 <span className={cls('font-bold', factorStyles[topFactor.factor].text)}>{topFactor.factor}</span>이며,
-                  현재 수준은 <span className="font-bold text-slate-900">{topFactor.level}</span>입니다.
-                </p>
               </div>
-              <div className="flex gap-3">
-                <button onClick={handleReset} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-                  다시 하기
-                </button>
-              </div>
+              <button onClick={handleReset} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                다시 하기
+              </button>
             </div>
 
-            {/* ── MBTI 카드 ── */}
+            {/* MBTI 카드 */}
             <div className={cls('mt-6 rounded-[28px] border border-white/70 bg-gradient-to-br p-6 shadow-[0_18px_45px_rgba(15,23,42,0.10)]', mbtiResult.bg)}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="flex-1">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
-                    IPIP-50 기반 유사 MBTI
+                    IPIP 기반 유사 MBTI
                   </div>
                   <div className="mt-3 flex items-end gap-4">
-                    <div className={cls('text-6xl font-black tracking-tight', mbtiResult.color)}>
-                      {mbtiResult.type}
-                    </div>
+                    <div className={cls('text-6xl font-black tracking-tight', mbtiResult.color)}>{mbtiResult.type}</div>
                     <div className="mb-1">
                       <div className={cls('text-lg font-bold', mbtiResult.color)}>{mbtiResult.nickname}</div>
                       <div className="text-xs text-slate-400">유사 유형</div>
@@ -266,8 +339,6 @@ export default function BigFiveTestPage() {
                   </div>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{mbtiResult.desc}</p>
                 </div>
-
-                {/* 4축 요약 */}
                 <div className="grid grid-cols-2 gap-3 md:w-56">
                   {[
                     { label: 'E / I', left: 'E 외향', right: 'I 내향', factor: '외향성' },
@@ -281,14 +352,9 @@ export default function BigFiveTestPage() {
                     return (
                       <div key={axis.label} className="rounded-2xl bg-white/80 p-3 shadow-sm">
                         <div className="text-[10px] font-semibold text-slate-400 mb-1">{axis.label}</div>
-                        <div className={cls('text-sm font-bold', isLeft ? 'text-slate-900' : 'text-slate-400')}>
-                          {isLeft ? axis.left : axis.right}
-                        </div>
+                        <div className={cls('text-sm font-bold', isLeft ? 'text-slate-900' : 'text-slate-400')}>{isLeft ? axis.left : axis.right}</div>
                         <div className="mt-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400"
-                            style={{ width: `${((avg - 1) / 4) * 100}%` }}
-                          />
+                          <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400" style={{ width: `${((avg - 1) / 4) * 100}%` }} />
                         </div>
                         <div className="mt-1 text-[10px] text-slate-400">{avg.toFixed(1)}점</div>
                       </div>
@@ -296,23 +362,33 @@ export default function BigFiveTestPage() {
                   })}
                 </div>
               </div>
-
               <div className="mt-4 rounded-2xl bg-white/60 p-4 text-xs leading-6 text-slate-500">
-                ※ 이 유형은 IPIP-50 점수를 기반으로 통계적으로 유사한 MBTI 유형을 도출한 것입니다. 공식 MBTI 검사 결과와 다를 수 있으며, 참고용으로만 활용해주세요.
+                ※ 이 유형은 IPIP 점수를 기반으로 유사한 MBTI 유형을 도출한 것입니다. 공식 MBTI 결과와 다를 수 있으며, 참고용으로만 활용해주세요.
               </div>
             </div>
 
-            {/* Big Five 카드들 */}
+            {/* 빠른 검사 → 정밀 검사 유도 */}
+            {mode === 'quick' && (
+              <div className="mt-6 rounded-[24px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-5 flex flex-col md:flex-row items-center gap-4">
+                <div className="flex-1">
+                  <div className="text-sm font-bold text-violet-700">🔬 더 정확한 결과가 궁금하다면?</div>
+                  <p className="mt-1 text-sm text-slate-600">50문항 정밀 검사로 각 성향의 세밀한 점수와 더 신뢰도 높은 유형을 확인해보세요.</p>
+                </div>
+                <button onClick={handleUpgrade} className="rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(139,92,246,0.35)] transition hover:-translate-y-0.5 whitespace-nowrap">
+                  정밀 검사 하기 →
+                </button>
+              </div>
+            )}
+
+            {/* Big Five 카드 */}
             <div className="mt-6 grid gap-4 xl:grid-cols-5 md:grid-cols-2">
               {scores.map((item, index) => {
                 const style = factorStyles[item.factor];
                 const isTop = index === 0;
                 return (
-                  <div key={item.factor} className={cls('relative overflow-hidden rounded-[28px] border bg-gradient-to-br p-5 shadow-[0_18px_45px_rgba(15,23,42,0.10)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.16)]', style.card, style.ring, isTop && 'scale-[1.02]')}>
+                  <div key={item.factor} className={cls('relative overflow-hidden rounded-[28px] border bg-gradient-to-br p-5 shadow-[0_18px_45px_rgba(15,23,42,0.10)] transition hover:-translate-y-1', style.card, style.ring, isTop && 'scale-[1.02]')}>
                     <div className={cls('absolute right-0 top-0 h-24 w-24 rounded-full bg-gradient-to-br opacity-20 blur-2xl', style.glow)} />
-                    {isTop && (
-                      <div className="absolute right-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-slate-900 shadow-sm">TOP 1</div>
-                    )}
+                    {isTop && <div className="absolute right-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-slate-900 shadow-sm">TOP 1</div>}
                     <div className={cls('inline-flex rounded-full px-3 py-1 text-xs font-bold shadow-sm', style.chip)}>{item.factor}</div>
                     <div className="mt-4 flex items-end justify-between gap-3">
                       <div>
@@ -326,39 +402,11 @@ export default function BigFiveTestPage() {
                     </div>
                     <p className="mt-4 min-h-[48px] text-sm leading-6 text-slate-600">{factorDescriptions[item.factor]}</p>
                     <div className="mt-5 h-4 overflow-hidden rounded-full bg-white/80 p-1 shadow-inner">
-                      <div className={cls('h-full rounded-full bg-gradient-to-r shadow-[0_8px_18px_rgba(59,130,246,0.25)]', style.bar)} style={{ width: `${item.percent}%` }} />
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                      <div className="rounded-2xl bg-white/70 p-3 shadow-sm">
-                        <div className="text-slate-400">합계</div>
-                        <div className="mt-1 text-base font-bold text-slate-900">{item.sum} / 50</div>
-                      </div>
-                      <div className="rounded-2xl bg-white/70 p-3 shadow-sm">
-                        <div className="text-slate-400">환산</div>
-                        <div className="mt-1 text-base font-bold text-slate-900">{item.percent.toFixed(0)}%</div>
-                      </div>
+                      <div className={cls('h-full rounded-full bg-gradient-to-r', style.bar)} style={{ width: `${item.percent}%` }} />
                     </div>
                   </div>
                 );
               })}
-            </div>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-[28px] border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm">
-                <div className="text-sm font-bold text-amber-700">해석 안내</div>
-                <p className="mt-2 text-sm leading-7 text-amber-900">
-                  이 결과는 참고용 자기이해 자료입니다. 의료적 진단이나 전문 심리평가를 대체하지 않으며, 응답 당시의 상태나 환경에 따라 달라질 수 있습니다.
-                </p>
-              </div>
-              <div className="rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-sm">
-                <div className="text-sm font-bold text-slate-700">요약 인사이트</div>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                  <li>• 유사 MBTI: <span className="font-bold text-slate-900">{mbtiResult.type} ({mbtiResult.nickname})</span></li>
-                  <li>• 가장 두드러진 성향: <span className="font-bold text-slate-900">{topFactor.factor}</span></li>
-                  <li>• 현재 최고 점수: <span className="font-bold text-slate-900">{topFactor.avg.toFixed(2)}점</span></li>
-                  <li>• 역채점 문항 포함 자동 계산 적용</li>
-                </ul>
-              </div>
             </div>
           </section>
         )}
@@ -369,7 +417,7 @@ export default function BigFiveTestPage() {
             const selected = answers[q.id];
             const style = factorStyles[q.factor];
             return (
-              <article key={q.id} className="relative overflow-hidden rounded-[30px] border border-white/70 bg-white/75 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)] md:p-6">
+              <article key={q.id} className="relative overflow-hidden rounded-[30px] border border-white/70 bg-white/75 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 md:p-6">
                 <div className={cls('absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b', style.glow)} />
                 <div className="pl-2">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -377,13 +425,13 @@ export default function BigFiveTestPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white shadow-sm">{q.id}번</span>
                         <span className={cls('rounded-full px-3 py-1 text-xs font-bold shadow-sm', style.chip)}>{q.factor}</span>
-                        {q.reverse && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">역채점 문항</span>}
+                        {q.reverse && <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">역채점</span>}
                       </div>
                       <h3 className="mt-4 text-lg font-bold leading-8 text-slate-900 md:text-xl">{q.text}</h3>
                     </div>
                     {selected && (
                       <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-2 text-center shadow-sm">
-                        <div className="text-xs text-slate-400">선택한 점수</div>
+                        <div className="text-xs text-slate-400">선택 점수</div>
                         <div className="text-xl font-black text-slate-900">{selected}</div>
                       </div>
                     )}
@@ -413,14 +461,14 @@ export default function BigFiveTestPage() {
               <div>
                 <div className="text-sm font-semibold text-slate-500">현재 상태</div>
                 <div className="mt-1 text-lg font-bold text-slate-900">
-                  현재 <span className="text-sky-600">{totalAnswered}개</span> 문항에 응답했습니다.
+                  <span className="text-sky-600">{totalAnswered}개</span> / {questions.length}개 응답 완료
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={handleReset} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  초기화
+                  처음으로
                 </button>
-                <button onClick={handleSubmit} className="rounded-2xl bg-gradient-to-r from-sky-500 via-violet-500 to-fuchsia-500 px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(99,102,241,0.32)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40">
+                <button onClick={handleSubmit} disabled={submitted} className="rounded-2xl bg-gradient-to-r from-sky-500 via-violet-500 to-fuchsia-500 px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(99,102,241,0.32)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40">
                   결과 보기
                 </button>
               </div>
