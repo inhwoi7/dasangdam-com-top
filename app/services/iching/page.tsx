@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { castHexagram, generateReading, lineValueName } from './lib/iching-logic';
 import type { Line, ReadingResult } from './lib/iching-logic';
 import hexagramsData from './data/hexagrams.json';
+import { useKakaoShare } from '@/lib/useKakaoShare'; // ✅ 추가
 
 interface HexagramData {
   number: number;
@@ -104,7 +105,13 @@ function CastingAnimation() {
   );
 }
 
-function ResultCard({ reading, onReset }: { reading: ReadingResult; onReset: () => void }) {
+// ✅ question prop 추가
+function ResultCard({ reading, onReset, question, onShare }: {
+  reading: ReadingResult;
+  onReset: () => void;
+  question: string;
+  onShare: () => void;
+}) {
   const [activeTab, setActiveTab] = useState<'original' | 'changed' | 'lines'>('original');
   const hexData = (num: number): HexagramData | undefined => hexagramsData.hexagrams.find((h) => h.number === num) as HexagramData | undefined;
   const orig = hexData(reading.original.hexagramNumber);
@@ -217,7 +224,26 @@ function ResultCard({ reading, onReset }: { reading: ReadingResult; onReset: () 
         </motion.div>
       </AnimatePresence>
 
-      <motion.div className="mt-8 flex justify-center" whileTap={{ scale: 0.97 }}>
+      {/* ✅ 카카오 공유 버튼 */}
+      <div className="mt-8 flex flex-col items-center gap-3">
+        <button
+          onClick={onShare}
+          className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#FEE500] text-zinc-900 rounded-full font-bold text-sm tracking-wide shadow-md active:scale-95 transition-all w-full max-w-xs"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
+          </svg>
+          카카오톡으로 공유하기
+        </button>
+        <p className="text-xs text-stone-500">
+          다상담{' '}
+          <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+            dasangdam.com
+          </a>
+        </p>
+      </div>
+
+      <motion.div className="mt-4 flex justify-center" whileTap={{ scale: 0.97 }}>
         <button onClick={onReset} className="px-8 py-3 border-2 border-stone-500 rounded-full text-stone-700 text-base font-medium tracking-widest hover:border-stone-800 hover:text-stone-900 transition-all duration-300">
           다시 점치기 · 再占
         </button>
@@ -253,6 +279,8 @@ export default function IChingPage() {
   const [selectedHistory, setSelectedHistory] = useState<(ReadingResult & { timestamp: Date }) | null>(null);
   const castTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const { shareWithCapture } = useKakaoShare(); // ✅ 훅
+
   const handleCast = useCallback(() => {
     if (appState === 'casting') return;
     setAppState('casting');
@@ -274,7 +302,35 @@ export default function IChingPage() {
     setSelectedHistory(null);
   }, []);
 
+  // ✅ 카카오 공유 핸들러
+  const handleShare = useCallback(() => {
+    const reading = selectedHistory ?? currentReading;
+    if (!reading) return;
+
+    const hexData = (num: number) => hexagramsData.hexagrams.find((h) => h.number === num);
+    const orig = hexData(reading.original.hexagramNumber);
+    const chan = reading.changed ? hexData(reading.changed.hexagramNumber) : null;
+    if (!orig) return;
+
+    const title = chan
+      ? `주역점 ${orig.chineseName}(${orig.koreanName}) → ${chan.chineseName}(${chan.koreanName})`
+      : `주역점 第${orig.number}卦 ${orig.chineseName} · ${orig.koreanName}`;
+
+    const description = question
+      ? `"${question}" · ${orig.meaning}`
+      : orig.meaning;
+
+    shareWithCapture({
+      captureId: 'iching-capture',
+      title,
+      description,
+      buttonText: '나도 점치기 →',
+      pageUrl: 'https://dasangdam.com/services/iching',
+    });
+  }, [selectedHistory, currentReading, question, shareWithCapture]);
+
   const displayReading = selectedHistory ?? currentReading;
+  const displayQuestion = selectedHistory ? '' : question;
 
   return (
     <div className="min-h-screen bg-[#EDEAE2] text-stone-900">
@@ -362,9 +418,9 @@ export default function IChingPage() {
 
             {appState === 'revealed' && displayReading && (
               <motion.div key="revealed" className="w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {question && (
+                {displayQuestion && (
                   <motion.div className="mb-4 px-5 py-3 bg-white rounded-xl border-2 border-stone-400 text-base text-stone-800 italic text-center font-medium" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    &ldquo;{question}&rdquo;
+                    &ldquo;{displayQuestion}&rdquo;
                   </motion.div>
                 )}
                 <motion.div className="bg-white rounded-2xl p-5 border-2 border-stone-300 shadow-sm mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -376,7 +432,13 @@ export default function IChingPage() {
                   )}
                 </motion.div>
                 <motion.div className="bg-white rounded-2xl p-5 border-2 border-stone-300 shadow-sm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                  <ResultCard reading={displayReading} onReset={handleReset} />
+                  {/* ✅ question, onShare prop 전달 */}
+                  <ResultCard
+                    reading={displayReading}
+                    onReset={handleReset}
+                    question={displayQuestion}
+                    onShare={handleShare}
+                  />
                 </motion.div>
               </motion.div>
             )}
