@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useKakaoShare } from '@/lib/useKakaoShare'; // ✅ 추가
 
 type Factor = '외향성' | '친화성' | '성실성' | '신경증' | '개방성';
 type Mode = 'select' | 'quick' | 'full';
@@ -65,30 +66,23 @@ const allQuestions: Question[] = [
   { id: 50, text: '아이디어가 풍부하다.', factor: '개방성' },
 ];
 
-// ── Mini-IPIP 20문항 (학술적으로 검증된 버전, 각 요인당 정방향 2 + 역방향 2)
-// 출처: Donnellan et al. (2006) Mini-IPIP
 const quickQuestions: Question[] = [
-  // 외향성
   { id: 101, text: '나는 파티에서 분위기를 주도한다.', factor: '외향성' },
   { id: 102, text: '나는 모임에서 많은 사람들과 대화한다.', factor: '외향성' },
   { id: 103, text: '나는 말을 많이 하지 않는 편이다.', factor: '외향성', reverse: true },
   { id: 104, text: '나는 가급적 뒤에 있으려 한다(나서지 않는다).', factor: '외향성', reverse: true },
-  // 친화성
   { id: 105, text: '나는 다른 사람들의 감정에 공감한다.', factor: '친화성' },
   { id: 106, text: '나는 타인의 감정을 함께 느낀다.', factor: '친화성' },
   { id: 107, text: '나는 다른 사람들에게 별로 관심이 없다.', factor: '친화성', reverse: true },
   { id: 108, text: '나는 타인의 문제에 관심이 없다.', factor: '친화성', reverse: true },
-  // 성실성
   { id: 109, text: '나는 집안일이나 할 일을 바로바로 처리한다.', factor: '성실성' },
   { id: 110, text: '나는 질서와 정돈을 좋아한다.', factor: '성실성' },
   { id: 111, text: '나는 물건을 제자리에 두지 않는 편이다.', factor: '성실성', reverse: true },
   { id: 112, text: '나는 일을 엉망으로 만드는 경향이 있다.', factor: '성실성', reverse: true },
-  // 신경증
   { id: 113, text: '나는 기분이 자주 바뀐다.', factor: '신경증' },
   { id: 114, text: '나는 쉽게 속상해하거나 기분이 상한다.', factor: '신경증' },
   { id: 115, text: '나는 대부분의 시간 동안 편안함을 느낀다.', factor: '신경증', reverse: true },
   { id: 116, text: '나는 우울함을 잘 느끼지 않는다.', factor: '신경증', reverse: true },
-  // 개방성
   { id: 117, text: '나는 상상력이 풍부하다.', factor: '개방성' },
   { id: 118, text: '나는 어려운 개념이나 추상적인 아이디어를 즐긴다.', factor: '개방성' },
   { id: 119, text: '나는 추상적인 개념을 이해하는 데 어려움을 겪는다.', factor: '개방성', reverse: true },
@@ -180,6 +174,8 @@ export default function IpipPage() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
 
+  const { shareWithCapture } = useKakaoShare(); // ✅ 훅
+
   const questions = mode === 'quick' ? quickQuestions : allQuestions;
   const totalAnswered = Object.keys(answers).filter(id => questions.find(q => q.id === Number(id))).length;
   const allAnswered = totalAnswered === questions.length;
@@ -203,9 +199,7 @@ export default function IpipPage() {
       return;
     }
     setSubmitted(true);
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    setTimeout(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 100);
   };
 
   const handleReset = () => {
@@ -222,6 +216,19 @@ export default function IpipPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ✅ 카카오 공유 핸들러
+  const handleKakaoShare = useCallback(() => {
+    if (!mbtiResult || !topFactor) return;
+    const modeLabel = mode === 'quick' ? '빠른 검사(20문항)' : '정밀 검사(50문항)';
+    shareWithCapture({
+      captureId: 'ipip-capture',
+      title: `나의 성격 유형 ${mbtiResult.type} · ${mbtiResult.nickname}`,
+      description: `${mbtiResult.desc} · ${modeLabel} 결과`,
+      buttonText: '나도 검사하기 →',
+      pageUrl: 'https://dasangdam.com/services/ipip',
+    });
+  }, [mbtiResult, topFactor, mode, shareWithCapture]);
+
   // ── 모드 선택 화면 ──
   if (mode === 'select') {
     return (
@@ -231,26 +238,18 @@ export default function IpipPage() {
             <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold tracking-wide text-slate-500 shadow-sm mb-4">
               IPIP × MBTI 성향 분석
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900">
-              나의 성격 유형 찾기
-            </h1>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900">나의 성격 유형 찾기</h1>
             <p className="mt-2 text-xl font-semibold text-slate-400">feat. MBTI</p>
             <p className="mt-4 text-sm leading-7 text-slate-500">검사 방식을 선택해주세요</p>
           </div>
 
-          {/* 빠른 검사 */}
-          <button
-            onClick={() => setMode('quick')}
-            className="w-full text-left rounded-[28px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-orange-300"
-          >
+          <button onClick={() => setMode('quick')} className="w-full text-left rounded-[28px] border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-orange-300">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700 mb-3">⚡ 추천</div>
                 <h2 className="text-2xl font-black text-slate-900">빠른 검사</h2>
                 <p className="mt-1 text-sm font-semibold text-orange-600">20문항 · 약 3분</p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  학술적으로 검증된 Mini-IPIP 문항으로 구성된 빠른 검사예요. 각 요인당 4문항(정방향 2 + 역방향 2)으로 신뢰도 높은 결과를 드립니다.
-                </p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">학술적으로 검증된 Mini-IPIP 문항으로 구성된 빠른 검사예요. 각 요인당 4문항(정방향 2 + 역방향 2)으로 신뢰도 높은 결과를 드립니다.</p>
               </div>
               <div className="text-4xl">⚡</div>
             </div>
@@ -261,19 +260,13 @@ export default function IpipPage() {
             </div>
           </button>
 
-          {/* 정밀 검사 */}
-          <button
-            onClick={() => setMode('full')}
-            className="w-full text-left rounded-[28px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-violet-300"
-          >
+          <button onClick={() => setMode('full')} className="w-full text-left rounded-[28px] border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.14)] hover:border-violet-300">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 mb-3">🔬 정밀</div>
                 <h2 className="text-2xl font-black text-slate-900">정밀 검사</h2>
                 <p className="mt-1 text-sm font-semibold text-violet-600">50문항 · 약 10분</p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  IPIP-50 전체 문항으로 더 정확하고 상세한 성격 분석 결과를 확인하세요. 각 요인별 세밀한 점수를 제공합니다.
-                </p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">IPIP-50 전체 문항으로 더 정확하고 상세한 성격 분석 결과를 확인하세요. 각 요인별 세밀한 점수를 제공합니다.</p>
               </div>
               <div className="text-4xl">🔬</div>
             </div>
@@ -293,7 +286,6 @@ export default function IpipPage() {
     );
   }
 
-  // ── 검사 + 결과 화면 ──
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.25),_transparent_22%),radial-gradient(circle_at_top_right,_rgba(244,114,182,0.20),_transparent_24%),radial-gradient(circle_at_bottom_left,_rgba(192,132,252,0.18),_transparent_24%),linear-gradient(180deg,_#fff8fb_0%,_#f5f7ff_38%,_#eefaf7_100%)]">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -347,9 +339,7 @@ export default function IpipPage() {
             <div className={cls('mt-6 rounded-[28px] border border-white/70 bg-gradient-to-br p-6 shadow-[0_18px_45px_rgba(15,23,42,0.10)]', mbtiResult.bg)}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
-                    IPIP 기반 유사 MBTI
-                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">IPIP 기반 유사 MBTI</div>
                   <div className="mt-3 flex items-end gap-4">
                     <div className={cls('text-6xl font-black tracking-tight', mbtiResult.color)}>{mbtiResult.type}</div>
                     <div className="mb-1">
@@ -428,6 +418,21 @@ export default function IpipPage() {
                 );
               })}
             </div>
+
+            {/* ✅ 카카오 공유 버튼 */}
+            <button onClick={handleKakaoShare}
+              className="mt-6 w-full rounded-[24px] bg-[#FEE500] px-5 py-4 text-sm font-extrabold text-zinc-900 shadow-[0_8px_24px_rgba(254,229,0,0.4)] transition hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
+              </svg>
+              카카오톡으로 공유하기
+            </button>
+
+            {/* ✅ 다상담 링크 */}
+            <p className="mt-3 text-center text-xs text-slate-400">
+              다상담{' '}
+              <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">dasangdam.com</a>
+            </p>
           </section>
         )}
 
