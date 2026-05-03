@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useKakaoShare } from "@/lib/useKakaoShare";
-import { ArrowLeft, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 
 type Message = {
   id: number;
@@ -32,7 +32,6 @@ export default function MessagePage() {
   const [isShaking, setIsShaking] = useState(false);
   const { shareWithCapture } = useKakaoShare();
 
-  // 메시지 불러오기
   useEffect(() => {
     fetchMessages();
   }, [selectedCategory]);
@@ -117,6 +116,9 @@ export default function MessagePage() {
 
         <div className="px-4 pt-6 space-y-5">
 
+          {/* 카테고리 안내 레이블 */}
+          <p className="text-sm text-zinc-400 font-medium">카테고리를 선택하세요 😊</p>
+
           {/* 카테고리 선택 */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((cat) => {
@@ -125,7 +127,7 @@ export default function MessagePage() {
               return (
                 <button key={cat} onClick={() => setSelectedCategory(cat)}
                   className={`rounded-full px-4 py-2 text-sm font-bold border transition ${isSelected ? `${s.bg} ${s.text} ${s.border}` : "bg-white text-zinc-500 border-zinc-200"}`}>
-                  {s.emoji} {cat}
+                  {cat} {s.emoji}
                 </button>
               );
             })}
@@ -151,7 +153,7 @@ export default function MessagePage() {
             >
               {/* 카테고리 뱃지 */}
               <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold mb-5 ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
-                {catStyle.emoji} {current.category}
+                {current.category} {catStyle.emoji}
               </div>
 
               {/* 철학자 */}
