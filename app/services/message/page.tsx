@@ -30,9 +30,11 @@ export default function MessagePage() {
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [loading, setLoading] = useState(true);
   const [isShaking, setIsShaking] = useState(false);
+  const [seenIds, setSeenIds] = useState<number[]>([]);
   const { shareWithCapture } = useKakaoShare();
 
   useEffect(() => {
+    setSeenIds([]); // 카테고리 바뀌면 히스토리 초기화
     fetchMessages();
   }, [selectedCategory]);
 
@@ -56,23 +58,34 @@ export default function MessagePage() {
 
     setMessages(data || []);
     if (data && data.length > 0) {
-      pickRandom(data);
+      pickRandom(data, []);
     } else {
       setCurrent(null);
     }
     setLoading(false);
   }
 
-  function pickRandom(pool: Message[]) {
-    const random = pool[Math.floor(Math.random() * pool.length)];
-    setCurrent(random);
+  function pickRandom(pool: Message[], seen: number[], currentId?: number) {
+    // 아직 안 본 메시지 우선으로 선택
+    const unseen = pool.filter((m) => !seen.includes(m.id));
+    // 다 봤으면 현재 메시지만 제외하고 전체에서 선택 (히스토리 리셋)
+    const candidates = unseen.length > 0
+      ? unseen
+      : pool.filter((m) => m.id !== currentId);
+    const finalPool = candidates.length > 0 ? candidates : pool;
+
+    const chosen = finalPool[Math.floor(Math.random() * finalPool.length)];
+    setCurrent(chosen);
+
+    const newSeen = unseen.length > 0 ? [...seen, chosen.id] : [chosen.id];
+    setSeenIds(newSeen);
   }
 
   function handleShuffle() {
     if (messages.length === 0) return;
     setIsShaking(true);
     setTimeout(() => {
-      pickRandom(messages);
+      pickRandom(messages, seenIds, current?.id);
       setIsShaking(false);
     }, 400);
   }
