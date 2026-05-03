@@ -2,29 +2,17 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
-  CalendarDays,
-  ChevronDown,
-  Clock3,
-  HeartHandshake,
-  Info,
-  MoonStar,
-  Sparkles,
-  SunMedium,
-  Users,
-  X,
+  ArrowLeft, CalendarDays, ChevronDown, Clock3, HeartHandshake,
+  Info, MoonStar, Sparkles, SunMedium, Users, X,
 } from "lucide-react";
 import { calculateSajuSimple, lunarToSolar } from "@fullstackfamily/manseryeok";
-import { useKakaoShare } from "@/lib/useKakaoShare"; // ✅ 추가
+import { useKakaoShare } from "@/lib/useKakaoShare";
 
-type EnergyType = {
-  wood: number; fire: number; earth: number; metal: number; water: number;
-};
-type PillarItem = {
-  label: string; gan: string; ji: string; ganElement: string; jiElement: string;
-};
+type EnergyType = { wood: number; fire: number; earth: number; metal: number; water: number };
+type PillarItem = { label: string; gan: string; ji: string; ganElement: string; jiElement: string };
 type ResultType = {
   pillars: PillarItem[]; energy: EnergyType; dayMaster: string; dayBranch: string;
+  yearBranch: string; // ← 년주 지지 (띠 계산용)
   dominantElement: string; solarDateText: string; inputDateText: string; basisText: string;
   summaryText: string; yearPillarText: string; monthPillarText: string;
   dayPillarText: string; hourPillarText: string; unknownTime: boolean;
@@ -49,12 +37,14 @@ const ELEMENT_META: Record<string, { label: string; hanja: string; emoji: string
   금: { label: "금", hanja: "金", emoji: "⚔️", chipClass: "bg-zinc-200 text-zinc-800 border-zinc-300", barClass: "bg-zinc-500", softClass: "bg-zinc-50" },
   수: { label: "수", hanja: "Water", emoji: "💧", chipClass: "bg-blue-100 text-blue-800 border-blue-200", barClass: "bg-blue-500", softClass: "bg-blue-50" },
 };
+
 const BRANCH_ANIMALS: Record<string, { label: string; emoji: string }> = {
   자: { label: "쥐", emoji: "🐭" }, 축: { label: "소", emoji: "🐮" }, 인: { label: "호랑이", emoji: "🐯" },
   묘: { label: "토끼", emoji: "🐰" }, 진: { label: "용", emoji: "🐲" }, 사: { label: "뱀", emoji: "🐍" },
   오: { label: "말", emoji: "🐴" }, 미: { label: "양", emoji: "🐑" }, 신: { label: "원숭이", emoji: "🐵" },
   유: { label: "닭", emoji: "🐔" }, 술: { label: "개", emoji: "🐶" }, 해: { label: "돼지", emoji: "🐷" },
 };
+
 const STEM_ELEMENT_MAP: Record<string, string> = {
   갑: "목", 을: "목", 병: "화", 정: "화", 무: "토", 기: "토", 경: "금", 신: "금", 임: "수", 계: "수",
 };
@@ -88,8 +78,7 @@ function addElementCount(energy: EnergyType, element?: string) {
 }
 function getDominantElement(energy: EnergyType) {
   const list = [{ key: "목", value: energy.wood }, { key: "화", value: energy.fire }, { key: "토", value: energy.earth }, { key: "금", value: energy.metal }, { key: "수", value: energy.water }];
-  list.sort((a, b) => b.value - a.value);
-  return list[0]?.key ?? "수";
+  return list.sort((a, b) => b.value - a.value)[0]?.key ?? "수";
 }
 function getDaysInMonth(year: number, month: number, isLunar: boolean) {
   if (isLunar) return Array.from({ length: 30 }, (_, i) => i + 1);
@@ -143,11 +132,14 @@ function calculatePersonResult(birthData: BirthDataType): ResultType {
   const dominantElement = getDominantElement(energy);
   const inputDateText = `${year}.${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")} ${isLunar ? "(음력)" : "(양력)"}`;
   const solarDateText = `${solarYear}년 ${solarMonth}월 ${solarDay}일`;
-  const basisText = isLunar ? `음력 입력값을 양력으로 변환한 뒤 계산했어요${unknownTime ? " · 시간 미입력으로 시주는 제외했어요" : ""}` : `입력한 양력 기준으로 계산했어요${unknownTime ? " · 시간 미입력으로 시주는 제외했어요" : ""}`;
+  const basisText = isLunar
+    ? `음력 입력값을 양력으로 변환한 뒤 계산했어요${unknownTime ? " · 시간 미입력으로 시주는 제외했어요" : ""}`
+    : `입력한 양력 기준으로 계산했어요${unknownTime ? " · 시간 미입력으로 시주는 제외했어요" : ""}`;
   const dayMaster = dayPillarText[0] ?? "-";
   const dayBranch = dayPillarText[1] ?? "-";
+  const yearBranch = yearPillarText[1] ?? "-"; // ← 년주 지지 (띠)
   const summaryText = `${yearPillarText}년 · ${monthPillarText}월 · ${dayPillarText}일${unknownTime ? " · 시주 미입력" : ` · ${hourPillarText}시`}`;
-  return { pillars, energy, dayMaster, dayBranch, dominantElement, solarDateText, inputDateText, basisText, summaryText, yearPillarText, monthPillarText, dayPillarText, hourPillarText, unknownTime };
+  return { pillars, energy, dayMaster, dayBranch, yearBranch, dominantElement, solarDateText, inputDateText, basisText, summaryText, yearPillarText, monthPillarText, dayPillarText, hourPillarText, unknownTime };
 }
 function mergeEnergy(a: EnergyType, b: EnergyType): EnergyType {
   return { wood: a.wood + b.wood, fire: a.fire + b.fire, earth: a.earth + b.earth, metal: a.metal + b.metal, water: a.water + b.water };
@@ -200,7 +192,11 @@ function getCompatibilityContent(a: ResultType, b: ResultType): CompatibilityTyp
   score = Math.max(0, Math.min(100, score));
   const gradeInfo = getScoreGrade(score);
   const confidenceLabel = a.unknownTime && b.unknownTime ? "보통 이하 · 두 사람 모두 시주 제외" : a.unknownTime || b.unknownTime ? "보통 · 한 사람 시주 제외" : "높음 · 시주 포함";
-  const summary = score >= 75 ? "기본 결이 서로 잘 이어지고, 관계를 오래 가져갈수록 장점이 드러나기 쉬운 궁합입니다." : score >= 55 ? "잘 맞는 부분과 조율이 필요한 부분이 함께 보이는 궁합입니다. 서로의 차이를 이해하면 충분히 안정적으로 흐를 수 있습니다." : "서로의 생활 리듬이나 감정 표현 방식에서 차이를 크게 느낄 수 있는 궁합입니다. 하지만 차이를 명확히 알고 맞추면 관계의 밀도를 높일 여지는 있습니다.";
+  const summary = score >= 75
+    ? "기본 결이 서로 잘 이어지고, 관계를 오래 가져갈수록 장점이 드러나기 쉬운 궁합입니다."
+    : score >= 55
+    ? "잘 맞는 부분과 조율이 필요한 부분이 함께 보이는 궁합입니다. 서로의 차이를 이해하면 충분히 안정적으로 흐를 수 있습니다."
+    : "서로의 생활 리듬이나 감정 표현 방식에서 차이를 크게 느낄 수 있는 궁합입니다. 하지만 차이를 명확히 알고 맞추면 관계의 밀도를 높일 여지는 있습니다.";
   const dayMasterChemistryMap: Record<string, string> = {
     same: `두 사람의 일간 오행이 모두 ${aDayElement} 계열이라 기본 결이 비슷합니다. 서로를 이해하는 속도는 빠를 수 있지만, 비슷한 약점도 함께 드러날 수 있어 역할 분담이 중요합니다.`,
     "a-generates-b": `A의 일간 오행인 ${aDayElement}이 B의 ${bDayElement}을 살리는 상생 흐름입니다. A가 먼저 방향을 잡아주거나 기운을 북돋아주는 쪽으로 관계가 흘러가기 쉽습니다.`,
@@ -224,7 +220,7 @@ function getCompatibilityContent(a: ResultType, b: ResultType): CompatibilityTyp
   let caution = "";
   if (dayBranchRelation.type === "clash") caution = "가까워질수록 사소한 생활 방식, 연락 빈도, 감정 표현 속도에서 부딪힐 수 있습니다. 문제의 원인을 성격 탓으로만 보지 말고 리듬 차이로 이해하는 것이 중요합니다.";
   else if (dayMasterRelation.type === "a-controls-b" || dayMasterRelation.type === "b-controls-a") caution = "한쪽이 상대를 이끌거나 교정하려는 흐름이 강해지면 관계 피로가 빨리 쌓일 수 있습니다. 조언과 통제를 구분하는 태도가 필요합니다.";
-  else caution = "기본적으로 무난한 흐름이더라도 오래 가는 관계는 결국 대화 습관과 현실적인 배려에서 차이가 납니다. 잘 맞는 부분만 믿기보다 생활 속 합을 만들어가는 태도가 중요합니다.";
+  else caution = "기본적으로 무난한 흐름이더라도 오래 가는 관계는 결국 대화 습관과 현실적인 배려에서 차이가 납니다.";
   const advice: string[] = [];
   if (dayMasterRelation.type === "a-generates-b" || dayMasterRelation.type === "b-generates-a") advice.push("한쪽이 주는 에너지와 다른 한쪽이 받는 에너지의 흐름이 좋으니, 고마움 표현을 자주 해주는 것이 관계 안정에 도움이 됩니다.");
   if (dayMasterRelation.type === "a-controls-b" || dayMasterRelation.type === "b-controls-a") advice.push("의견 차이가 생길 때는 누가 맞는지보다 어떤 방식이 더 편한지부터 확인하면 갈등이 줄어듭니다.");
@@ -352,9 +348,14 @@ function BirthFormCard({ title, birthData, setBirthData, years, months, hours }:
   );
 }
 
+// ── 개인 결과 카드: 일지 동물 → 나의 띠(년주 기준)로 변경
 function PersonResultCard({ title, result }: { title: string; result: ResultType }) {
   const dominantMeta = ELEMENT_META[result.dominantElement];
-  const animal = BRANCH_ANIMALS[result.dayBranch] || { label: "-", emoji: "•" };
+  // 년주 지지 기준 띠
+  const yearAnimal = BRANCH_ANIMALS[result.yearBranch] ?? { label: "미상", emoji: "✨" };
+  // 일지 동물 (세부 표시용)
+  const dayAnimal = BRANCH_ANIMALS[result.dayBranch] ?? { label: "-", emoji: "•" };
+
   return (
     <section className="rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
       <div className="flex items-start justify-between gap-3">
@@ -371,12 +372,31 @@ function PersonResultCard({ title, result }: { title: string; result: ResultType
       <div className="mt-4 grid grid-cols-4 gap-2">
         {result.pillars.map((item) => <PillarBlock key={`${title}-${item.label}`} item={item} />)}
       </div>
+      {/* ── 나의 띠(년주) / 일간 / 대표 오행 ── */}
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100"><div className="text-[11px] font-bold text-blue-400">일간</div><div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayMaster}</div></div>
-        <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100"><div className="text-[11px] font-bold text-amber-500">일지</div><div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayBranch} {animal.emoji} {animal.label}</div></div>
-        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100"><div className="text-[11px] font-bold text-emerald-500">대표 오행</div><div className="mt-1 text-base font-extrabold text-zinc-900">{dominantMeta.emoji} {result.dominantElement}</div></div>
+        <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
+          <div className="text-[11px] font-bold text-amber-500">나의 띠</div>
+          <div className="mt-1 text-base font-extrabold text-zinc-900">{yearAnimal.emoji} {yearAnimal.label}띠</div>
+          <div className="mt-0.5 text-[10px] text-zinc-400">{result.yearPillarText} 년주 기준</div>
+        </div>
+        <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
+          <div className="text-[11px] font-bold text-blue-400">일간</div>
+          <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayMaster}</div>
+          <div className="mt-0.5 text-[10px] text-zinc-400">일주 기준</div>
+        </div>
+        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+          <div className="text-[11px] font-bold text-emerald-500">대표 오행</div>
+          <div className="mt-1 text-base font-extrabold text-zinc-900">{dominantMeta.emoji} {result.dominantElement}</div>
+          <div className="mt-0.5 text-[10px] text-zinc-400">전체 분포 기준</div>
+        </div>
       </div>
-      <div className="mt-4 rounded-3xl bg-zinc-50 p-4">
+      {/* 일지는 작게 별도 표시 */}
+      <div className="mt-3 rounded-2xl bg-zinc-50 px-4 py-3 flex items-center gap-2">
+        <span className="text-[11px] font-bold text-zinc-400">일지</span>
+        <span className="text-sm font-bold text-zinc-700">{result.dayBranch} {dayAnimal.emoji} {dayAnimal.label}</span>
+        <span className="text-[10px] text-zinc-400 ml-auto">사주 전문 용어</span>
+      </div>
+      <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
         <div className="text-[11px] font-bold text-zinc-400">기준 안내</div>
         <div className="mt-2 text-sm leading-6 text-zinc-700">{result.basisText}</div>
       </div>
@@ -433,7 +453,7 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
 
-  const { shareWithCapture } = useKakaoShare(); // ✅ 훅
+  const { shareWithCapture } = useKakaoShare();
 
   useEffect(() => {
     setResultA(null); setResultB(null); setCompatibility(null); setErrorMessage("");
@@ -462,7 +482,6 @@ export default function Page() {
 
   const handleBack = () => { if (typeof window !== "undefined") window.history.back(); };
 
-  // ✅ 카카오 공유 핸들러
   const handleKakaoShare = useCallback(() => {
     if (!compatibility || !resultA || !resultB) return;
     shareWithCapture({
@@ -484,13 +503,11 @@ export default function Page() {
             </button>
             <div className="text-lg font-extrabold tracking-tight">사주 궁합</div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setInfoOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200" aria-label="안내">
+              <button type="button" onClick={() => setInfoOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200">
                 <Info className="h-5 w-5" />
               </button>
-              {/* ✅ 헤더 카카오 공유 버튼 */}
               <button type="button" onClick={handleKakaoShare} disabled={!compatibility}
-                className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 transition ${compatibility ? "bg-[#FEE500] ring-[#F0D800] hover:scale-105" : "bg-zinc-100 ring-zinc-200 opacity-40 cursor-not-allowed"}`}
-                aria-label="카카오 공유">
+                className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 transition ${compatibility ? "bg-[#FEE500] ring-[#F0D800] hover:scale-105" : "bg-zinc-100 ring-zinc-200 opacity-40 cursor-not-allowed"}`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
                 </svg>
@@ -570,7 +587,6 @@ export default function Page() {
                 </div>
               </section>
 
-              {/* ✅ 카카오 공유 버튼 */}
               <button type="button" onClick={handleKakaoShare}
                 className="w-full rounded-[24px] bg-[#FEE500] px-5 py-4 text-sm font-extrabold text-zinc-900 shadow-[0_8px_24px_rgba(254,229,0,0.4)] transition hover:translate-y-[-1px] flex items-center justify-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -579,7 +595,6 @@ export default function Page() {
                 카카오톡으로 공유하기
               </button>
 
-              {/* ✅ 다상담 링크 */}
               <p className="text-center text-xs text-zinc-400">
                 다상담{" "}
                 <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">dasangdam.com</a>
