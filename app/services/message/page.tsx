@@ -14,7 +14,7 @@ type Message = {
   is_active: boolean;
 };
 
-const CATEGORIES = ["전체", "자존감", "관계", "커리어", "휴식"];
+const CATEGORIES = ["전체", "자존감", "관계", "커리어", "휴식", "성장", "행복", "인생"];
 
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; emoji: string }> = {
   전체: { bg: "bg-zinc-100", text: "text-zinc-700", border: "border-zinc-200", emoji: "✨" },
@@ -22,6 +22,9 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string
   관계: { bg: "bg-rose-100", text: "text-rose-700", border: "border-rose-200", emoji: "🌹" },
   커리어: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200", emoji: "🔵" },
   휴식: { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200", emoji: "🌿" },
+  성장: { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200", emoji: "🌱" },
+  행복: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200", emoji: "🌟" },
+  인생: { bg: "bg-sky-100", text: "text-sky-700", border: "border-sky-200", emoji: "🌊" },
 };
 
 export default function MessagePage() {
