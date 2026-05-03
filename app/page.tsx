@@ -12,7 +12,7 @@ type ServiceItem = {
 };
 
 const SERVICES: ServiceItem[] = [
-  { title: "오늘 나를 위한 메시지", description: "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
+  { title: "오늘의 메시지, 친구와 함께 나눠요", description: "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
   { title: "사주", description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
   { title: "행운의 숫자", description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
   { title: "MBTI 매칭", description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
