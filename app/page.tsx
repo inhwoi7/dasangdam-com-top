@@ -115,7 +115,7 @@ export default async function HomePage() {
         <section className="serviceSection">
           <div className="sectionHeader">
             <span className="sectionMini">지혜로운 선택</span>
-            <h2>지금 나에게 필요한 게 뭘까요?</h2>
+            <h2>오늘은 뭐가 궁금하세요?</h2>
           </div>
           <div className="serviceGrid">
             {SERVICES.map((service) => (
@@ -137,7 +137,7 @@ export default async function HomePage() {
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">생각의 흔적</span>
-              <h2>써니의 다양한 생각들</h2>
+              <h2>써니의 생각</h2>
             </div>
             <Link href="/blog" style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
