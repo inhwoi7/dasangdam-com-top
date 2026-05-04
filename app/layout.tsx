@@ -17,6 +17,22 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "다상담",
   description: "써니와 함께하는 인생의 지혜로운 쉼터",
+  openGraph: {
+    title: "다상담",
+    description: "써니와 함께하는 인생의 지혜로운 쉼터",
+    url: "https://dasangdam.com",
+    siteName: "다상담",
+    images: [
+      {
+        url: "https://dasangdam.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "다상담",
+      },
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
