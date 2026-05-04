@@ -173,7 +173,7 @@ export default async function HomePage() {
         </section>
 
         {/* 함께하는 이야기 섹션 */}
-        <section className="librarySection" style={{ marginTop: "48px" }}>
+        <section className="librarySection" style={{ marginTop: "36px" }}>
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">함께하는 이야기</span>
@@ -188,7 +188,7 @@ export default async function HomePage() {
           </div>
           <Link href="/talk" className="postRow" style={{ textDecoration: "none" }}>
             <div className="postMain">
-              <h3>써니와 함께하는 이야기 공간이에요</h3>
+              <h3>우리 함께하는 소통하는 공간이에요</h3>
               <p>편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊</p>
             </div>
             <div className="postArrow"><ArrowRightIcon /></div>
