@@ -186,27 +186,12 @@ export default async function HomePage() {
               전체 보기 →
             </Link>
           </div>
-          <Link href="/talk" style={{ textDecoration: "none" }}>
-            <div style={{
-              background: "var(--card-bg, #FFFFFF)",
-              border: "1px solid var(--border, #EDE0CE)",
-              borderRadius: "16px",
-              padding: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              cursor: "pointer",
-            }}>
-              <div>
-                <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text, #2C1810)", marginBottom: "6px" }}>
-                  써니와 함께하는 이야기 공간이에요
-                </p>
-                <p style={{ fontSize: "13px", color: "var(--text-faint, #7A6355)" }}>
-                  편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊
-                </p>
-              </div>
-              <ArrowRightIcon />
+          <Link href="/talk" className="postRow" style={{ textDecoration: "none" }}>
+            <div className="postMain">
+              <h3>써니와 함께하는 이야기 공간이에요</h3>
+              <p>편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊</p>
             </div>
+            <div className="postArrow"><ArrowRightIcon /></div>
           </Link>
         </section>
 
