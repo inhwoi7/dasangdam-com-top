@@ -40,7 +40,7 @@ export function useKakaoShare() {
       if (!kakao) throw new Error("카카오 SDK 미로드");
       if (!kakao.isInitialized()) kakao.init(KAKAO_JS_KEY);
 
-      const thumbnail = "https://dasangdam.com/og-image.png";
+      const thumbnail = "https://dasangdam.com/og-image.png?v=2";
 
       kakao.Share.sendDefault({
         objectType: "feed",
