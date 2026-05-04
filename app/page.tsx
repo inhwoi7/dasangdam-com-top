@@ -31,7 +31,7 @@ function formatDate(dateString: string) {
 
 async function fetchData() {
   const todayPick = await getFeaturedQuote().catch(() => null);
-  const articlePosts = await getArticlePosts(5).catch(() => []);
+  const articlePosts = await getArticlePosts(3).catch(() => []);
   return { todayPick, articlePosts };
 }
 
@@ -173,7 +173,7 @@ export default async function HomePage() {
         </section>
 
         {/* 함께하는 이야기 섹션 */}
-        <section className="librarySection">
+        <section className="librarySection" style={{ marginTop: "48px" }}>
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">함께하는 이야기</span>
