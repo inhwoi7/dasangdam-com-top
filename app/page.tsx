@@ -171,6 +171,45 @@ export default async function HomePage() {
             )}
           </div>
         </section>
+
+        {/* 함께하는 이야기 섹션 */}
+        <section className="librarySection">
+          <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <div>
+              <span className="sectionMini">함께하는 이야기</span>
+              <h2>이야기 나눠요 💬</h2>
+            </div>
+            <Link href="/talk" style={{
+              fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
+              fontWeight: "600", marginBottom: "2px", display: "inline-flex", alignItems: "center", gap: "4px"
+            }}>
+              전체 보기 →
+            </Link>
+          </div>
+          <Link href="/talk" style={{ textDecoration: "none" }}>
+            <div style={{
+              background: "var(--card-bg, #FFFFFF)",
+              border: "1px solid var(--border, #EDE0CE)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+            }}>
+              <div>
+                <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text, #2C1810)", marginBottom: "6px" }}>
+                  써니와 함께하는 이야기 공간이에요
+                </p>
+                <p style={{ fontSize: "13px", color: "var(--text-faint, #7A6355)" }}>
+                  편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊
+                </p>
+              </div>
+              <ArrowRightIcon />
+            </div>
+          </Link>
+        </section>
+
       </div>
     </main>
   );
