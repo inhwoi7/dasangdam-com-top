@@ -27,13 +27,12 @@ export function useKakaoShare() {
     description,
     buttonText = "나도 확인하기 →",
     pageUrl,
-    imageUrl,
   }: {
     captureId: string;
     title: string;
     description: string;
     buttonText?: string;
-    pageUrl: string;  // 이미 파라미터가 포함된 URL을 받음
+    pageUrl: string;
     imageUrl?: string;
   }) => {
     try {
@@ -41,12 +40,7 @@ export function useKakaoShare() {
       if (!kakao) throw new Error("카카오 SDK 미로드");
       if (!kakao.isInitialized()) kakao.init(KAKAO_JS_KEY);
 
-      const thumbnail =
-        imageUrl ||
-        (typeof window !== "undefined"
-          ? (document.querySelector('meta[property="og:image"]') as HTMLMetaElement)?.content
-          : undefined) ||
-        "https://dasangdam.com/og-image.png";
+      const thumbnail = "https://dasangdam.com/og-image.png";
 
       kakao.Share.sendDefault({
         objectType: "feed",
