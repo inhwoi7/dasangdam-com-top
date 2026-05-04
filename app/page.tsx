@@ -188,7 +188,7 @@ export default async function HomePage() {
           </div>
           <Link href="/talk" className="postRow" style={{ textDecoration: "none" }}>
             <div className="postMain">
-              <h3>우리 함께하는 소통하는 공간이에요</h3>
+              <h3>소통하는 공간이에요</h3>
               <p>편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊</p>
             </div>
             <div className="postArrow"><ArrowRightIcon /></div>
