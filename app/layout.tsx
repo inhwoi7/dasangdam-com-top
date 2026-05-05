@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "다상담",
   description: "써니와 함께하는 인생의 지혜로운 쉼터",
+  verification: {
+    google: "W0-t8K56UwaiZXNMr9KFJC7uf8D86ojgRTurzg9kqO0", 
+  },
   openGraph: {
     title: "다상담",
     description: "써니와 함께하는 인생의 지혜로운 쉼터",
