@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   description: "써니와 함께하는 인생의 지혜로운 쉼터",
   verification: {
     google: "W0-t8K56UwaiZXNMr9KFJC7uf8D86ojgRTurzg9kqO0", 
+    naver: "e8e8ec3de6a4457cd84e5f5752897beddce17ace",
   },
   openGraph: {
     title: "다상담",
