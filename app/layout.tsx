@@ -18,8 +18,7 @@ export const metadata: Metadata = {
   title: "다상담",
   description: "써니와 함께하는 인생의 지혜로운 쉼터",
   verification: {
-    google: "W0-t8K56UwaiZXNMr9KFJC7uf8D86ojgRTurzg9kqO0", 
-    naver: "e8e8ec3de6a4457cd84e5f5752897beddce17ace",
+    google: "W0-t8K56UwaiZXNMr9KFJC7uf8D86ojgRTurzg9kqO0",
   },
   openGraph: {
     title: "다상담",
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
     siteName: "다상담",
     images: [
       {
-        url: "https://dasangdam.com/og-image.png",
+        url: "https://dasangdam.com/og-image.png?v=2",
         width: 1200,
         height: 630,
         alt: "다상담",
@@ -50,6 +49,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        {/* 네이버 서치어드바이저 인증 */}
+        <meta name="naver-site-verification" content="e8e8ec3de6a4457cd84e5f5752897beddce17ace" />
+
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-S51L4W52NK"
           strategy="afterInteractive"
