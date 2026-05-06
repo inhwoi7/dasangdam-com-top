@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// ── 자주 쓰는 성씨 원획법 획수 자동완성 ─────────
 const SURNAME_STROKES: Record<string, number> = {
   김: 8, 이: 7, 박: 6, 최: 11, 정: 15, 강: 9, 조: 14, 윤: 4,
   장: 11, 임: 8, 한: 17, 오: 7, 서: 10, 신: 5, 권: 22, 황: 12,
@@ -11,7 +10,21 @@ const SURNAME_STROKES: Record<string, number> = {
   손: 10, 배: 14, 백: 5, 허: 11, 유: 9, 남: 9,
 };
 
-// ── 등급별 스타일 ─────────────────────────────
+const GUK_EASY: Record<string, { period: string; desc: string }> = {
+  "원격(元格)":  { period: "초년운 (유년기)",    desc: "이름 두 글자를 합친 획수예요. 어린 시절과 인생의 기초가 되는 기운이에요." },
+  "형격(亨格)":  { period: "청년운 (사회진출)",  desc: "성씨 + 이름 첫 글자의 획수예요. 성격 형성과 사회에 나아가는 시기의 기운이에요." },
+  "이격(利格)":  { period: "장년운 (중년기)",    desc: "성씨 + 이름 마지막 글자의 획수예요. 중년의 사회적 성취와 가정운을 나타내요." },
+  "정격(貞格)":  { period: "총운 ✨ 가장 중요",  desc: "성씨 + 이름 전체 획수예요. 인생 전체를 관통하는 가장 중요한 기운이에요." },
+};
+
+const ELEMENT_STYLE: Record<string, { color: string; bg: string; label: string }> = {
+  목: { color: "#15803d", bg: "#f0fdf4", label: "木 (나무)" },
+  화: { color: "#b91c1c", bg: "#fef2f2", label: "火 (불)" },
+  토: { color: "#b45309", bg: "#fffbeb", label: "土 (흙)" },
+  금: { color: "#6b7280", bg: "#f9fafb", label: "金 (쇠)" },
+  수: { color: "#1d4ed8", bg: "#eff6ff", label: "水 (물)" },
+};
+
 function getRatingStyle(rating: string) {
   switch (rating) {
     case "매우좋음": return { color: "#1d4ed8", bg: "#eff6ff", emoji: "🔵", bar: "#2563eb" };
@@ -23,7 +36,6 @@ function getRatingStyle(rating: string) {
   }
 }
 
-// ── 등급 → 점수 (Progress Bar용) ────────────────
 function getRatingScore(rating: string): number {
   switch (rating) {
     case "매우좋음": return 100;
@@ -34,23 +46,6 @@ function getRatingScore(rating: string): number {
     default:         return 50;
   }
 }
-
-// ── 4격 쉬운 설명 ────────────────────────────
-const GUK_EASY: Record<string, string> = {
-  "원격(元格)":  "성씨 자체의 기본 기운이에요.",
-  "형격(亨格)":  "성씨와 이름 첫 글자가 만나는 기운이에요.",
-  "이격(利格)":  "이름 두 글자 사이의 기운이에요.",
-  "정격(貞格)":  "성씨와 이름 전체를 합친 총합 기운이에요. 가장 중요해요.",
-};
-
-// ── 오행 색상 ────────────────────────────────
-const ELEMENT_STYLE: Record<string, { color: string; bg: string; label: string }> = {
-  목: { color: "#15803d", bg: "#f0fdf4", label: "木 (나무)" },
-  화: { color: "#b91c1c", bg: "#fef2f2", label: "火 (불)" },
-  토: { color: "#b45309", bg: "#fffbeb", label: "土 (흙)" },
-  금: { color: "#6b7280", bg: "#f9fafb", label: "金 (쇠)" },
-  수: { color: "#1d4ed8", bg: "#eff6ff", label: "水 (물)" },
-};
 
 interface AnalysisResult {
   namingScore: {
@@ -112,7 +107,6 @@ export default function NamingPage() {
     }
   }
 
-  // ── 입력 화면 ──────────────────────────────
   if (step === "input") {
     return (
       <main className="page">
@@ -126,7 +120,6 @@ export default function NamingPage() {
             </p>
           </div>
 
-          {/* 이름 입력 */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
               이름 입력 <span style={{ fontWeight: 400, color: "var(--text-faint)" }}>(성씨 포함, 최대 4글자)</span>
@@ -145,7 +138,6 @@ export default function NamingPage() {
             />
           </div>
 
-          {/* 획수 입력 */}
           {nameInput.length > 0 && (
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
@@ -156,10 +148,7 @@ export default function NamingPage() {
                   const isAuto = i === 0 && !!SURNAME_STROKES[char];
                   return (
                     <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                      <div style={{
-                        fontSize: 20, fontWeight: 700, marginBottom: 6,
-                        color: "var(--text-primary)",
-                      }}>{char}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, color: "var(--text-primary)" }}>{char}</div>
                       <input
                         type="number" min={1} max={81}
                         value={strokeInputs[i] ?? ""}
@@ -176,16 +165,14 @@ export default function NamingPage() {
                           color: "var(--text-primary)", textAlign: "center", outline: "none",
                         }}
                       />
-                      {isAuto && (
-                        <div style={{ fontSize: 10, color: "#16a34a", marginTop: 3 }}>자동입력</div>
-                      )}
+                      {isAuto && <div style={{ fontSize: 10, color: "#16a34a", marginTop: 3 }}>자동입력</div>}
                     </div>
                   );
                 })}
               </div>
               <p style={{ marginTop: 10, fontSize: 12, color: "var(--text-faint)", lineHeight: 1.6 }}>
                 💡 주요 성씨는 획수가 자동으로 입력돼요.<br />
-                이름 글자는 한자 사전에서 <strong>원획법 획수</strong>를 확인해주세요.
+                이름 글자는 한자 사전에서 원획법 획수를 확인해주세요.
               </p>
             </div>
           )}
@@ -205,7 +192,6 @@ export default function NamingPage() {
             {loading ? "분석 중..." : "이름 분석하기 →"}
           </button>
 
-          {/* 주요 성씨 안내 */}
           <div style={{ marginTop: 20, padding: "14px 16px", background: "var(--section-bg)", borderRadius: 12 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>자동입력 지원 성씨</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -225,7 +211,6 @@ export default function NamingPage() {
     );
   }
 
-  // ── 결과 화면 ──────────────────────────────
   const score = result!.namingScore;
   const overallStyle = getRatingStyle(score.overallRating);
   const gukList = [
@@ -234,8 +219,6 @@ export default function NamingPage() {
     { label: "이격(利格)",  data: score.fourGuk.iGuk },
     { label: "정격(貞格)",  data: score.fourGuk.jeonGuk },
   ];
-
-  // 전체 점수 평균 (Progress Bar)
   const avgScore = Math.round(
     gukList.reduce((acc, { data }) => acc + getRatingScore(data.rating), 0) / gukList.length
   );
@@ -243,7 +226,6 @@ export default function NamingPage() {
   return (
     <main className="page">
       <div className="container" style={{ maxWidth: 460 }}>
-
         <div style={{ marginBottom: 24 }}>
           <button onClick={() => { setStep("input"); setResult(null); }}
             style={{ fontSize: 13, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -254,7 +236,6 @@ export default function NamingPage() {
           </h1>
         </div>
 
-        {/* 종합 등급 카드 */}
         <div style={{
           padding: "24px 20px", borderRadius: 16, marginBottom: 20, textAlign: "center",
           background: overallStyle.bg, border: `1.5px solid ${overallStyle.color}33`,
@@ -263,56 +244,50 @@ export default function NamingPage() {
           <p style={{ fontSize: 32, fontWeight: 800, color: overallStyle.color, marginBottom: 12 }}>
             {overallStyle.emoji} {score.overallRating}
           </p>
-          {/* Progress Bar */}
           <div style={{ background: "#e5e7eb", borderRadius: 999, height: 10, overflow: "hidden" }}>
-            <div style={{
-              width: `${avgScore}%`, height: "100%",
-              background: overallStyle.bar, borderRadius: 999,
-              transition: "width 1s ease",
-            }} />
+            <div style={{ width: `${avgScore}%`, height: "100%", background: overallStyle.bar, borderRadius: 999 }} />
           </div>
-          <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6 }}>
-            4격 평균 점수 {avgScore}점
-          </p>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6 }}>4격 평균 점수 {avgScore}점</p>
         </div>
 
-        {/* 4격 분석 */}
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-            4격 수리 분석
-          </h2>
-          <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 12 }}>
-            이름을 4가지 방식으로 나눠서 각각의 기운을 봐요.
-          </p>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>4격 수리 분석</h2>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 12 }}>이름을 4가지 방식으로 나눠서 각각의 기운을 봐요.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {gukList.map(({ label, data }) => {
               const s = getRatingStyle(data.rating);
-              const barScore = getRatingScore(data.rating);
+              const easy = GUK_EASY[label];
               return (
                 <div key={label} style={{
                   padding: "16px", borderRadius: 14,
                   background: "var(--card-bg)", border: `1px solid ${s.color}33`,
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                     <div>
-                      <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{label}</span>
-                      <span style={{ fontSize: 12, color: "var(--text-faint)", marginLeft: 6 }}>
-                        {GUK_EASY[label]}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{label}</span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, marginLeft: 8,
+                        padding: "2px 7px", borderRadius: 6,
+                        background: "var(--section-bg)", color: "var(--text-faint)",
+                      }}>
+                        {easy?.period}
                       </span>
                     </div>
                     <span style={{
                       fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-                      background: s.bg, color: s.color,
+                      background: s.bg, color: s.color, whiteSpace: "nowrap",
                     }}>
                       {s.emoji} {data.rating}
                     </span>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                  <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 8, lineHeight: 1.5 }}>
+                    {easy?.desc}
+                  </p>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
                     {data.strokes}획 · {data.name}
                   </div>
-                  {/* Mini progress bar */}
                   <div style={{ background: "#e5e7eb", borderRadius: 999, height: 4, marginBottom: 6 }}>
-                    <div style={{ width: `${barScore}%`, height: "100%", background: s.bar, borderRadius: 999 }} />
+                    <div style={{ width: `${getRatingScore(data.rating)}%`, height: "100%", background: s.bar, borderRadius: 999 }} />
                   </div>
                   <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}>
                     {data.description}
@@ -323,42 +298,27 @@ export default function NamingPage() {
           </div>
         </div>
 
-        {/* 발음오행 */}
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-            발음오행
-          </h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>발음오행</h2>
           <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 12 }}>
             이름을 부를 때 나오는 소리의 기운이에요. 서로 잘 어울리면 좋아요.
           </p>
-          <div style={{
-            display: "flex", gap: 10, padding: "16px",
-            background: "var(--card-bg)", borderRadius: 14, border: "1px solid var(--border)",
-          }}>
+          <div style={{ display: "flex", gap: 10, padding: "16px", background: "var(--card-bg)", borderRadius: 14, border: "1px solid var(--border)" }}>
             {score.pronunciationElements.map((el, i) => {
               const es = ELEMENT_STYLE[el.element] ?? { color: "#888", bg: "#f9fafb", label: el.elementKr };
               return (
-                <div key={i} style={{
-                  flex: 1, textAlign: "center", padding: "12px 8px",
-                  background: es.bg, borderRadius: 10,
-                }}>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
-                    {el.char}
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: es.color }}>
-                    {es.label}
-                  </div>
+                <div key={i} style={{ flex: 1, textAlign: "center", padding: "12px 8px", background: es.bg, borderRadius: 10 }}>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>{el.char}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: es.color }}>{es.label}</div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* 한 줄 요약 */}
         <div style={{
           padding: "14px 16px", borderRadius: 12, marginBottom: 24,
-          background: "var(--section-bg)",
-          fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8,
+          background: "var(--section-bg)", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8,
           borderLeft: `3px solid ${overallStyle.bar}`,
         }}>
           <strong style={{ color: "var(--text-primary)" }}>요약</strong><br />
@@ -375,7 +335,6 @@ export default function NamingPage() {
         >
           다른 이름 분석하기
         </button>
-
       </div>
     </main>
   );
