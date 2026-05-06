@@ -8,7 +8,7 @@ type ServiceItem = {
   title: string;
   description: string;
   href: string;
-  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder" | "message";
+icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder" | "message" | "naming";
 };
 
 const SERVICES: ServiceItem[] = [
@@ -20,6 +20,7 @@ const SERVICES: ServiceItem[] = [
   { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
   { title: "사다리 게임", description: "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
   { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+  { title: "지혜로운 작명", description: "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
 ];
 
 function formatDate(dateString: string) {

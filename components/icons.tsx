@@ -12,7 +12,8 @@ type ServiceIconType =
   | "iching"
   | "tarot"
   | "ladder"
-  | "message";
+  | "message"
+  | "naming";
 
 export function SunLogo() {
   return (
@@ -149,7 +150,17 @@ export function ServiceIcon({
           <path d="M16 18H32M16 24H26" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
         </svg>
       );
-
+    case "naming":
+      return (
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M12 10H28L36 18V38C36 39.1 35.1 40 34 40H12C10.9 40 10 39.1 10 38V12C10 10.9 10.9 10 12 10Z" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M28 10V18H36" stroke={stroke} strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M16 26H28" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M16 31H24" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M16 21H22" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      );
+    
     default:
       return (
         <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
