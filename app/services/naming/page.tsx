@@ -3,12 +3,54 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// ── 타입 ──────────────────────────────────────
-interface HanjaInfo {
-  hanja: string;
-  meaning: string;
-  strokes: number;
+// ── 자주 쓰는 성씨 원획법 획수 자동완성 ─────────
+const SURNAME_STROKES: Record<string, number> = {
+  김: 8, 이: 7, 박: 6, 최: 11, 정: 15, 강: 9, 조: 14, 윤: 4,
+  장: 11, 임: 8, 한: 17, 오: 7, 서: 10, 신: 5, 권: 22, 황: 12,
+  안: 6, 송: 7, 류: 9, 전: 6, 홍: 9, 고: 10, 문: 4, 양: 11,
+  손: 10, 배: 14, 백: 5, 허: 11, 유: 9, 남: 9,
+};
+
+// ── 등급별 스타일 ─────────────────────────────
+function getRatingStyle(rating: string) {
+  switch (rating) {
+    case "매우좋음": return { color: "#1d4ed8", bg: "#eff6ff", emoji: "🔵", bar: "#2563eb" };
+    case "좋음":     return { color: "#15803d", bg: "#f0fdf4", emoji: "🟢", bar: "#16a34a" };
+    case "보통":     return { color: "#b45309", bg: "#fffbeb", emoji: "🟡", bar: "#d97706" };
+    case "나쁨":     return { color: "#b91c1c", bg: "#fef2f2", emoji: "🔴", bar: "#dc2626" };
+    case "매우나쁨": return { color: "#7f1d1d", bg: "#fee2e2", emoji: "❌", bar: "#991b1b" };
+    default:         return { color: "#6b7280", bg: "#f9fafb", emoji: "⚪", bar: "#9ca3af" };
+  }
 }
+
+// ── 등급 → 점수 (Progress Bar용) ────────────────
+function getRatingScore(rating: string): number {
+  switch (rating) {
+    case "매우좋음": return 100;
+    case "좋음":     return 75;
+    case "보통":     return 50;
+    case "나쁨":     return 25;
+    case "매우나쁨": return 10;
+    default:         return 50;
+  }
+}
+
+// ── 4격 쉬운 설명 ────────────────────────────
+const GUK_EASY: Record<string, string> = {
+  "원격(元格)":  "성씨 자체의 기본 기운이에요.",
+  "형격(亨格)":  "성씨와 이름 첫 글자가 만나는 기운이에요.",
+  "이격(利格)":  "이름 두 글자 사이의 기운이에요.",
+  "정격(貞格)":  "성씨와 이름 전체를 합친 총합 기운이에요. 가장 중요해요.",
+};
+
+// ── 오행 색상 ────────────────────────────────
+const ELEMENT_STYLE: Record<string, { color: string; bg: string; label: string }> = {
+  목: { color: "#15803d", bg: "#f0fdf4", label: "木 (나무)" },
+  화: { color: "#b91c1c", bg: "#fef2f2", label: "火 (불)" },
+  토: { color: "#b45309", bg: "#fffbeb", label: "土 (흙)" },
+  금: { color: "#6b7280", bg: "#f9fafb", label: "金 (쇠)" },
+  수: { color: "#1d4ed8", bg: "#eff6ff", label: "水 (물)" },
+};
 
 interface AnalysisResult {
   namingScore: {
@@ -24,45 +66,6 @@ interface AnalysisResult {
   };
 }
 
-// ── 등급별 색상 ───────────────────────────────
-function getRatingColor(rating: string) {
-  switch (rating) {
-    case "매우좋음": return "#2563eb";
-    case "좋음":     return "#16a34a";
-    case "보통":     return "#d97706";
-    case "나쁨":     return "#dc2626";
-    case "매우나쁨": return "#991b1b";
-    default:         return "#888";
-  }
-}
-
-function getRatingBg(rating: string) {
-  switch (rating) {
-    case "매우좋음": return "#eff6ff";
-    case "좋음":     return "#f0fdf4";
-    case "보통":     return "#fffbeb";
-    case "나쁨":     return "#fef2f2";
-    case "매우나쁨": return "#fee2e2";
-    default:         return "#f4f4f5";
-  }
-}
-
-function getRatingEmoji(rating: string) {
-  switch (rating) {
-    case "매우좋음": return "★★★";
-    case "좋음":     return "★★";
-    case "보통":     return "★";
-    case "나쁨":     return "✕";
-    case "매우나쁨": return "✕✕";
-    default:         return "";
-  }
-}
-
-const ELEMENT_COLOR: Record<string, string> = {
-  목: "#16a34a", 화: "#dc2626", 토: "#d97706", 금: "#9ca3af", 수: "#2563eb",
-};
-
-// ── 메인 컴포넌트 ─────────────────────────────
 export default function NamingPage() {
   const [step, setStep] = useState<"input" | "result">("input");
   const [nameInput, setNameInput] = useState("");
@@ -71,33 +74,32 @@ export default function NamingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 이름 입력 시 획수 입력칸 개수 동기화
   function handleNameChange(val: string) {
-    setNameInput(val);
-    setStrokeInputs(Array.from({ length: val.length }, (_, i) => strokeInputs[i] ?? ""));
+    const trimmed = val.replace(/\s/g, "");
+    setNameInput(trimmed);
+    const newStrokes = Array.from({ length: trimmed.length }, (_, i) => {
+      if (i === 0) {
+        const auto = SURNAME_STROKES[trimmed[0]];
+        return auto ? String(auto) : (strokeInputs[0] ?? "");
+      }
+      return strokeInputs[i] ?? "";
+    });
+    setStrokeInputs(newStrokes);
     setError("");
   }
 
-  // 분석 요청
   async function handleAnalyze() {
     setError("");
-
-    if (nameInput.length < 2) {
-      setError("성씨 포함 2글자 이상 입력해주세요."); return;
-    }
+    if (nameInput.length < 2) { setError("성씨 포함 2글자 이상 입력해주세요."); return; }
     if (strokeInputs.some((s) => !s || isNaN(Number(s)) || Number(s) < 1)) {
       setError("모든 글자의 획수를 입력해주세요."); return;
     }
-
     setLoading(true);
     try {
       const res = await fetch("/api/naming/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nameHangul: nameInput,
-          strokesList: strokeInputs.map(Number),
-        }),
+        body: JSON.stringify({ nameHangul: nameInput, strokesList: strokeInputs.map(Number) }),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error ?? "분석 실패");
@@ -110,42 +112,35 @@ export default function NamingPage() {
     }
   }
 
-  // ── 입력 화면 ────────────────────────────────
+  // ── 입력 화면 ──────────────────────────────
   if (step === "input") {
     return (
       <main className="page">
-        <div className="container" style={{ maxWidth: 480 }}>
-
-          {/* 헤더 */}
+        <div className="container" style={{ maxWidth: 460 }}>
           <div style={{ marginBottom: 28 }}>
-            <Link href="/" style={{ fontSize: 13, color: "var(--text-faint)", textDecoration: "none" }}>
-              ← 홈으로
-            </Link>
-            <h1 style={{ marginTop: 16, fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>
-              이름 감명
-            </h1>
-            <p style={{ marginTop: 6, fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-              성씨 포함 이름과 각 글자의 원획법 획수를 입력하면<br />
-              수리성명학 기준으로 점수를 분석해드려요.
+            <Link href="/" style={{ fontSize: 13, color: "var(--text-faint)", textDecoration: "none" }}>← 홈으로</Link>
+            <h1 style={{ marginTop: 16, fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>이름 감명 ✨</h1>
+            <p style={{ marginTop: 6, fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7 }}>
+              이름을 입력하면 수리성명학으로 분석해드려요.<br />
+              성씨 획수는 자동으로 입력돼요!
             </p>
           </div>
 
           {/* 이름 입력 */}
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
-              이름 입력 (성씨 포함)
+              이름 입력 <span style={{ fontWeight: 400, color: "var(--text-faint)" }}>(성씨 포함, 최대 4글자)</span>
             </label>
             <input
-              type="text"
-              value={nameInput}
+              type="text" value={nameInput}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="예: 한지민"
               maxLength={4}
               style={{
-                width: "100%", padding: "12px 14px", fontSize: 18,
-                border: "1.5px solid var(--border)", borderRadius: 12,
+                width: "100%", padding: "14px", fontSize: 22, fontWeight: 700,
+                border: "1.5px solid var(--border)", borderRadius: 14,
                 background: "var(--card-bg)", color: "var(--text-primary)",
-                outline: "none", letterSpacing: 6, textAlign: "center",
+                outline: "none", letterSpacing: 12, textAlign: "center",
               }}
             />
           </div>
@@ -154,96 +149,104 @@ export default function NamingPage() {
           {nameInput.length > 0 && (
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
-                각 글자의 원획법 획수
+                각 글자의 획수 <span style={{ fontWeight: 400, color: "var(--text-faint)" }}>(원획법 기준)</span>
               </label>
               <div style={{ display: "flex", gap: 10 }}>
-                {Array.from(nameInput).map((char, i) => (
-                  <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, color: "var(--text-primary)" }}>
-                      {char}
+                {Array.from(nameInput).map((char, i) => {
+                  const isAuto = i === 0 && !!SURNAME_STROKES[char];
+                  return (
+                    <div key={i} style={{ flex: 1, textAlign: "center" }}>
+                      <div style={{
+                        fontSize: 20, fontWeight: 700, marginBottom: 6,
+                        color: "var(--text-primary)",
+                      }}>{char}</div>
+                      <input
+                        type="number" min={1} max={81}
+                        value={strokeInputs[i] ?? ""}
+                        onChange={(e) => {
+                          const next = [...strokeInputs];
+                          next[i] = e.target.value;
+                          setStrokeInputs(next);
+                        }}
+                        placeholder="획수"
+                        style={{
+                          width: "100%", padding: "10px 4px", fontSize: 16, fontWeight: 700,
+                          border: `1.5px solid ${isAuto ? "#16a34a55" : "var(--border)"}`,
+                          borderRadius: 10, background: isAuto ? "#f0fdf4" : "var(--card-bg)",
+                          color: "var(--text-primary)", textAlign: "center", outline: "none",
+                        }}
+                      />
+                      {isAuto && (
+                        <div style={{ fontSize: 10, color: "#16a34a", marginTop: 3 }}>자동입력</div>
+                      )}
                     </div>
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={strokeInputs[i] ?? ""}
-                      onChange={(e) => {
-                        const next = [...strokeInputs];
-                        next[i] = e.target.value;
-                        setStrokeInputs(next);
-                      }}
-                      placeholder="획수"
-                      style={{
-                        width: "100%", padding: "10px 6px", fontSize: 15,
-                        border: "1.5px solid var(--border)", borderRadius: 10,
-                        background: "var(--card-bg)", color: "var(--text-primary)",
-                        textAlign: "center", outline: "none",
-                      }}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-              <p style={{ marginTop: 8, fontSize: 12, color: "var(--text-faint)" }}>
-                💡 원획법 획수는 일반 획수와 다를 수 있어요. 작명 전문 서적이나 한자 사전을 참고하세요.
+              <p style={{ marginTop: 10, fontSize: 12, color: "var(--text-faint)", lineHeight: 1.6 }}>
+                💡 주요 성씨는 획수가 자동으로 입력돼요.<br />
+                이름 글자는 한자 사전에서 <strong>원획법 획수</strong>를 확인해주세요.
               </p>
             </div>
           )}
 
-          {/* 에러 메시지 */}
-          {error && (
-            <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 12 }}>{error}</p>
-          )}
+          {error && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
-          {/* 분석 버튼 */}
           <button
             onClick={handleAnalyze}
             disabled={loading || nameInput.length < 2}
             style={{
-              width: "100%", padding: "14px", fontSize: 16, fontWeight: 700,
+              width: "100%", padding: "15px", fontSize: 16, fontWeight: 700,
               background: nameInput.length >= 2 ? "var(--text-primary)" : "var(--border)",
               color: nameInput.length >= 2 ? "var(--card-bg)" : "var(--text-faint)",
               border: "none", borderRadius: 12, cursor: nameInput.length >= 2 ? "pointer" : "not-allowed",
-              transition: "opacity 0.2s",
             }}
           >
-            {loading ? "분석 중..." : "이름 분석하기"}
+            {loading ? "분석 중..." : "이름 분석하기 →"}
           </button>
 
-          {/* 예시 안내 */}
-          <div style={{
-            marginTop: 24, padding: "14px 16px",
-            background: "var(--section-bg)", borderRadius: 12,
-            fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8,
-          }}>
-            <strong style={{ color: "var(--text-primary)" }}>입력 예시</strong><br />
-            이름: 한지민<br />
-            획수: 한(17) · 지(8) · 민(5)
+          {/* 주요 성씨 안내 */}
+          <div style={{ marginTop: 20, padding: "14px 16px", background: "var(--section-bg)", borderRadius: 12 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>자동입력 지원 성씨</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {Object.entries(SURNAME_STROKES).map(([sur, str]) => (
+                <span key={sur} style={{
+                  fontSize: 12, padding: "3px 8px", borderRadius: 8,
+                  background: "var(--card-bg)", color: "var(--text-secondary)",
+                  border: "1px solid var(--border)",
+                }}>
+                  {sur}({str})
+                </span>
+              ))}
+            </div>
           </div>
-
         </div>
       </main>
     );
   }
 
-  // ── 결과 화면 ────────────────────────────────
+  // ── 결과 화면 ──────────────────────────────
   const score = result!.namingScore;
+  const overallStyle = getRatingStyle(score.overallRating);
   const gukList = [
-    { label: "원격(元格)", data: score.fourGuk.wonGuk },
-    { label: "형격(亨格)", data: score.fourGuk.hyeongGuk },
-    { label: "이격(利格)", data: score.fourGuk.iGuk },
-    { label: "정격(貞格)", data: score.fourGuk.jeonGuk },
+    { label: "원격(元格)",  data: score.fourGuk.wonGuk },
+    { label: "형격(亨格)",  data: score.fourGuk.hyeongGuk },
+    { label: "이격(利格)",  data: score.fourGuk.iGuk },
+    { label: "정격(貞格)",  data: score.fourGuk.jeonGuk },
   ];
+
+  // 전체 점수 평균 (Progress Bar)
+  const avgScore = Math.round(
+    gukList.reduce((acc, { data }) => acc + getRatingScore(data.rating), 0) / gukList.length
+  );
 
   return (
     <main className="page">
-      <div className="container" style={{ maxWidth: 480 }}>
+      <div className="container" style={{ maxWidth: 460 }}>
 
-        {/* 헤더 */}
         <div style={{ marginBottom: 24 }}>
-          <button
-            onClick={() => { setStep("input"); setResult(null); }}
-            style={{ fontSize: 13, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
+          <button onClick={() => { setStep("input"); setResult(null); }}
+            style={{ fontSize: 13, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
             ← 다시 분석하기
           </button>
           <h1 style={{ marginTop: 16, fontSize: 24, fontWeight: 700, color: "var(--text-primary)" }}>
@@ -251,85 +254,117 @@ export default function NamingPage() {
           </h1>
         </div>
 
-        {/* 종합 등급 */}
+        {/* 종합 등급 카드 */}
         <div style={{
-          padding: "20px", borderRadius: 16, marginBottom: 16, textAlign: "center",
-          background: getRatingBg(score.overallRating),
-          border: `1.5px solid ${getRatingColor(score.overallRating)}22`,
+          padding: "24px 20px", borderRadius: 16, marginBottom: 20, textAlign: "center",
+          background: overallStyle.bg, border: `1.5px solid ${overallStyle.color}33`,
         }}>
-          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6 }}>종합 평가</p>
-          <p style={{ fontSize: 28, fontWeight: 800, color: getRatingColor(score.overallRating) }}>
-            {score.overallRating} {getRatingEmoji(score.overallRating)}
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8 }}>이름 종합 점수</p>
+          <p style={{ fontSize: 32, fontWeight: 800, color: overallStyle.color, marginBottom: 12 }}>
+            {overallStyle.emoji} {score.overallRating}
+          </p>
+          {/* Progress Bar */}
+          <div style={{ background: "#e5e7eb", borderRadius: 999, height: 10, overflow: "hidden" }}>
+            <div style={{
+              width: `${avgScore}%`, height: "100%",
+              background: overallStyle.bar, borderRadius: 999,
+              transition: "width 1s ease",
+            }} />
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6 }}>
+            4격 평균 점수 {avgScore}점
           </p>
         </div>
 
         {/* 4격 분석 */}
-        <div style={{ marginBottom: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 10 }}>
-            4격(四格) 수리 분석
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+            4격 수리 분석
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {gukList.map(({ label, data }) => (
-              <div key={label} style={{
-                padding: "14px 16px", borderRadius: 12,
-                background: "var(--card-bg)",
-                border: `1px solid ${getRatingColor(data.rating)}33`,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{label}</span>
-                  <span style={{
-                    fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
-                    background: getRatingBg(data.rating), color: getRatingColor(data.rating),
-                  }}>
-                    {data.rating}
-                  </span>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 12 }}>
+            이름을 4가지 방식으로 나눠서 각각의 기운을 봐요.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {gukList.map(({ label, data }) => {
+              const s = getRatingStyle(data.rating);
+              const barScore = getRatingScore(data.rating);
+              return (
+                <div key={label} style={{
+                  padding: "16px", borderRadius: 14,
+                  background: "var(--card-bg)", border: `1px solid ${s.color}33`,
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <div>
+                      <span style={{ fontSize: 13, color: "var(--text-faint)" }}>{label}</span>
+                      <span style={{ fontSize: 12, color: "var(--text-faint)", marginLeft: 6 }}>
+                        {GUK_EASY[label]}
+                      </span>
+                    </div>
+                    <span style={{
+                      fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+                      background: s.bg, color: s.color,
+                    }}>
+                      {s.emoji} {data.rating}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                    {data.strokes}획 · {data.name}
+                  </div>
+                  {/* Mini progress bar */}
+                  <div style={{ background: "#e5e7eb", borderRadius: 999, height: 4, marginBottom: 6 }}>
+                    <div style={{ width: `${barScore}%`, height: "100%", background: s.bar, borderRadius: 999 }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    {data.description}
+                  </div>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 3 }}>
-                  {data.strokes}획 · {data.name}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                  {data.description}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* 발음오행 */}
-        <div style={{ marginBottom: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 10 }}>
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             발음오행
           </h2>
+          <p style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 12 }}>
+            이름을 부를 때 나오는 소리의 기운이에요. 서로 잘 어울리면 좋아요.
+          </p>
           <div style={{
             display: "flex", gap: 10, padding: "16px",
-            background: "var(--card-bg)", borderRadius: 12, border: "1px solid var(--border)",
+            background: "var(--card-bg)", borderRadius: 14, border: "1px solid var(--border)",
           }}>
-            {score.pronunciationElements.map((el, i) => (
-              <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-                  {el.char}
-                </div>
-                <div style={{
-                  fontSize: 13, fontWeight: 700, padding: "3px 0",
-                  color: ELEMENT_COLOR[el.element] ?? "#888",
+            {score.pronunciationElements.map((el, i) => {
+              const es = ELEMENT_STYLE[el.element] ?? { color: "#888", bg: "#f9fafb", label: el.elementKr };
+              return (
+                <div key={i} style={{
+                  flex: 1, textAlign: "center", padding: "12px 8px",
+                  background: es.bg, borderRadius: 10,
                 }}>
-                  {el.elementKr}
+                  <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
+                    {el.char}
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: es.color }}>
+                    {es.label}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* 요약 */}
+        {/* 한 줄 요약 */}
         <div style={{
-          padding: "14px 16px", borderRadius: 12,
-          background: "var(--section-bg)", marginBottom: 24,
-          fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7,
+          padding: "14px 16px", borderRadius: 12, marginBottom: 24,
+          background: "var(--section-bg)",
+          fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8,
+          borderLeft: `3px solid ${overallStyle.bar}`,
         }}>
+          <strong style={{ color: "var(--text-primary)" }}>요약</strong><br />
           {score.summary}
         </div>
 
-        {/* 다시 분석 버튼 */}
         <button
           onClick={() => { setStep("input"); setResult(null); }}
           style={{
