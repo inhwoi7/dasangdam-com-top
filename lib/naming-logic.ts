@@ -229,7 +229,7 @@ export function calcFourGuk(
   nameChar1Strokes: number,
   nameChar2Strokes: number
 ): FourGuk {
-  const won   = familyStrokes;
+  const won    = nameChar1Strokes + nameChar2Strokes; 
   const hyeong = familyStrokes + nameChar1Strokes;
   const i     = nameChar1Strokes + nameChar2Strokes;
   const jeon  = familyStrokes + nameChar1Strokes + nameChar2Strokes;
