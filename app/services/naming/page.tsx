@@ -33,12 +33,39 @@ interface AnalysisResult {
   };
 }
 
+const COMPOUND_SURNAMES = [
+  "남궁", "황보", "제갈", "선우", "독고", "동방", "사공", "서문",
+];
+
 const SURNAME_STROKES: Record<string, number> = {
   김:8, 이:7, 박:6, 최:11, 정:15, 강:9, 조:14, 윤:4,
   장:11, 임:8, 한:17, 오:7, 서:10, 신:5, 권:22, 황:12,
   안:6, 송:7, 류:9, 전:6, 홍:9, 고:10, 문:4, 양:11,
   손:10, 배:14, 백:5, 허:11, 유:9, 남:9,
+
+  // 두 글자 성씨는 원획법 기준으로 프로젝트 기준에 맞게 확인/수정하세요.
+  남궁:19, 황보:21, 제갈:29, 선우:13, 독고:18, 동방:16, 사공:12, 서문:14,
 };
+
+function parseKoreanName(fullName: string) {
+  const chars = Array.from(fullName);
+  const compoundSurname = COMPOUND_SURNAMES.find(surname => fullName.startsWith(surname));
+
+  if (compoundSurname) {
+    const surnameLength = Array.from(compoundSurname).length;
+    return {
+      surname: compoundSurname,
+      givenName: chars.slice(surnameLength).join(""),
+      surnameLength,
+    };
+  }
+
+  return {
+    surname: chars[0] ?? "",
+    givenName: chars.slice(1).join(""),
+    surnameLength: chars.length > 0 ? 1 : 0,
+  };
+}
 
 const ELEMENT_STYLE: Record<string, { color: string; bg: string; label: string }> = {
   목: { color: "#15803d", bg: "#f0fdf4", label: "木 나무" },
@@ -120,21 +147,27 @@ export default function NamingPage() {
 
   function handleNameChange(val: string) {
     const t = val.replace(/\s/g, "").slice(0, 4);
+    const parsed = parseKoreanName(t);
+
     setNameInput(t);
-    setSurnameStrokes(SURNAME_STROKES[t[0]] ?? 0);
-    setSelectedHanja(Array(t.length).fill(null));
+    setSurnameStrokes(SURNAME_STROKES[parsed.surname] ?? 0);
+    setSelectedHanja(Array(Array.from(t).length).fill(null));
     setError("");
   }
 
   async function handleGoStep2() {
+    const parsed = parseKoreanName(nameInput);
+
     if (nameInput.length < 2) { setError("성씨 포함 2글자 이상 입력해주세요."); return; }
+    if (!parsed.givenName) { setError("이름을 입력해주세요."); return; }
     if (!surnameStrokes) { setError("성씨 획수를 입력해주세요."); return; }
+
     setLoading(true);
     try {
       const chars = Array.from(nameInput);
       const results = await Promise.all(
         chars.map((char, i) =>
-          i === 0 ? Promise.resolve([])
+          i < parsed.surnameLength ? Promise.resolve([])
             : fetch(`/api/naming/hanja?sound=${char}&surnameStrokes=${surnameStrokes}`)
                 .then(r => r.json()).then(d => d.results ?? [])
         )
@@ -153,13 +186,26 @@ export default function NamingPage() {
 
   async function handleAnalyze() {
     const chars = Array.from(nameInput);
-    const strokesList = chars.map((_, i) => i === 0 ? surnameStrokes : (selectedHanja[i]?.strokes ?? 0));
+    const parsed = parseKoreanName(nameInput);
+    const givenNameStrokesList = chars
+      .slice(parsed.surnameLength)
+      .map((_, idx) => selectedHanja[idx + parsed.surnameLength]?.strokes ?? 0);
+    const strokesList = [surnameStrokes, ...givenNameStrokesList];
+
     if (strokesList.some(s => !s)) { setError("모든 글자의 한자를 선택해주세요."); return; }
+
     setLoading(true);
     try {
       const res = await fetch("/api/naming/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nameHangul: nameInput, strokesList }),
+        body: JSON.stringify({
+          nameHangul: nameInput,
+          surname: parsed.surname,
+          givenName: parsed.givenName,
+          surnameStrokes,
+          givenNameStrokesList,
+          strokesList,
+        }),
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
@@ -172,7 +218,8 @@ export default function NamingPage() {
   function reset() { setStep(1); setResult(null); setNameInput(""); setSelectedHanja([]); setError(""); setSurnameStrokes(0); }
 
   const nameChars = Array.from(nameInput);
-  const allSelected = nameChars.every((_, i) => i === 0 || selectedHanja[i] !== null);
+  const parsedName = parseKoreanName(nameInput);
+  const allSelected = nameChars.every((_, i) => i < parsedName.surnameLength || selectedHanja[i] !== null);
 
   // ══════════════════════════════════════
   // STEP 1 — 이름 입력
@@ -217,7 +264,7 @@ export default function NamingPage() {
             }}
           >
             {[0, 1, 2, 3].map(i => {
-              const char = nameInput[i];
+              const char = nameChars[i];
               const isCurrent = nameInput.length === i;
               return (
                 <div key={i} style={{
@@ -242,7 +289,7 @@ export default function NamingPage() {
                         }} />
                       ) : null}
                       <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                        {i === 0 ? "성씨" : `${i}번째`}
+                        {i === 0 || i < parsedName.surnameLength ? "성씨" : `${i - parsedName.surnameLength + 1}번째`}
                       </span>
                     </>
                   )}
@@ -277,12 +324,12 @@ export default function NamingPage() {
           }}>
             {surnameStrokes ? (
               <p style={{ fontSize: 14, color: "#15803d" }}>
-                ✅ <strong>{nameInput[0]}</strong>씨 성씨 획수 <strong>{surnameStrokes}획</strong> 자동 확인됐어요!
+                ✅ <strong>{parsedName.surname}</strong>씨 성씨 획수 <strong>{surnameStrokes}획</strong> 자동 확인됐어요!
               </p>
             ) : (
               <div>
                 <p style={{ fontSize: 13, color: "#92400e", marginBottom: 10, fontWeight: 600 }}>
-                  ⚠️ <strong>{nameInput[0]}</strong>씨 성씨는 직접 획수를 입력해주세요
+                  ⚠️ <strong>{parsedName.surname}</strong>씨 성씨는 직접 획수를 입력해주세요
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <input
@@ -356,7 +403,7 @@ export default function NamingPage() {
             return (
               <div key={i} style={{ textAlign: "center", minWidth: 56 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{char}</div>
-                {i === 0 ? (
+                {i < parsedName.surnameLength ? (
                   <div style={{ fontSize: 11, color: "#15803d", marginTop: 2, fontWeight: 600 }}>성씨 ✓</div>
                 ) : sel ? (
                   <>
@@ -373,7 +420,7 @@ export default function NamingPage() {
 
         {/* 글자별 한자 목록 */}
         {nameChars.map((char, charIdx) => {
-          if (charIdx === 0) return null;
+          if (charIdx < parsedName.surnameLength) return null;
           const options = hanjaOptions[charIdx] ?? [];
           const sel = selectedHanja[charIdx];
           const allBad = options.length > 0 && options.every(opt =>
@@ -409,7 +456,7 @@ export default function NamingPage() {
                   background: "#fffbeb", border: "1px solid #fde68a",
                   fontSize: 13, color: "#92400e", lineHeight: 1.6,
                 }}>
-                  ⚠️ <strong>"{char}"</strong> 글자는 <strong>{nameInput[0]}씨</strong>와 수리 조합이 불리해요.<br />
+                  ⚠️ <strong>"{char}"</strong> 글자는 <strong>{parsedName.surname}씨</strong>와 수리 조합이 불리해요.<br />
                   <span style={{ fontSize: 12 }}>다른 글자 사용을 권장하지만, 원하시면 선택 가능해요.</span>
                 </div>
               )}
@@ -494,7 +541,7 @@ export default function NamingPage() {
     score.fourGuk.wonGuk, score.fourGuk.hyeongGuk,
     score.fourGuk.iGuk, score.fourGuk.jeonGuk,
   ].reduce((a, d) => a + getRatingScore(d.rating), 0) / 4);
-  const hanjaName = nameChars.map((_, i) => i === 0 ? "" : selectedHanja[i]?.hanja ?? "?").join("");
+  const hanjaName = nameChars.map((_, i) => i < parsedName.surnameLength ? "" : selectedHanja[i]?.hanja ?? "?").join("");
   const gukList = [
     { label: "원격(元格)", data: score.fourGuk.wonGuk },
     { label: "형격(亨格)", data: score.fourGuk.hyeongGuk },
@@ -527,7 +574,7 @@ export default function NamingPage() {
           </div>
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
             {nameChars.map((char, i) => {
-              if (i === 0) return null;
+              if (i < parsedName.surnameLength) return null;
               const sel = selectedHanja[i];
               const es = sel ? ELEMENT_STYLE[sel.element] : null;
               return sel ? (
