@@ -207,29 +207,70 @@ export default function NamingPage() {
         </div>
 
         {/* 이름 입력 */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 10 }}>
-            이름을 입력하세요
-          </label>
-          <input
-            type="text" value={nameInput}
-            onChange={e => handleNameChange(e.target.value)}
-            placeholder="예) 한지민"
-            maxLength={4}
-            style={{
-              width: "100%", padding: "16px", fontSize: 26, fontWeight: 700,
-              border: "2px solid var(--border)", borderRadius: 14,
-              background: "var(--card-bg)", color: "var(--text-primary)",
-              outline: "none", letterSpacing: 16, textAlign: "center",
-              transition: "border-color 0.2s",
-            }}
-            onFocus={e => e.target.style.borderColor = "#2563eb"}
-            onBlur={e => e.target.style.borderColor = "var(--border)"}
-          />
-          <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6, textAlign: "center" }}>
-            성씨 포함해서 입력해주세요 (예: 김민준, 이서연)
-          </p>
+<div style={{ marginBottom: 16 }}>
+  <label style={{
+    fontSize: 13, fontWeight: 700, color: "var(--text-primary)",
+    display: "block", marginBottom: 10,
+  }}>
+    ✏️ 이름을 입력하세요
+  </label>
+
+  {/* 글자 칸 UI */}
+  <div style={{
+    display: "flex", gap: 10, marginBottom: 10, justifyContent: "center",
+  }}>
+    {[0,1,2,3].map(i => {
+      const char = nameInput[i];
+      const isActive = nameInput.length === i;
+      return (
+        <div key={i} style={{
+          width: 64, height: 72, borderRadius: 14, display: "flex",
+          flexDirection: "column", alignItems: "center", justifyContent: "center",
+          border: `2px solid ${char ? "#2563eb" : isActive ? "#93c5fd" : "var(--border)"}`,
+          background: char ? "#eff6ff" : "var(--card-bg)",
+          transition: "all 0.15s",
+          position: "relative",
+        }}>
+          <span style={{
+            fontSize: 28, fontWeight: 800,
+            color: char ? "#1e293b" : "transparent",
+          }}>
+            {char ?? "가"}
+          </span>
+          {!char && (
+            <span style={{
+              position: "absolute", fontSize: 11,
+              color: i === 0 ? "#9ca3af" : "#d1d5db",
+              bottom: 8,
+            }}>
+              {i === 0 ? "성씨" : `${i}번째`}
+            </span>
+          )}
         </div>
+      );
+    })}
+  </div>
+
+  {/* 실제 입력창 (숨김 처리 없이 아래에 표시) */}
+  <input
+    type="text" value={nameInput}
+    onChange={e => handleNameChange(e.target.value)}
+    placeholder="여기에 이름을 입력하세요"
+    maxLength={4}
+    style={{
+      width: "100%", padding: "14px 16px", fontSize: 18, fontWeight: 600,
+      border: "2px solid var(--border)", borderRadius: 12,
+      background: "var(--card-bg)", color: "var(--text-primary)",
+      outline: "none", textAlign: "center",
+      transition: "border-color 0.2s",
+    }}
+    onFocus={e => e.target.style.borderColor = "#2563eb"}
+    onBlur={e => e.target.style.borderColor = "var(--border)"}
+  />
+  <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 6, textAlign: "center" }}>
+    성씨 포함 2~4글자 (예: 김민준, 이서연, 박지우)
+  </p>
+</div>
 
         {/* 성씨 획수 확인 */}
         {nameInput.length > 0 && (
