@@ -206,50 +206,89 @@ export default function NamingPage() {
           </div>
         </div>
 
-        {/* 이름 입력 */}
+{/* 이름 입력 */}
 <div style={{ marginBottom: 16 }}>
   <label style={{
     fontSize: 13, fontWeight: 700, color: "var(--text-primary)",
-    display: "block", marginBottom: 10,
+    display: "block", marginBottom: 12,
   }}>
     ✏️ 이름을 입력하세요
   </label>
 
-  {/* 글자 칸 UI */}
-  <div style={{
-    display: "flex", gap: 10, marginBottom: 10, justifyContent: "center",
-  }}>
+  {/* 글자 칸 — 클릭하면 포커스 */}
+  <div
+    style={{
+      display: "flex", gap: 10, justifyContent: "center",
+      padding: "20px 16px", borderRadius: 16,
+      border: "2px solid var(--border)",
+      background: "var(--card-bg)", cursor: "text",
+      position: "relative",
+    }}
+    onClick={() => (document.getElementById("name-input") as HTMLInputElement)?.focus()}
+  >
     {[0,1,2,3].map(i => {
       const char = nameInput[i];
-      const isActive = nameInput.length === i;
+      const isCurrent = nameInput.length === i;
       return (
         <div key={i} style={{
-          width: 64, height: 72, borderRadius: 14, display: "flex",
-          flexDirection: "column", alignItems: "center", justifyContent: "center",
-          border: `2px solid ${char ? "#2563eb" : isActive ? "#93c5fd" : "var(--border)"}`,
-          background: char ? "#eff6ff" : "var(--card-bg)",
+          width: 60, height: 68, borderRadius: 12,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          border: `2px solid ${char ? "#2563eb" : isCurrent ? "#93c5fd" : "#e5e7eb"}`,
+          background: char ? "#eff6ff" : isCurrent ? "#f0f9ff" : "#f9fafb",
           transition: "all 0.15s",
-          position: "relative",
         }}>
-          <span style={{
-            fontSize: 28, fontWeight: 800,
-            color: char ? "#1e293b" : "transparent",
-          }}>
-            {char ?? "가"}
-          </span>
-          {!char && (
-            <span style={{
-              position: "absolute", fontSize: 11,
-              color: i === 0 ? "#9ca3af" : "#d1d5db",
-              bottom: 8,
-            }}>
-              {i === 0 ? "성씨" : `${i}번째`}
+          {char ? (
+            <span style={{ fontSize: 26, fontWeight: 800, color: "#1e293b" }}>
+              {char}
             </span>
+          ) : (
+            <>
+              {isCurrent && (
+                <span style={{
+                  display: "inline-block", width: 2, height: 28,
+                  background: "#2563eb", borderRadius: 2,
+                  animation: "blink 1s step-end infinite",
+                }} />
+              )}
+              <span style={{
+                fontSize: 11, color: "#9ca3af", marginTop: isCurrent ? 2 : 0,
+              }}>
+                {i === 0 ? "성씨" : `${i}번째`}
+              </span>
+            </>
           )}
         </div>
       );
     })}
+
+    {/* 숨긴 실제 input */}
+    <input
+      id="name-input"
+      type="text"
+      value={nameInput}
+      onChange={e => handleNameChange(e.target.value)}
+      maxLength={4}
+      style={{
+        position: "absolute", opacity: 0,
+        width: "100%", height: "100%",
+        top: 0, left: 0, cursor: "text",
+      }}
+    />
   </div>
+
+  {/* 커서 깜빡임 애니메이션 */}
+  <style>{`
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  `}</style>
+
+  <p style={{ fontSize: 12, color: "var(--text-faint)", marginTop: 8, textAlign: "center" }}>
+    네모 칸을 눌러서 입력하세요 (성씨 포함 2~4글자)
+  </p>
+</div>
 
   {/* 실제 입력창 (숨김 처리 없이 아래에 표시) */}
   <input
