@@ -25,6 +25,7 @@ const ELEMENT_STYLE: Record<string, { color: string; bg: string; label: string }
   수: { color: "#1d4ed8", bg: "#eff6ff", label: "水 (물)" },
 };
 
+
 function getRatingStyle(rating: string) {
   switch (rating) {
     case "매우좋음": return { color: "#1d4ed8", bg: "#eff6ff", emoji: "🔵", bar: "#2563eb" };
