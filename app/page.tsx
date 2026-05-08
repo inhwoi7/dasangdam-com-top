@@ -13,15 +13,15 @@ type ServiceItem = {
 
 const SERVICES: ServiceItem[] = [
   { title: "오늘의 메시지, 함께 나눠요", description: "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
-  { title: "사주", description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
+  { title: "오늘의 한 장, 타로", description: "마음 속 질문을 카드에 담아보세요. 메이저 22장 · 전체 78장.", href: "/services/tarot", icon: "tarot" },
   { title: "행운의 숫자", description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
+  { title: "사주", description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
+  { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
   { title: "MBTI 매칭", description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
   { title: "나의 성격 유형 찾기 (feat. MBTI)", description: "나의 성격 유형을 과학적으로 알아보세요.", href: "/services/ipip", icon: "ipip" },
-  { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
-  { title: "사다리 게임", description: "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
   { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+  { title: "사다리 게임", description: "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
   { title: "지혜로운 작명", description: "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
-  { title: "오늘의 한 장, 타로", description: "마음 속 질문을 카드에 담아보세요. 메이저 아르카나 22장.", href: "/services/tarot", icon: "tarot" },
 ];
 
 function formatDate(dateString: string) {
