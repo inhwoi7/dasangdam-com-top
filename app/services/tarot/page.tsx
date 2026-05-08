@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { useKakaoShare } from '@/lib/useKakaoShare'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -262,6 +263,8 @@ export default function TarotPage() {
   const [flipped, setFlipped]         = useState(false)
   const [picking, setPicking]         = useState(false)
 
+  const { shareWithCapture } = useKakaoShare()
+
   /* Google Fonts */
   useEffect(() => {
     const link = document.createElement('link')
@@ -307,6 +310,17 @@ export default function TarotPage() {
       setDeck(shuffleArr(cards))
     }
     setStep(s)
+  }
+
+  function handleKakaoShare() {
+    if (!pickedCard) return
+    shareWithCapture({
+      captureId: 'tarot-capture',
+      title: `오늘의 타로 — ${pickedCard.name_ko}`,
+      description: `${isReversed ? '↕ 역방향 · ' : ''}${pickedCard.keywords.slice(0,3).join(' · ')}`,
+      buttonText: '나도 타로 뽑기 →',
+      pageUrl: 'https://dasangdam.com/services/tarot',
+    })
   }
 
   function handleShuffle() {
@@ -550,7 +564,7 @@ export default function TarotPage() {
 
               <div className="q-wrap">
                 <textarea
-                  placeholder={'고민을 솔직하게 적어주세요, 카드가 느낍니다.\n예) 이 사람이 저를 진심으로 좋아하는 걸까요?'}
+                  placeholder={'예) 이 사람이 저를 진심으로 좋아하는 걸까요?\n솔직하게 적어주세요, 카드가 느낍니다.'}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                 />
@@ -634,7 +648,7 @@ export default function TarotPage() {
 
           {/* ══════════ S4: RESULT ══════════ */}
           {step === 'result' && pickedCard && (
-            <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 16, paddingBottom: 40 }}>
+            <div className="screen" id="tarot-capture" style={{ justifyContent: 'flex-start', paddingTop: 16, paddingBottom: 40 }}>
               <div style={{ height: 52, flexShrink: 0 }} />
 
               <button className="back-btn fu" style={{ marginBottom: 16 }} onClick={() => goTo('question')}>
@@ -698,6 +712,27 @@ export default function TarotPage() {
 
               <button className="again-btn fu4" onClick={() => goTo('question')}>
                 새로운 질문하기
+              </button>
+
+              <button
+                onClick={handleKakaoShare}
+                className="fu4"
+                style={{
+                  width:'100%', maxWidth:420, padding:'15px',
+                  borderRadius:12, border:'none',
+                  background:'#FEE500',
+                  color:'#3C1E1E', fontSize:15, fontWeight:700,
+                  fontFamily:"'Noto Sans KR',sans-serif",
+                  cursor:'pointer', transition:'all .2s',
+                  display:'flex', alignItems:'center',
+                  justifyContent:'center', gap:8,
+                  marginTop:8, boxShadow:'0 4px 16px rgba(254,229,0,.4)',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
+                </svg>
+                카카오로 공유하기
               </button>
               <div style={{ height: 20, flexShrink: 0 }} />
             </div>
