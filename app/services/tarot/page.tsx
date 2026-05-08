@@ -353,11 +353,20 @@ export default function TarotPage() {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Cinzel:wght@400;600&family=Noto+Sans+KR:wght@300;400&display=swap');
 
     .tarot-root {
-      --ink:#0e0b18; --void:#07050f; --gold:#c9a84c;
-      --gold-pale:#e8d5a3; --gold-dim:#7a6230;
-      --cream:#f5efe6; --mist:#c8bfdb; --lilac:#9b8fc2; --deep:#1a1430;
-      font-family:'Noto Sans KR',sans-serif; font-weight:300;
-      background:var(--void); color:var(--cream);
+      --bg:      #1e1535;
+      --bg2:     #271c42;
+      --bg3:     #32265a;
+      --accent:  #a78bfa;
+      --accent2: #c4b5fd;
+      --gold:    #f0c060;
+      --gold2:   #fde68a;
+      --text:    #f0ecff;
+      --text2:   #c4b5fd;
+      --text3:   #9b8ec4;
+      --border:  rgba(167,139,250,.25);
+      --border2: rgba(167,139,250,.12);
+      font-family:'Noto Sans KR',sans-serif; font-weight:400;
+      background:var(--bg); color:var(--text);
       min-height:100dvh; overflow-x:hidden;
     }
     .tarot-root * { box-sizing:border-box; margin:0; padding:0; }
@@ -365,66 +374,66 @@ export default function TarotPage() {
     .screen { min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:0 20px; }
 
     /* -- brand -- */
-    .brand { font-family:'Cinzel',serif; font-size:11px; letter-spacing:5px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:24px; animation:fadeDown .8s ease both; }
-    .hero-title { font-family:'Noto Serif KR',serif; font-size:clamp(20px,5vw,26px); font-weight:300; line-height:1.55; text-align:center; color:var(--cream); margin-bottom:8px; animation:fadeDown .8s .15s ease both; }
-    .hero-title em { font-style:normal; color:var(--gold); }
-    .hero-sub { font-size:12px; color:var(--lilac); letter-spacing:1px; margin-bottom:28px; animation:fadeDown .8s .2s ease both; }
+    .brand { font-family:'Cinzel',serif; font-size:11px; letter-spacing:5px; color:var(--accent2); text-transform:uppercase; margin-bottom:20px; animation:fadeDown .8s ease both; opacity:.85; }
+    .hero-title { font-family:'Noto Serif KR',serif; font-size:clamp(22px,5.5vw,30px); font-weight:400; line-height:1.5; text-align:center; color:var(--text); margin-bottom:10px; animation:fadeDown .8s .15s ease both; }
+    .hero-title em { font-style:normal; color:var(--gold2); font-weight:600; }
+    .hero-sub { font-size:13px; color:var(--text2); letter-spacing:1px; margin-bottom:24px; animation:fadeDown .8s .2s ease both; }
 
     /* cats */
-    .cats { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:20px; animation:fadeDown .8s .25s ease both; }
-    .cat { padding:7px 16px; border-radius:24px; border:1px solid #2e2448; background:transparent; color:var(--mist); font-size:12px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all .2s; letter-spacing:.5px; }
-    .cat.on,.cat:hover { border-color:var(--gold-dim); background:rgba(201,168,76,.08); color:var(--gold-pale); }
+    .cats { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; animation:fadeDown .8s .25s ease both; }
+    .cat { padding:8px 18px; border-radius:24px; border:1px solid var(--border); background:rgba(167,139,250,.08); color:var(--text2); font-size:13px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all .2s; }
+    .cat.on,.cat:hover { border-color:var(--accent); background:rgba(167,139,250,.2); color:var(--text); }
 
     /* textarea */
-    .q-wrap { width:100%; max-width:380px; background:rgba(255,255,255,.03); border:1px solid #2e2448; border-radius:14px; padding:16px; margin-bottom:16px; animation:fadeDown .8s .3s ease both; transition:border-color .2s; }
-    .q-wrap:focus-within { border-color:var(--gold-dim); }
-    .q-wrap textarea { width:100%; height:76px; background:transparent; border:none; outline:none; color:var(--cream); font-size:14px; line-height:1.65; resize:none; font-family:'Noto Sans KR',sans-serif; font-weight:300; }
-    .q-wrap textarea::placeholder { color:#3d3060; }
+    .q-wrap { width:100%; max-width:380px; background:rgba(255,255,255,.08); border:1.5px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px; animation:fadeDown .8s .3s ease both; transition:border-color .2s; }
+    .q-wrap:focus-within { border-color:var(--accent); background:rgba(255,255,255,.11); }
+    .q-wrap textarea { width:100%; height:90px; background:transparent; border:none; outline:none; color:var(--text); font-size:15px; line-height:1.7; resize:none; font-family:'Noto Sans KR',sans-serif; font-weight:400; }
+    .q-wrap textarea::placeholder { color:var(--text3); font-size:14px; }
 
     /* buttons */
-    .go-btn { width:100%; max-width:380px; padding:15px; border-radius:12px; border:1px solid var(--gold-dim); background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.06)); color:var(--gold-pale); font-size:14px; letter-spacing:1.5px; font-family:'Cinzel',serif; cursor:pointer; transition:all .25s; animation:fadeDown .8s .35s ease both; }
-    .go-btn:hover { background:linear-gradient(135deg,rgba(201,168,76,.28),rgba(201,168,76,.12)); border-color:var(--gold); box-shadow:0 0 28px rgba(201,168,76,.2); }
-    .back-btn { background:transparent; border:none; color:var(--lilac); font-size:12px; cursor:pointer; letter-spacing:1px; font-family:'Noto Sans KR',sans-serif; display:flex; align-items:center; gap:6px; transition:color .2s; }
-    .back-btn:hover { color:var(--gold-pale); }
-    .again-btn { width:100%; max-width:420px; padding:14px; border-radius:12px; border:1px solid #2e2448; background:transparent; color:var(--lilac); font-size:13px; letter-spacing:1px; font-family:'Cinzel',serif; cursor:pointer; transition:all .2s; margin-top:4px; }
-    .again-btn:hover { border-color:var(--gold-dim); color:var(--gold-pale); }
+    .go-btn { width:100%; max-width:380px; padding:16px; border-radius:14px; border:none; background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; font-size:16px; font-weight:500; letter-spacing:.5px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all .25s; animation:fadeDown .8s .35s ease both; box-shadow:0 4px 20px rgba(124,58,237,.4); }
+    .go-btn:hover { background:linear-gradient(135deg,#6d28d9,#8b5cf6); box-shadow:0 6px 28px rgba(124,58,237,.55); transform:translateY(-1px); }
+    .back-btn { background:transparent; border:none; color:var(--text2); font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; display:flex; align-items:center; gap:6px; transition:color .2s; font-weight:400; }
+    .back-btn:hover { color:var(--text); }
+    .again-btn { width:100%; max-width:420px; padding:14px; border-radius:12px; border:1.5px solid var(--border); background:rgba(167,139,250,.08); color:var(--text2); font-size:14px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all .2s; margin-top:8px; font-weight:400; }
+    .again-btn:hover { border-color:var(--accent); color:var(--text); background:rgba(167,139,250,.15); }
 
     /* shuffle screen */
-    .s-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:4px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:28px; }
-    .s-title { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:300; text-align:center; line-height:1.6; color:var(--cream); margin-bottom:6px; }
-    .s-sub { font-size:12px; color:var(--lilac); text-align:center; margin-bottom:40px; }
+    .s-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--accent2); text-transform:uppercase; margin-bottom:20px; opacity:.8; }
+    .s-title { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:400; text-align:center; line-height:1.5; color:var(--text); margin-bottom:8px; }
+    .s-sub { font-size:14px; color:var(--text2); text-align:center; margin-bottom:32px; }
 
     /* deck */
-    .deck { position:relative; width:120px; height:200px; cursor:pointer; margin-bottom:36px; -webkit-tap-highlight-color:transparent; }
-    .deck-card { position:absolute; width:108px; height:185px; border-radius:12px; border:1px solid rgba(201,168,76,.2); background:linear-gradient(160deg,#1e1638,#12102a); overflow:hidden; }
-    .deck-card:nth-child(1) { left:12px; top:14px; transform:rotate(-8deg); }
-    .deck-card:nth-child(2) { left:6px; top:7px; transform:rotate(-3deg); }
+    .deck { position:relative; width:160px; height:260px; cursor:pointer; margin-bottom:36px; -webkit-tap-highlight-color:transparent; }
+    .deck-card { position:absolute; width:140px; height:240px; border-radius:14px; border:1.5px solid rgba(167,139,250,.35); background:linear-gradient(160deg,#2d1f52,#1a1235); overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.4); }
+    .deck-card:nth-child(1) { left:16px; top:16px; transform:rotate(-10deg); }
+    .deck-card:nth-child(2) { left:8px; top:8px; transform:rotate(-4deg); }
     .deck-card:nth-child(3) { left:0; top:0; transform:rotate(2deg); }
-    .deck-inner { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(201,168,76,.07) 5px,rgba(201,168,76,.07) 6px); }
+    .deck-inner { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background-image:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(167,139,250,.1) 6px,rgba(167,139,250,.1) 7px); }
     .deck.shuffling .deck-card:nth-child(3) { animation:shuffleL .45s ease; }
     .deck.shuffling .deck-card:nth-child(2) { animation:shuffleM .45s .05s ease; }
 
     /* pulse */
-    .pulse { width:10px; height:10px; border-radius:50%; opacity:.5; animation:pulseAnim 2s infinite; }
-    .cue-txt { font-size:12px; color:var(--lilac); letter-spacing:.5px; margin-top:10px; }
+    .pulse { width:14px; height:14px; border-radius:50%; opacity:.7; animation:pulseAnim 1.5s infinite; }
+    .cue-txt { font-size:15px; color:var(--text2); margin-top:14px; font-weight:400; text-align:center; }
 
     /* progress dots */
     .prog { display:flex; gap:7px; margin-top:32px; }
-    .prog-dot { width:5px; height:5px; border-radius:3px; background:#2e2448; transition:all .3s; }
-    .prog-dot.on { background:var(--gold); width:18px; }
+    .prog-dot { width:6px; height:6px; border-radius:3px; background:rgba(167,139,250,.25); transition:all .3s; }
+    .prog-dot.on { background:var(--accent); width:20px; }
 
     /* pick screen */
-    .pick-title { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:300; text-align:center; color:var(--cream); margin-bottom:6px; }
-    .pick-sub { font-size:12px; color:var(--lilac); text-align:center; margin-bottom:36px; }
+    .pick-title { font-family:'Noto Serif KR',serif; font-size:22px; font-weight:400; text-align:center; color:var(--text); margin-bottom:8px; }
+    .pick-sub { font-size:14px; color:var(--text2); text-align:center; margin-bottom:32px; }
     .spread { display:flex; gap:clamp(10px,3vw,20px); justify-content:center; align-items:flex-end; width:100%; margin-bottom:28px; }
-    .s-card { width:clamp(80px,22vw,110px); height:calc(clamp(80px,22vw,110px)*1.75); border-radius:10px; border:1px solid rgba(201,168,76,.2); background:linear-gradient(160deg,#1e1638,#12102a); cursor:pointer; position:relative; overflow:hidden; transition:all .25s; -webkit-tap-highlight-color:transparent; }
+    .s-card { width:clamp(90px,24vw,120px); height:calc(clamp(90px,24vw,120px)*1.75); border-radius:14px; border:1.5px solid rgba(167,139,250,.3); background:linear-gradient(160deg,#2d1f52,#1a1235); cursor:pointer; position:relative; overflow:hidden; transition:all .3s; -webkit-tap-highlight-color:transparent; box-shadow:0 6px 24px rgba(0,0,0,.35); }
     .s-card:nth-child(1) { transform:rotate(-5deg); }
     .s-card:nth-child(2) { transform:rotate(0deg) translateY(-8px); }
     .s-card:nth-child(3) { transform:rotate(5deg); }
-    .s-card:hover { transform:translateY(-14px) rotate(0deg) !important; border-color:var(--gold); z-index:2; box-shadow:0 12px 40px rgba(201,168,76,.25); }
-    .s-card-inner { width:100%; height:100%; background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(201,168,76,.07) 5px,rgba(201,168,76,.07) 6px); display:flex; align-items:center; justify-content:center; }
-    .s-card-glow { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(201,168,76,.18),transparent 65%); opacity:0; transition:opacity .3s; }
-    .s-card:hover .s-card-glow { opacity:1; }
+    .s-card:hover { transform:translateY(-18px) rotate(0deg) scale(1.04) !important; border-color:var(--accent); z-index:2; box-shadow:0 16px 48px rgba(167,139,250,.4); }
+    .s-card-inner { width:100%; height:100%; background-image:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(167,139,250,.1) 6px,rgba(167,139,250,.1) 7px); display:flex; align-items:center; justify-content:center; }
+    .s-card-glow { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(167,139,250,.3),transparent 65%); opacity:0; transition:opacity .3s; }
+    .s-card:hover .s-card-glow,.s-card:active .s-card-glow { opacity:1; }
     .s-card-pos { position:absolute; bottom:7px; left:0; right:0; text-align:center; font-size:9px; color:rgba(201,168,76,.5); letter-spacing:1.5px; font-family:'Cinzel',serif; }
 
     /* flip */
@@ -436,29 +445,29 @@ export default function TarotPage() {
     .flip-inner.flipped .flip-back { opacity:1; }
     .flip-back img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:.85; display:block; }
     .flip-back-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(14,11,24,.9) 30%,rgba(14,11,24,.2) 100%); }
-    .flip-back-num { position:absolute; top:10px; left:0; right:0; text-align:center; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--gold-pale); z-index:1; }
-    .flip-back-name { position:absolute; bottom:28px; left:8px; right:8px; font-family:'Noto Serif KR',serif; font-size:13px; color:var(--cream); z-index:1; text-align:center; line-height:1.3; }
-    .flip-back-sub { position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:9px; color:var(--gold-dim); z-index:1; letter-spacing:1px; font-family:'Cinzel',serif; }
+    .flip-back-num { position:absolute; top:10px; left:0; right:0; text-align:center; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:rgba(255,255,255,.9); z-index:1; text-shadow:0 1px 4px rgba(0,0,0,.8); }
+    .flip-back-name { position:absolute; bottom:28px; left:8px; right:8px; font-family:'Noto Serif KR',serif; font-size:14px; color:#fff; z-index:1; text-align:center; line-height:1.3; font-weight:500; text-shadow:0 2px 8px rgba(0,0,0,.9); }
+    .flip-back-sub { position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:10px; color:rgba(255,255,255,.7); z-index:1; letter-spacing:1px; font-family:'Cinzel',serif; text-shadow:0 1px 4px rgba(0,0,0,.8); }
 
     /* result sections */
-    .rev-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(155,100,80,.2); border:1px solid rgba(155,100,80,.4); border-radius:12px; padding:3px 10px; font-size:10px; color:#e8b09a; letter-spacing:.5px; margin-bottom:12px; }
-    .result-section { width:100%; max-width:420px; background:rgba(255,255,255,.025); border:1px solid rgba(201,168,76,.12); border-radius:14px; padding:16px; margin-bottom:10px; }
-    .rs-label { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2.5px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .rev-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(245,158,11,.15); border:1.5px solid rgba(245,158,11,.4); border-radius:12px; padding:5px 12px; font-size:12px; color:#fde68a; font-weight:500; margin-bottom:14px; }
+    .result-section { width:100%; max-width:420px; background:rgba(255,255,255,.06); border:1.5px solid var(--border2); border-radius:14px; padding:18px; margin-bottom:10px; }
+    .rs-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; color:var(--accent2); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
     .rs-label::after { content:''; flex:1; height:1px; background:linear-gradient(to right,rgba(201,168,76,.2),transparent); }
     .rs-keywords { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
-    .kw { padding:4px 10px; border-radius:20px; border:1px solid rgba(201,168,76,.2); font-size:11px; color:var(--gold-pale); background:rgba(201,168,76,.05); letter-spacing:.5px; }
-    .rs-text { font-size:13.5px; line-height:1.75; color:var(--mist); font-weight:300; }
-    .sunny-box { width:100%; max-width:420px; background:linear-gradient(135deg,rgba(201,168,76,.07),rgba(201,168,76,.03)); border:1px solid rgba(201,168,76,.25); border-radius:14px; padding:18px; margin-bottom:10px; position:relative; overflow:hidden; }
+    .kw { padding:5px 12px; border-radius:20px; border:1.5px solid rgba(167,139,250,.3); font-size:12px; color:var(--accent2); background:rgba(167,139,250,.1); font-weight:500; }
+    .rs-text { font-size:15px; line-height:1.8; color:var(--text); font-weight:400; }
+    .sunny-box { width:100%; max-width:420px; background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(167,139,250,.08)); border:1.5px solid rgba(167,139,250,.35); border-radius:14px; padding:20px; margin-bottom:10px; position:relative; overflow:hidden; }
     .sunny-box::before { content:'✦'; position:absolute; right:14px; top:10px; font-size:28px; color:rgba(201,168,76,.06); }
-    .sunny-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(201,168,76,.12); border:1px solid rgba(201,168,76,.3); border-radius:20px; padding:4px 12px; font-size:10px; color:var(--gold-pale); letter-spacing:1px; margin-bottom:12px; }
-    .sunny-text { font-family:'Noto Serif KR',serif; font-size:13.5px; line-height:1.85; color:var(--cream); font-weight:300; }
+    .sunny-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(167,139,250,.2); border:1.5px solid rgba(167,139,250,.4); border-radius:20px; padding:5px 14px; font-size:11px; color:var(--accent2); font-weight:600; margin-bottom:14px; }
+    .sunny-text { font-family:'Noto Serif KR',serif; font-size:15px; line-height:1.9; color:var(--text); font-weight:400; }
 
     /* animations */
     @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
     @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
     @keyframes pulseAnim { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.8);opacity:.15} }
-    @keyframes shuffleL { 0%{transform:rotate(2deg) translateX(0)} 30%{transform:rotate(-18deg) translateX(-30px) translateY(-10px)} 60%{transform:rotate(14deg) translateX(20px)} 100%{transform:rotate(2deg) translateX(0)} }
-    @keyframes shuffleM { 0%{transform:rotate(-3deg)} 30%{transform:rotate(12deg) translateX(25px) translateY(-8px)} 60%{transform:rotate(-16deg) translateX(-18px)} 100%{transform:rotate(-3deg)} }
+    @keyframes shuffleL { 0%{transform:rotate(2deg) translateX(0)} 25%{transform:rotate(-25deg) translateX(-50px) translateY(-20px) scale(1.05)} 60%{transform:rotate(18deg) translateX(35px) translateY(-5px)} 100%{transform:rotate(2deg) translateX(0)} }
+    @keyframes shuffleM { 0%{transform:rotate(-4deg)} 25%{transform:rotate(20deg) translateX(40px) translateY(-15px) scale(1.03)} 60%{transform:rotate(-22deg) translateX(-30px) translateY(5px)} 100%{transform:rotate(-4deg)} }
     .fu  { animation:fadeUp .6s ease both; }
     .fu1 { animation:fadeUp .6s .1s ease both; }
     .fu2 { animation:fadeUp .6s .2s ease both; }
@@ -499,32 +508,36 @@ export default function TarotPage() {
               <p className="hero-sub">✦ &nbsp; Major Arcana 22장 &nbsp; ✦</p>
 
               {/* 덱 선택 */}
-              <div style={{ display:'flex', gap:8, marginBottom:20, animation:'fadeDown .8s .18s ease both' }}>
+              <div style={{ display:'flex', gap:10, marginBottom:20, width:'100%', maxWidth:380, animation:'fadeDown .8s .18s ease both' }}>
                 <button
                   onClick={() => setDeckMode('simple')}
                   style={{
-                    flex:1, padding:'10px 0', borderRadius:10,
-                    border: deckMode==='simple' ? '1px solid #c9a84c' : '1px solid #2e2448',
-                    background: deckMode==='simple' ? 'rgba(201,168,76,.12)' : 'transparent',
-                    color: deckMode==='simple' ? '#e8d5a3' : '#9b8fc2',
-                    fontSize:12, cursor:'pointer', fontFamily:'Noto Sans KR,sans-serif',
-                    transition:'all .2s', letterSpacing:'.5px',
+                    flex:1, padding:'14px 12px', borderRadius:12,
+                    border: deckMode==='simple' ? '2px solid #a78bfa' : '1.5px solid rgba(167,139,250,.25)',
+                    background: deckMode==='simple' ? 'rgba(124,58,237,.25)' : 'rgba(255,255,255,.05)',
+                    color: deckMode==='simple' ? '#f0ecff' : '#c4b5fd',
+                    fontSize:14, cursor:'pointer', fontFamily:'Noto Sans KR,sans-serif',
+                    transition:'all .2s', fontWeight: deckMode==='simple' ? 600 : 400,
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:4,
                   }}>
-                  🌙 심플<br />
-                  <span style={{fontSize:10, opacity:.7}}>메이저 22장</span>
+                  <span style={{fontSize:20}}>🌙</span>
+                  <span>심플</span>
+                  <span style={{fontSize:11, opacity:.7, fontWeight:400}}>메이저 22장</span>
                 </button>
                 <button
                   onClick={() => setDeckMode('deep')}
                   style={{
-                    flex:1, padding:'10px 0', borderRadius:10,
-                    border: deckMode==='deep' ? '1px solid #c9a84c' : '1px solid #2e2448',
-                    background: deckMode==='deep' ? 'rgba(201,168,76,.12)' : 'transparent',
-                    color: deckMode==='deep' ? '#e8d5a3' : '#9b8fc2',
-                    fontSize:12, cursor:'pointer', fontFamily:'Noto Sans KR,sans-serif',
-                    transition:'all .2s', letterSpacing:'.5px',
+                    flex:1, padding:'14px 12px', borderRadius:12,
+                    border: deckMode==='deep' ? '2px solid #a78bfa' : '1.5px solid rgba(167,139,250,.25)',
+                    background: deckMode==='deep' ? 'rgba(124,58,237,.25)' : 'rgba(255,255,255,.05)',
+                    color: deckMode==='deep' ? '#f0ecff' : '#c4b5fd',
+                    fontSize:14, cursor:'pointer', fontFamily:'Noto Sans KR,sans-serif',
+                    transition:'all .2s', fontWeight: deckMode==='deep' ? 600 : 400,
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:4,
                   }}>
-                  🔮 심층<br />
-                  <span style={{fontSize:10, opacity:.7}}>전체 78장</span>
+                  <span style={{fontSize:20}}>🔮</span>
+                  <span>심층</span>
+                  <span style={{fontSize:11, opacity:.7, fontWeight:400}}>전체 78장</span>
                 </button>
               </div>
 
@@ -537,7 +550,7 @@ export default function TarotPage() {
 
               <div className="q-wrap">
                 <textarea
-                  placeholder={'예) 이 사람이 저를 진심으로 좋아하는 걸까요?\n솔직하게 적어주세요, 카드가 느낍니다.'}
+                  placeholder={'고민을 솔직하게 적어주세요, 카드가 느낍니다.\n예) 이 사람이 저를 진심으로 좋아하는 걸까요?'}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                 />
