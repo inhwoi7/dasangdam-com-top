@@ -23,7 +23,10 @@
   box-sizing: border-box;
 }
 
+/* ✅ font-size 17px 명시 (기존: 미설정 → 브라우저 기본 16px)
+   전체 글자·카드·간격이 약 6% 비례해서 커짐 */
 html {
+  font-size: 17px;
   scroll-behavior: smooth;
 }
 
@@ -35,13 +38,17 @@ body {
     radial-gradient(circle at top center, rgba(255, 241, 204, 0.55), transparent 28%),
     linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
   color: var(--text);
+  /* ✅ "Pretendard Variable" 우선 추가 (CDN dynamic-subset 로드 방식과 맞춤)
+     layout.tsx에서 CDN으로 불러온 Pretendard가 여기서 실제 적용됨 */
   font-family:
+    "Pretendard Variable",
     "Pretendard",
     "Apple SD Gothic Neo",
     "Noto Sans KR",
     "Malgun Gothic",
     sans-serif;
-  line-height: 1.55;
+  /* ✅ line-height 1.55 → 1.6 (줄간격 조금 더 여유있게) */
+  line-height: 1.6;
 }
 
 body {
@@ -128,9 +135,11 @@ select {
   color: #a77a2b;
 }
 
+/* ✅ 56px 고정 → clamp(40px, 5vw, 56px)
+   화면이 작으면 40px, 넓으면 56px, 중간은 자동 조절 */
 .brandText h1 {
   margin: 0;
-  font-size: 56px;
+  font-size: clamp(40px, 5vw, 56px);
   line-height: 1;
   letter-spacing: -0.05em;
   font-weight: 800;
@@ -164,9 +173,10 @@ select {
   margin-bottom: 8px;
 }
 
+/* ✅ 28px 고정 → clamp(26px, 3vw, 32px) 반응형 */
 .sectionHeader h2 {
   margin: 0;
-  font-size: 28px;
+  font-size: clamp(26px, 3vw, 32px);
   line-height: 1.25;
   letter-spacing: -0.04em;
   font-weight: 800;
@@ -237,9 +247,10 @@ select {
   flex: 1;
 }
 
+/* ✅ 24px 고정 → clamp(21px, 2.5vw, 26px) 반응형 */
 .recommendCopy h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: clamp(21px, 2.5vw, 26px);
   line-height: 1.35;
   letter-spacing: -0.04em;
   font-weight: 800;
@@ -276,18 +287,22 @@ select {
   margin-bottom: 36px;
 }
 
+/* ✅ repeat(2, 1fr) 고정 → auto-fill minmax(300px, 1fr)
+   카드 하나가 최소 300px 확보 → 화면 너비에 따라 열 수 자동 결정
+   큰 화면: 3열, 보통: 2열, 좁은 화면: 1열 */
 .serviceGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
+/* ✅ min-height 110 → 124px, padding 소폭 증가 */
 .serviceCard {
-  min-height: 110px;
+  min-height: 124px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 18px 18px 16px;
+  gap: 18px;
+  padding: 20px 20px 20px 18px;
   border-radius: 24px;
   border: 1px solid rgba(234, 223, 205, 0.6);
   background: rgba(255, 253, 249, 0.97);
@@ -353,26 +368,29 @@ select {
   min-width: 0;
 }
 
+/* ✅ 19px → 20px */
 .serviceText strong {
   display: block;
-  font-size: 19px;
+  font-size: 20px;
   line-height: 1.25;
   letter-spacing: -0.02em;
   font-weight: 700;
   margin-bottom: 8px;
 }
 
+/* ✅ 13px faint → 14px soft (가독성 향상) */
 .serviceText p {
   margin: 0;
-  font-size: 13px;
-  color: var(--text-faint);
+  font-size: 14px;
+  color: var(--text-soft);
   line-height: 1.5;
 }
 
+/* ✅ 38px → 44px (애플 HIG 최소 터치 영역 기준) */
 .serviceArrow,
 .postArrow {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid #e7dcc9;
   background: #fbf6ed;
@@ -452,9 +470,10 @@ select {
   font-weight: 600;
 }
 
+/* ✅ 18px → 19px */
 .postMain h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.4;
   letter-spacing: -0.03em;
   font-weight: 800;
@@ -691,9 +710,8 @@ select {
     align-self: flex-end;
   }
 
-  .serviceGrid {
-    grid-template-columns: 1fr;
-  }
+  /* ✅ 기존 grid-template-columns: 1fr 제거
+     auto-fill이 알아서 처리하므로 불필요 */
 
   .postTitle {
     font-size: 34px;
@@ -756,8 +774,13 @@ select {
     font-size: 24px;
   }
 
+  /* ✅ 640px 이하(모바일)에서 확실하게 1열 */
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+
   .serviceCard {
-    min-height: 102px;
+    min-height: 108px;
     padding: 16px;
   }
 

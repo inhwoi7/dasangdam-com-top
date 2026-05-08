@@ -1,18 +1,14 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// ✅ viewport export 추가 (Next.js App Router 공식 방식)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "다상담",
@@ -44,14 +40,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="ko" className="h-full antialiased">
       <head>
         {/* 네이버 서치어드바이저 인증 */}
-        <meta name="naver-site-verification" content="e8e8ec3de6a4457cd84e5f5752897beddce17ace" />
+        <meta
+          name="naver-site-verification"
+          content="e8e8ec3de6a4457cd84e5f5752897beddce17ace"
+        />
 
+        {/* ✅ Pretendard 폰트 CDN 명시 로드
+            기존에는 font-family에만 써놨을 뿐 실제 로드가 안 됐음.
+            preconnect로 연결 미리 준비 → 폰트 로딩 속도 개선 */}
+        <link
+          rel="preconnect"
+          href="https://cdn.jsdelivr.net"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css"
+        />
+
+        {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-S51L4W52NK"
           strategy="afterInteractive"
