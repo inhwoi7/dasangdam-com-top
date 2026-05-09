@@ -36,16 +36,16 @@ export default async function HomePage() {
   const hasTodayPickLink = Boolean(todayPick?.slug);
 
   const SERVICES: ServiceItem[] = [
-    { title: t("menu_message"), description: locale === "en" ? "Find the one sentence you need today." : "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
-    { title: t("menu_tarot"), description: locale === "en" ? "Put your question into a card. Major 22 · Full 78." : "마음 속 질문을 카드에 담아보세요. 메이저 22장 · 전체 78장.", href: "/services/tarot", icon: "tarot" },
-    { title: t("menu_lucky_number"), description: locale === "en" ? "Check your lucky number with a light heart." : "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
-    { title: t("menu_saju"), description: locale === "en" ? "Explore your innate flow and current fortune." : "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
-    { title: t("menu_saju_match"), description: locale === "en" ? "Check the harmony between you two." : "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
-    { title: t("menu_mbti"), description: locale === "en" ? "Understand relationship patterns clearly." : "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
-    { title: t("menu_personality"), description: locale === "en" ? "Discover your personality type scientifically." : "나의 성격 유형을 과학적으로 알아보세요.", href: "/services/ipip", icon: "ipip" },
-    { title: t("menu_iching"), description: locale === "en" ? "Check today's energy lightly and comfortably." : "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
-    { title: t("menu_ladder"), description: locale === "en" ? "Try the ladder of fate with friends!" : "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
-    { title: t("menu_naming"), description: locale === "en" ? "Find a good name that fits your fortune." : "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
+    { title: t("menu_message"), description: locale === "en" ? "Discover your daily inspiration." : "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
+    { title: t("menu_tarot"), description: locale === "en" ? "Draw a card for your question. Major 22 · Full 78." : "마음 속 질문을 카드에 담아보세요. 메이저 22장 · 전체 78장.", href: "/services/tarot", icon: "tarot" },
+    { title: t("menu_lucky_number"), description: locale === "en" ? "Find your lucky number today." : "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
+    { title: t("menu_saju"), description: locale === "en" ? "Explore your destiny and cosmic flow." : "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
+    { title: t("menu_saju_match"), description: locale === "en" ? "Check your compatibility." : "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
+    { title: t("menu_mbti"), description: locale === "en" ? "Analyze your relationship chemistry." : "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
+    { title: t("menu_personality"), description: locale === "en" ? "Unlock your true personality type." : "나의 성격 유형을 과학적으로 알아보세요.", href: "/services/ipip", icon: "ipip" },
+    { title: t("menu_iching"), description: locale === "en" ? "Reveal your energy for today." : "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+    { title: t("menu_ladder"), description: locale === "en" ? "Play the Ladder Game with friends!" : "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
+    { title: t("menu_naming"), description: locale === "en" ? "Find a name that brings good fortune." : "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
   ];
 
   const displayTitle = locale === "en" && todayPick?.title_en ? todayPick.title_en : todayPick?.title;
