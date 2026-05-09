@@ -24,7 +24,8 @@ function formatDate(dateString: string, locale: string) {
 
 async function fetchData(locale: string) {
   const todayPick = await getFeaturedQuote(locale).catch(() => null);
-  const articlePosts = await getArticlePosts(3).catch(() => []);
+  // ✅ locale 전달 → KO면 Language=KO 글만, EN이면 Language=EN 글만
+  const articlePosts = await getArticlePosts(3, locale).catch(() => []);
   return { todayPick, articlePosts };
 }
 
@@ -151,7 +152,8 @@ export default async function HomePage() {
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">{locale === "en" ? "Traces of Thought" : "생각의 흔적"}</span>
-              <h2>{t("section_think")}</h2>
+              {/* ✅ 써니의 생각 (오타 수정) */}
+              <h2>{locale === "en" ? "Sunny's Thoughts" : "써니의 생각"}</h2>
             </div>
             <Link href="/blog" style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
@@ -163,7 +165,11 @@ export default async function HomePage() {
           <div className="postList">
             {articlePosts.length > 0 ? (
               articlePosts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="postRow">
+                <Link
+                  key={post.id}
+                  href={`/blog/${locale === "en" && post.en_page_id ? post.en_page_id : post.slug}`}
+                  className="postRow"
+                >
                   <div className="postMain">
                     <div className="postMeta">
                       {post.category && <span className="categoryTag">{post.category}</span>}

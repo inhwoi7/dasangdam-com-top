@@ -74,6 +74,20 @@ function mapPost(page: any): PostItem {
   };
 }
 
+// KO: Language=KO 또는 비어있는 글, EN: Language=EN만
+function buildLanguageFilter(locale: string) {
+  if (locale === "en") {
+    return { property: "Language", select: { equals: "EN" } };
+  }
+  // KO: Language=KO이거나 Language가 없는 글 (기존 글 포함)
+  return {
+    or: [
+      { property: "Language", select: { equals: "KO" } },
+      { property: "Language", select: { is_empty: true } },
+    ],
+  };
+}
+
 export async function getFeaturedQuote(locale = "ko"): Promise<PostItem | null> {
   try {
     const lang = locale === "en" ? "EN" : "KO";
@@ -95,38 +109,53 @@ export async function getFeaturedQuote(locale = "ko"): Promise<PostItem | null> 
   }
 }
 
-export async function getArticlePosts(limit = 10): Promise<PostItem[]> {
+export async function getArticlePosts(limit = 10, locale = "ko"): Promise<PostItem[]> {
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
           { property: "Type",      select:   { equals: "article" } },
+          buildLanguageFilter(locale),
         ],
       },
       sorts: [{ property: "PublishedDate", direction: "descending" }],
-      page_size: limit,
+      page_size: limit + 10, // 여유분 더 가져와서 EN 글 혹시 섞인 거 제거 후 limit 맞춤
     });
-    return data.results?.map(mapPost) ?? [];
+
+    let results: PostItem[] = data.results?.map(mapPost) ?? [];
+
+    // KO일 때 혹시라도 EN 글이 섞이면 제거 (이중 안전장치)
+    if (locale === "ko") {
+      results = results.filter((p) => p.language !== "EN");
+    }
+
+    return results.slice(0, limit);
   } catch (e: any) {
     console.error("[getArticlePosts]", e.message);
     return [];
   }
 }
 
-export async function getQuotePosts(limit = 100): Promise<PostItem[]> {
+export async function getQuotePosts(limit = 100, locale = "ko"): Promise<PostItem[]> {
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
-          { property: "Type", select: { equals: "quote" } },
+          { property: "Type",      select:   { equals: "quote" } },
+          buildLanguageFilter(locale),
         ],
       },
       sorts: [{ property: "PublishedDate", direction: "descending" }],
       page_size: limit,
     });
-    return data.results?.map(mapPost) ?? [];
+
+    let results: PostItem[] = data.results?.map(mapPost) ?? [];
+    if (locale === "ko") {
+      results = results.filter((p) => p.language !== "EN");
+    }
+    return results;
   } catch (e: any) {
     console.error("[getQuotePosts]", e.message);
     return [];
@@ -135,20 +164,27 @@ export async function getQuotePosts(limit = 100): Promise<PostItem[]> {
 
 export async function getArticlePostsPaginated(
   page = 1,
-  pageSize = 10
+  pageSize = 10,
+  locale = "ko"
 ): Promise<{ posts: PostItem[]; totalCount: number; hasMore: boolean }> {
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
-          { property: "Type", select: { equals: "article" } },
+          { property: "Type",      select:   { equals: "article" } },
+          buildLanguageFilter(locale),
         ],
       },
       sorts: [{ property: "PublishedDate", direction: "descending" }],
       page_size: 100,
     });
-    const all: PostItem[] = data.results?.map(mapPost) ?? [];
+
+    let all: PostItem[] = data.results?.map(mapPost) ?? [];
+    if (locale === "ko") {
+      all = all.filter((p) => p.language !== "EN");
+    }
+
     const start = (page - 1) * pageSize;
     const posts = all.slice(start, start + pageSize);
     return {
@@ -187,7 +223,6 @@ export async function getPostBySlug(slug: string, locale = "ko") {
 
     const post = mapPost(page);
 
-    // 영어 요청이고 EN_Page_ID가 있으면 영어 페이지 블록을 가져옴
     if (locale === "en" && post.en_page_id) {
       try {
         const enBlocks = await getAllBlocks(post.en_page_id);

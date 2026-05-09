@@ -47,19 +47,17 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="h-full antialiased">
+    <html lang={locale} className={`h-full antialiased ${locale === 'en' ? 'font-en' : ''}`}>
       <head>
         <meta
           name="naver-site-verification"
-          content="e8e8ec3de6a4457cd84e5f5752897beddce17ace"
+          content="e8e8ec3de6a4457cd84e5f5752897beddce17ace"<html lang={locale} className={`h-full antialiased ${locale === 'en' ? 'font-en' : ''}`}></html>
         />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        {locale === "ko" && (
-          <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css"
-          />
-        )}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css"
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-S51L4W52NK"
           strategy="afterInteractive"
@@ -75,6 +73,9 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <header className="fixed top-2 right-4 z-50">
+            <LangSwitch />
+          </header>
           {children}
           <Footer />
         </NextIntlClientProvider>
