@@ -1,4 +1,7 @@
+/* 영문 폰트 */
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
 :root {
   --bg: #f6f0e6;
   --bg-strong: #f3eadb;
@@ -23,8 +26,6 @@
   box-sizing: border-box;
 }
 
-/* ✅ font-size 17px 명시 (기존: 미설정 → 브라우저 기본 16px)
-   전체 글자·카드·간격이 약 6% 비례해서 커짐 */
 html {
   font-size: 17px;
   scroll-behavior: smooth;
@@ -38,8 +39,6 @@ body {
     radial-gradient(circle at top center, rgba(255, 241, 204, 0.55), transparent 28%),
     linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
   color: var(--text);
-  /* ✅ "Pretendard Variable" 우선 추가 (CDN dynamic-subset 로드 방식과 맞춤)
-     layout.tsx에서 CDN으로 불러온 Pretendard가 여기서 실제 적용됨 */
   font-family:
     "Pretendard Variable",
     "Pretendard",
@@ -47,8 +46,29 @@ body {
     "Noto Sans KR",
     "Malgun Gothic",
     sans-serif;
-  /* ✅ line-height 1.55 → 1.6 (줄간격 조금 더 여유있게) */
   line-height: 1.6;
+}
+
+/* 영어일 때 폰트 전환 */
+html.font-en,
+html.font-en body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+  word-spacing: 0.05em;
+}
+
+html.font-en .brandText h1,
+html.font-en .sectionHeader h2,
+html.font-en .recommendCopy h2,
+html.font-en .postMain h3,
+html.font-en .postTitle {
+  font-family: 'Lora', Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+html.font-en .brandEyebrow {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.18em;
 }
 
 body {
@@ -135,8 +155,6 @@ select {
   color: #a77a2b;
 }
 
-/* ✅ 56px 고정 → clamp(40px, 5vw, 56px)
-   화면이 작으면 40px, 넓으면 56px, 중간은 자동 조절 */
 .brandText h1 {
   margin: 0;
   font-size: clamp(40px, 5vw, 56px);
@@ -151,6 +169,13 @@ select {
   font-size: 16px;
   line-height: 1.45;
   letter-spacing: 0.01em;
+}
+
+/* LangSwitch 위치 */
+.langSwitchRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 /* Section common */
@@ -173,7 +198,6 @@ select {
   margin-bottom: 8px;
 }
 
-/* ✅ 28px 고정 → clamp(26px, 3vw, 32px) 반응형 */
 .sectionHeader h2 {
   margin: 0;
   font-size: clamp(26px, 3vw, 32px);
@@ -247,7 +271,6 @@ select {
   flex: 1;
 }
 
-/* ✅ 24px 고정 → clamp(21px, 2.5vw, 26px) 반응형 */
 .recommendCopy h2 {
   margin: 0;
   font-size: clamp(21px, 2.5vw, 26px);
@@ -287,16 +310,12 @@ select {
   margin-bottom: 36px;
 }
 
-/* ✅ repeat(2, 1fr) 고정 → auto-fill minmax(300px, 1fr)
-   카드 하나가 최소 300px 확보 → 화면 너비에 따라 열 수 자동 결정
-   큰 화면: 3열, 보통: 2열, 좁은 화면: 1열 */
 .serviceGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
-/* ✅ min-height 110 → 124px, padding 소폭 증가 */
 .serviceCard {
   min-height: 124px;
   display: flex;
@@ -328,35 +347,12 @@ select {
   flex-shrink: 0;
 }
 
-.serviceCard:nth-child(1) .serviceIconBox {
-  background: #fff3cf;
-  color: #d79a11;
-}
-
-.serviceCard:nth-child(2) .serviceIconBox {
-  background: #eef4ff;
-  color: #5c84f5;
-}
-
-.serviceCard:nth-child(3) .serviceIconBox {
-  background: #fff0f4;
-  color: #f05a7e;
-}
-
-.serviceCard:nth-child(4) .serviceIconBox {
-  background: #ecfbef;
-  color: #38a857;
-}
-
-.serviceCard:nth-child(5) .serviceIconBox {
-  background: #fff2f4;
-  color: #db5572;
-}
-
-.serviceCard:nth-child(6) .serviceIconBox {
-  background: #fff6e7;
-  color: #f08b22;
-}
+.serviceCard:nth-child(1) .serviceIconBox { background: #fff3cf; color: #d79a11; }
+.serviceCard:nth-child(2) .serviceIconBox { background: #eef4ff; color: #5c84f5; }
+.serviceCard:nth-child(3) .serviceIconBox { background: #fff0f4; color: #f05a7e; }
+.serviceCard:nth-child(4) .serviceIconBox { background: #ecfbef; color: #38a857; }
+.serviceCard:nth-child(5) .serviceIconBox { background: #fff2f4; color: #db5572; }
+.serviceCard:nth-child(6) .serviceIconBox { background: #fff6e7; color: #f08b22; }
 
 .serviceIconBox svg {
   width: 24px;
@@ -368,7 +364,6 @@ select {
   min-width: 0;
 }
 
-/* ✅ 19px → 20px */
 .serviceText strong {
   display: block;
   font-size: 20px;
@@ -378,7 +373,6 @@ select {
   margin-bottom: 8px;
 }
 
-/* ✅ 13px faint → 14px soft (가독성 향상) */
 .serviceText p {
   margin: 0;
   font-size: 14px;
@@ -386,7 +380,6 @@ select {
   line-height: 1.5;
 }
 
-/* ✅ 38px → 44px (애플 HIG 최소 터치 영역 기준) */
 .serviceArrow,
 .postArrow {
   width: 44px;
@@ -470,7 +463,6 @@ select {
   font-weight: 600;
 }
 
-/* ✅ 18px → 19px */
 .postMain h3 {
   margin: 0;
   font-size: 19px;
@@ -548,9 +540,7 @@ select {
 }
 
 /* Notion renderer */
-.notionProse {
-  color: var(--text);
-}
+.notionProse { color: var(--text); }
 
 .notionBlock + .notionBlock,
 .notionCallout + .notionBlock,
@@ -568,17 +558,9 @@ select {
   letter-spacing: -0.04em;
 }
 
-.notionProse h1 {
-  font-size: 32px;
-}
-
-.notionProse h2 {
-  font-size: 26px;
-}
-
-.notionProse h3 {
-  font-size: 22px;
-}
+.notionProse h1 { font-size: 32px; }
+.notionProse h2 { font-size: 26px; }
+.notionProse h3 { font-size: 22px; }
 
 .notionProse p,
 .notionProse li,
@@ -589,9 +571,7 @@ select {
   color: #2c3340;
 }
 
-.notionProse p {
-  margin: 0;
-}
+.notionProse p { margin: 0; }
 
 .notionProse ul,
 .notionProse ol {
@@ -648,9 +628,7 @@ select {
   line-height: 1.7;
 }
 
-.notionImage {
-  margin: 18px 0;
-}
+.notionImage { margin: 18px 0; }
 
 .notionImage img {
   width: 100%;
@@ -693,29 +671,16 @@ select {
     padding: 32px 20px;
   }
 
-  .brandText h1 {
-    font-size: 46px;
-  }
-
-  .brandSubtitle {
-    font-size: 15px;
-  }
+  .brandText h1 { font-size: 46px; }
+  .brandSubtitle { font-size: 15px; }
 
   .recommendBody {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .recommendAction {
-    align-self: flex-end;
-  }
-
-  /* ✅ 기존 grid-template-columns: 1fr 제거
-     auto-fill이 알아서 처리하므로 불필요 */
-
-  .postTitle {
-    font-size: 34px;
-  }
+  .recommendAction { align-self: flex-end; }
+  .postTitle { font-size: 34px; }
 }
 
 @media (max-width: 640px) {
@@ -730,18 +695,9 @@ select {
     padding: 24px 16px;
   }
 
-  .brandLogo {
-    width: 52px;
-    height: 52px;
-  }
-
-  .brandText h1 {
-    font-size: 38px;
-  }
-
-  .brandSubtitle {
-    font-size: 14px;
-  }
+  .brandLogo { width: 52px; height: 52px; }
+  .brandText h1 { font-size: 38px; }
+  .brandSubtitle { font-size: 14px; }
 
   .recommendCard,
   .serviceCard,
@@ -752,9 +708,7 @@ select {
     border-radius: 22px;
   }
 
-  .recommendCard {
-    padding: 16px;
-  }
+  .recommendCard { padding: 16px; }
 
   .recommendTop {
     flex-direction: column;
@@ -762,47 +716,22 @@ select {
     margin-bottom: 14px;
   }
 
-  .recommendCopy h2 {
-    font-size: 22px;
-  }
+  .recommendCopy h2 { font-size: 22px; }
+  .recommendAction { align-self: flex-start; }
+  .sectionHeader h2 { font-size: 24px; }
 
-  .recommendAction {
-    align-self: flex-start;
-  }
-
-  .sectionHeader h2 {
-    font-size: 24px;
-  }
-
-  /* ✅ 640px 이하(모바일)에서 확실하게 1열 */
-  .serviceGrid {
-    grid-template-columns: 1fr;
-  }
+  .serviceGrid { grid-template-columns: 1fr; }
 
   .serviceCard {
     min-height: 108px;
     padding: 16px;
   }
 
-  .serviceText strong {
-    font-size: 17px;
-  }
-
-  .postMain h3 {
-    font-size: 17px;
-  }
-
-  .postRow {
-    align-items: flex-start;
-  }
-
-  .postTitle {
-    font-size: 28px;
-  }
-
-  .postExcerpt {
-    font-size: 15px;
-  }
+  .serviceText strong { font-size: 17px; }
+  .postMain h3 { font-size: 17px; }
+  .postRow { align-items: flex-start; }
+  .postTitle { font-size: 28px; }
+  .postExcerpt { font-size: 15px; }
 
   .postHeaderCard,
   .postBodyCard,
@@ -810,17 +739,9 @@ select {
     padding: 20px;
   }
 
-  .notionProse h1 {
-    font-size: 28px;
-  }
-
-  .notionProse h2 {
-    font-size: 24px;
-  }
-
-  .notionProse h3 {
-    font-size: 20px;
-  }
+  .notionProse h1 { font-size: 28px; }
+  .notionProse h2 { font-size: 24px; }
+  .notionProse h3 { font-size: 20px; }
 
   .notionProse p,
   .notionProse li,

@@ -1,24 +1,30 @@
 import Comments from "@/components/Comments";
-import { getPostBySlug } from "../../../lib/notion";
+import { getPostBySlug } from "@/lib/notion";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getLocale } from "next-intl/server";
 
 export const revalidate = 0;
 
 export default async function BlogPostPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const locale = await getLocale();
+  const post = await getPostBySlug(slug, locale);
 
   if (!post) return notFound();
+
+  const title = locale === "en" && post.title_en ? post.title_en : post.title;
+  const excerpt = locale === "en" && post.excerpt_en ? post.excerpt_en : post.excerpt;
+  const backLabel = locale === "en" ? "← Home" : "← 홈으로";
 
   return (
     <main style={{ maxWidth: "720px", margin: "0 auto", padding: "60px 24px" }}>
       <Link href="/" style={{ display: "inline-block", marginBottom: "32px", color: "#8c7b6b", fontSize: "14px", textDecoration: "none" }}>
-        ← 홈으로
+        {backLabel}
       </Link>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "12px" }}>
@@ -29,18 +35,20 @@ export default async function BlogPostPage({
         )}
         {post.publishedDate && (
           <span style={{ color: "#b0a090", fontSize: "13px" }}>
-            {new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(post.publishedDate))}
+            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ko-KR", {
+              year: "numeric", month: "2-digit", day: "2-digit"
+            }).format(new Date(post.publishedDate))}
           </span>
         )}
       </div>
 
       <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#3d2f22", lineHeight: "1.5", marginBottom: "12px" }}>
-        {post.title}
+        {title}
       </h1>
 
-      {post.excerpt && (
+      {excerpt && (
         <p style={{ fontSize: "16px", color: "#8c7b6b", lineHeight: "1.8", marginBottom: "40px", paddingBottom: "32px", borderBottom: "1px solid #e8e0d5" }}>
-          {post.excerpt}
+          {excerpt}
         </p>
       )}
 

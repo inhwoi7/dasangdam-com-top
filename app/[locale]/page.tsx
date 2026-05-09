@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
+import { getLocale, getTranslations } from "next-intl/server";
+import LangSwitch from "@/components/LangSwitch";
 
 export const revalidate = 0;
 
@@ -11,24 +13,13 @@ type ServiceItem = {
   icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder" | "message" | "naming" | "tarot";
 };
 
-const SERVICES: ServiceItem[] = [
-  { title: "오늘의 메시지, 함께 나눠요", description: "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
-  { title: "오늘의 한 장, 타로", description: "마음 속 질문을 카드에 담아보세요. 메이저 22장 · 전체 78장.", href: "/services/tarot", icon: "tarot" },
-  { title: "행운의 숫자", description: "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
-  { title: "사주", description: "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
-  { title: "사주 궁합", description: "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
-  { title: "MBTI 매칭", description: "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
-  { title: "나의 성격 유형 찾기 (feat. MBTI)", description: "나의 성격 유형을 과학적으로 알아보세요.", href: "/services/ipip", icon: "ipip" },
-  { title: "주역점", description: "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
-  { title: "사다리 게임", description: "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
-  { title: "지혜로운 작명", description: "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
-];
-
-function formatDate(dateString: string) {
+function formatDate(dateString: string, locale: string) {
   if (!dateString) return "";
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
-  return new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ko-KR", {
+    year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(date);
 }
 
 async function fetchData() {
@@ -39,7 +30,25 @@ async function fetchData() {
 
 export default async function HomePage() {
   const { todayPick, articlePosts } = await fetchData();
+  const locale = await getLocale();
+  const t = await getTranslations();
   const hasTodayPickLink = Boolean(todayPick?.slug);
+
+  const SERVICES: ServiceItem[] = [
+    { title: t("menu_message"), description: locale === "en" ? "Find the one sentence you need today." : "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
+    { title: t("menu_tarot"), description: locale === "en" ? "Put your question into a card. Major 22 · Full 78." : "마음 속 질문을 카드에 담아보세요. 메이저 22장 · 전체 78장.", href: "/services/tarot", icon: "tarot" },
+    { title: t("menu_lucky_number"), description: locale === "en" ? "Check your lucky number with a light heart." : "가벼운 마음으로 확인하는 행운의 숫자를 확인해보세요.", href: "/services/lucky", icon: "lucky" },
+    { title: t("menu_saju"), description: locale === "en" ? "Explore your innate flow and current fortune." : "타고난 흐름과 현재의 운을 편안하게 살펴보세요.", href: "/services/saju", icon: "saju" },
+    { title: t("menu_saju_match"), description: locale === "en" ? "Check the harmony between you two." : "우리 둘의 성향 차이와 조화를 확인해보세요.", href: "/services/chemi", icon: "compatibility" },
+    { title: t("menu_mbti"), description: locale === "en" ? "Understand relationship patterns clearly." : "성향과 관계 패턴을 쉽고 명확하게 이해해보세요.", href: "/services/mbti", icon: "mbti" },
+    { title: t("menu_personality"), description: locale === "en" ? "Discover your personality type scientifically." : "나의 성격 유형을 과학적으로 알아보세요.", href: "/services/ipip", icon: "ipip" },
+    { title: t("menu_iching"), description: locale === "en" ? "Check today's energy lightly and comfortably." : "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
+    { title: t("menu_ladder"), description: locale === "en" ? "Try the ladder of fate with friends!" : "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
+    { title: t("menu_naming"), description: locale === "en" ? "Find a good name that fits your fortune." : "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
+  ];
+
+  const displayTitle = locale === "en" && todayPick?.title_en ? todayPick.title_en : todayPick?.title;
+  const displayExcerpt = locale === "en" && todayPick?.excerpt_en ? todayPick.excerpt_en : todayPick?.excerpt;
 
   return (
     <main className="page">
@@ -50,8 +59,13 @@ export default async function HomePage() {
             <div className="brandText">
               <p className="brandEyebrow">WISE REST WITH SUNNY</p>
               <h1>다상담</h1>
-              <p className="brandSubtitle">써니와 함께하는 인생의 지혜로운 쉼터</p>
+              <p className="brandSubtitle">
+                {locale === "en" ? "A wise resting place with Sunny" : "써니와 함께하는 인생의 지혜로운 쉼터"}
+              </p>
             </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
+            <LangSwitch />
           </div>
         </section>
 
@@ -62,15 +76,15 @@ export default async function HomePage() {
                 <Link href={`/blog/${todayPick.slug}`} className="recommendCard">
                   <div className="recommendTop">
                     <span className="recommendMini">TODAY&apos;S PICK</span>
-                    <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+                    <span className="recommendMiniText">{locale === "en" ? "Today's sentence" : "오늘 마음에 머무는 문장"}</span>
                   </div>
                   <div className="recommendBody">
                     <div className="recommendCopy">
-                      <h2>{todayPick.title}</h2>
-                      {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                      <h2>{displayTitle}</h2>
+                      {displayExcerpt && <p>{displayExcerpt}</p>}
                     </div>
                     <div className="recommendAction">
-                      <span>자세히 보기</span>
+                      <span>{t("see_detail")}</span>
                       <ArrowRightIcon />
                     </div>
                   </div>
@@ -79,12 +93,12 @@ export default async function HomePage() {
                 <div className="recommendCard">
                   <div className="recommendTop">
                     <span className="recommendMini">TODAY&apos;S PICK</span>
-                    <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
+                    <span className="recommendMiniText">{locale === "en" ? "Today's sentence" : "오늘 마음에 머무는 문장"}</span>
                   </div>
                   <div className="recommendBody">
                     <div className="recommendCopy">
-                      <h2>{todayPick.title}</h2>
-                      {todayPick.excerpt && <p>{todayPick.excerpt}</p>}
+                      <h2>{displayTitle}</h2>
+                      {displayExcerpt && <p>{displayExcerpt}</p>}
                     </div>
                   </div>
                 </div>
@@ -94,7 +108,7 @@ export default async function HomePage() {
                   fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
                   fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px"
                 }}>
-                  전체 목록 보기 →
+                  {t("read_more")} →
                 </Link>
               </div>
             </div>
@@ -102,12 +116,10 @@ export default async function HomePage() {
             <div className="recommendCard">
               <div className="recommendTop">
                 <span className="recommendMini">TODAY&apos;S PICK</span>
-                <span className="recommendMiniText">오늘 마음에 머무는 문장</span>
               </div>
               <div className="recommendBody">
                 <div className="recommendCopy">
-                  <h2>아직 등록된 오늘의 문장이 없습니다.</h2>
-                  <p>Notion에서 Published 체크된 quote 글을 추가해주세요.</p>
+                  <h2>{locale === "en" ? "No quote for today yet." : "아직 등록된 오늘의 문장이 없습니다."}</h2>
                 </div>
               </div>
             </div>
@@ -116,8 +128,8 @@ export default async function HomePage() {
 
         <section className="serviceSection">
           <div className="sectionHeader">
-            <span className="sectionMini">지혜로운 선택</span>
-            <h2>오늘은 뭐가 궁금하세요?</h2>
+            <span className="sectionMini">{locale === "en" ? "Wise Choice" : "지혜로운 선택"}</span>
+            <h2>{t("section_curious")}</h2>
           </div>
           <div className="serviceGrid">
             {SERVICES.map((service) => (
@@ -138,14 +150,14 @@ export default async function HomePage() {
         <section className="librarySection">
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <span className="sectionMini">생각의 흔적</span>
-              <h2>써니의 생각</h2>
+              <span className="sectionMini">{locale === "en" ? "Traces of Thought" : "생각의 흔적"}</span>
+              <h2>{t("section_think")}</h2>
             </div>
             <Link href="/blog" style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
               fontWeight: "600", marginBottom: "2px", display: "inline-flex", alignItems: "center", gap: "4px"
             }}>
-              전체 보기 →
+              {t("read_more")} →
             </Link>
           </div>
           <div className="postList">
@@ -155,10 +167,12 @@ export default async function HomePage() {
                   <div className="postMain">
                     <div className="postMeta">
                       {post.category && <span className="categoryTag">{post.category}</span>}
-                      {post.publishedDate && <span className="postDate">{formatDate(post.publishedDate)}</span>}
+                      {post.publishedDate && <span className="postDate">{formatDate(post.publishedDate, locale)}</span>}
                     </div>
-                    <h3>{post.title}</h3>
-                    {post.excerpt && <p>{post.excerpt}</p>}
+                    <h3>{locale === "en" && post.title_en ? post.title_en : post.title}</h3>
+                    {(locale === "en" && post.excerpt_en ? post.excerpt_en : post.excerpt) && (
+                      <p>{locale === "en" && post.excerpt_en ? post.excerpt_en : post.excerpt}</p>
+                    )}
                   </div>
                   <div className="postArrow"><ArrowRightIcon /></div>
                 </Link>
@@ -166,8 +180,7 @@ export default async function HomePage() {
             ) : (
               <div className="postRow">
                 <div className="postMain">
-                  <h3>아직 등록된 서재 글이 없습니다.</h3>
-                  <p>Notion에서 Published 체크된 article 글을 추가해주세요.</p>
+                  <h3>{locale === "en" ? "No posts yet." : "아직 등록된 서재 글이 없습니다."}</h3>
                 </div>
               </div>
             )}
@@ -177,25 +190,24 @@ export default async function HomePage() {
         <section className="librarySection" style={{ marginTop: "36px" }}>
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <span className="sectionMini">함께하는 이야기</span>
-              <h2>이야기 나눠요 💬</h2>
+              <span className="sectionMini">{locale === "en" ? "Together" : "함께하는 이야기"}</span>
+              <h2>{t("section_talk")}</h2>
             </div>
             <Link href="/talk" style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
               fontWeight: "600", marginBottom: "2px", display: "inline-flex", alignItems: "center", gap: "4px"
             }}>
-              전체 보기 →
+              {t("read_more")} →
             </Link>
           </div>
           <Link href="/talk" className="postRow" style={{ textDecoration: "none" }}>
             <div className="postMain">
-              <h3>소통하는 공간이에요</h3>
-              <p>편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊</p>
+              <h3>{locale === "en" ? "A space to connect" : "소통하는 공간이에요"}</h3>
+              <p>{locale === "en" ? "Feel free to leave a message. Just a nickname is enough 😊" : "편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊"}</p>
             </div>
             <div className="postArrow"><ArrowRightIcon /></div>
           </Link>
         </section>
-
       </div>
     </main>
   );

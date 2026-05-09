@@ -27,8 +27,11 @@ async function notionFetch(endpoint: string, body?: object) {
 export type PostItem = {
   id: string;
   title: string;
+  title_en?: string;
   slug: string;
   excerpt: string;
+  excerpt_en?: string;
+  en_page_id?: string;
   category: string;
   type: string;
   publishedDate: string;
@@ -56,8 +59,11 @@ function mapPost(page: any): PostItem {
   return {
     id:            page.id,
     title:         getTitle(p.Title),
+    title_en:      getRichText(p.Title_EN) || undefined,
     slug:          slug || page.id,
     excerpt:       getRichText(p.Excerpt),
+    excerpt_en:    getRichText(p.Exerpt_EN) || undefined,
+    en_page_id:    getRichText(p.EN_Page_ID) || undefined,
     category:      getSelect(p.Category),
     type:          getSelect(p.Type),
     publishedDate: getDate(p.PublishedDate),
@@ -152,7 +158,7 @@ export async function getArticlePostsPaginated(
   }
 }
 
-export async function getPostBySlug(slug: string) {
+export async function getPostBySlug(slug: string, locale = "ko") {
   try {
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
@@ -174,7 +180,25 @@ export async function getPostBySlug(slug: string) {
     }
 
     if (!page) return null;
-    return { ...mapPost(page), blocks: await getAllBlocks(page.id) };
+
+    const post = mapPost(page);
+
+    // 영어 요청이고 EN_Page_ID가 있으면 영어 페이지 블록을 가져옴
+    if (locale === "en" && post.en_page_id) {
+      try {
+        const enBlocks = await getAllBlocks(post.en_page_id);
+        return {
+          ...post,
+          title: post.title_en || post.title,
+          excerpt: post.excerpt_en || post.excerpt,
+          blocks: enBlocks,
+        };
+      } catch {
+        // 영어 페이지 실패 시 한국어로 fallback
+      }
+    }
+
+    return { ...post, blocks: await getAllBlocks(page.id) };
   } catch (e: any) {
     console.error("[getPostBySlug]", e.message);
     return null;
