@@ -47,7 +47,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`h-full antialiased ${locale === "en" ? "font-en" : ""}`}>
+    <html lang={locale} className="h-full antialiased">
       <head>
         <meta
           name="naver-site-verification"

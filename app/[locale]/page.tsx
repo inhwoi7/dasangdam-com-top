@@ -22,15 +22,15 @@ function formatDate(dateString: string, locale: string) {
   }).format(date);
 }
 
-async function fetchData() {
-  const todayPick = await getFeaturedQuote().catch(() => null);
+async function fetchData(locale: string) {
+  const todayPick = await getFeaturedQuote(locale).catch(() => null);
   const articlePosts = await getArticlePosts(3).catch(() => []);
   return { todayPick, articlePosts };
 }
 
 export default async function HomePage() {
-  const { todayPick, articlePosts } = await fetchData();
   const locale = await getLocale();
+  const { todayPick, articlePosts } = await fetchData(locale);
   const t = await getTranslations();
   const hasTodayPickLink = Boolean(todayPick?.slug);
 

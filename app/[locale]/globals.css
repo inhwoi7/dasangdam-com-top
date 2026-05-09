@@ -1,5 +1,3 @@
-/* 영문 폰트 */
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -49,27 +47,7 @@ body {
   line-height: 1.6;
 }
 
-/* 영어일 때 폰트 전환 */
-html.font-en,
-html.font-en body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  letter-spacing: 0.01em;
-  word-spacing: 0.05em;
-}
-
-html.font-en .brandText h1,
-html.font-en .sectionHeader h2,
-html.font-en .recommendCopy h2,
-html.font-en .postMain h3,
-html.font-en .postTitle {
-  font-family: 'Lora', Georgia, serif;
-  letter-spacing: -0.02em;
-}
-
-html.font-en .brandEyebrow {
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 0.18em;
-}
+/* 영어도 Pretendard 동일 적용 — KO/EN 폰트 통일 */
 
 body {
   min-height: 100vh;

@@ -32,6 +32,7 @@ export type PostItem = {
   excerpt: string;
   excerpt_en?: string;
   en_page_id?: string;
+  language?: string;
   category: string;
   type: string;
   publishedDate: string;
@@ -64,6 +65,7 @@ function mapPost(page: any): PostItem {
     excerpt:       getRichText(p.Excerpt),
     excerpt_en:    getRichText(p.Exerpt_EN) || undefined,
     en_page_id:    getRichText(p.EN_Page_ID) || undefined,
+    language:      getSelect(p.Language) || undefined,
     category:      getSelect(p.Category),
     type:          getSelect(p.Type),
     publishedDate: getDate(p.PublishedDate),
@@ -72,13 +74,15 @@ function mapPost(page: any): PostItem {
   };
 }
 
-export async function getFeaturedQuote(): Promise<PostItem | null> {
+export async function getFeaturedQuote(locale = "ko"): Promise<PostItem | null> {
   try {
+    const lang = locale === "en" ? "EN" : "KO";
     const data = await notionFetch(`/databases/${NOTION_DATABASE_ID}/query`, {
       filter: {
         and: [
           { property: "Published", checkbox: { equals: true } },
           { property: "Type",      select:   { equals: "quote" } },
+          { property: "Language",  select:   { equals: lang } },
         ],
       },
       sorts: [{ property: "PublishedDate", direction: "descending" }],
