@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import LangSwitch from "@/components/LangSwitch";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -73,9 +72,6 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <header className="fixed top-2 right-4 z-50">
-            <LangSwitch />
-          </header>
           {children}
           <Footer />
         </NextIntlClientProvider>
