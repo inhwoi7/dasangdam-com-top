@@ -47,11 +47,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`h-full antialiased ${locale === 'en' ? 'font-en' : ''}`}>
+    <html lang={locale} className={`h-full antialiased ${locale === "en" ? "font-en" : ""}`}>
       <head>
         <meta
           name="naver-site-verification"
-          content="e8e8ec3de6a4457cd84e5f5752897beddce17ace"<html lang={locale} className={`h-full antialiased ${locale === 'en' ? 'font-en' : ''}`}></html>
+          content="e8e8ec3de6a4457cd84e5f5752897beddce17ace"
         />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
