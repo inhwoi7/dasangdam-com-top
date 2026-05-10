@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getArticlePostsPaginated } from "@/lib/notion";
-import { getLocale } from "next-intl/server";
 
 export const revalidate = 0;
 
@@ -14,13 +13,16 @@ function formatDate(dateString: string, locale: string) {
 }
 
 export default async function BlogPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const locale = await getLocale();
+  const { locale } = await params;
   const { page: pageParam } = await searchParams;
   const currentPage = Math.max(1, parseInt(pageParam ?? "1", 10));
+
   const { posts, totalCount, hasMore } = await getArticlePostsPaginated(currentPage, 10, locale).catch(() => ({
     posts: [], totalCount: 0, hasMore: false,
   }));
@@ -28,12 +30,12 @@ export default async function BlogPage({
   const totalPages = Math.ceil(totalCount / 10);
 
   const t = {
-    back:       locale === "en" ? "← Home"              : "← 홈으로",
-    title:      locale === "en" ? "Sunny's Journal"     : "써니의 기록",
-    count:      locale === "en" ? `${totalCount} posts` : `총 ${totalCount}개의 글`,
-    empty:      locale === "en" ? "No posts yet."       : "아직 등록된 글이 없습니다.",
-    prev:       locale === "en" ? "← Prev"              : "← 이전",
-    next:       locale === "en" ? "Next →"              : "다음 →",
+    back:  locale === "en" ? "← Home"              : "← 홈으로",
+    title: locale === "en" ? "Sunny's Journal"     : "써니의 기록",
+    count: locale === "en" ? `${totalCount} posts` : `총 ${totalCount}개의 글`,
+    empty: locale === "en" ? "No posts yet."       : "아직 등록된 글이 없습니다.",
+    prev:  locale === "en" ? "← Prev"              : "← 이전",
+    next:  locale === "en" ? "Next →"              : "다음 →",
   };
 
   return (
@@ -79,9 +81,7 @@ export default async function BlogPage({
               ))
             ) : (
               <div className="postRow">
-                <div className="postMain">
-                  <h3>{t.empty}</h3>
-                </div>
+                <div className="postMain"><h3>{t.empty}</h3></div>
               </div>
             )}
           </div>
@@ -94,9 +94,7 @@ export default async function BlogPage({
                   height: "40px", padding: "0 16px", borderRadius: "999px",
                   border: "1px solid var(--line)", background: "var(--card)",
                   color: "var(--text)", fontSize: "14px", fontWeight: "600", textDecoration: "none",
-                }}>
-                  {t.prev}
-                </Link>
+                }}>{t.prev}</Link>
               )}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <Link key={p} href={`/blog?page=${p}`} style={{
@@ -106,9 +104,7 @@ export default async function BlogPage({
                   background: p === currentPage ? "var(--text)" : "var(--card)",
                   color: p === currentPage ? "white" : "var(--text)",
                   fontSize: "14px", fontWeight: "700", textDecoration: "none",
-                }}>
-                  {p}
-                </Link>
+                }}>{p}</Link>
               ))}
               {hasMore && (
                 <Link href={`/blog?page=${currentPage + 1}`} style={{
@@ -116,9 +112,7 @@ export default async function BlogPage({
                   height: "40px", padding: "0 16px", borderRadius: "999px",
                   border: "1px solid var(--line)", background: "var(--card)",
                   color: "var(--text)", fontSize: "14px", fontWeight: "600", textDecoration: "none",
-                }}>
-                  {t.next}
-                </Link>
+                }}>{t.next}</Link>
               )}
             </div>
           )}

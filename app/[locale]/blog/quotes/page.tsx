@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getQuotePosts } from "@/lib/notion";
-import { getLocale } from "next-intl/server";
 
 export const revalidate = 0;
 
@@ -13,8 +12,12 @@ function formatDate(dateString: string, locale: string) {
   }).format(date);
 }
 
-export default async function QuotesPage() {
-  const locale = await getLocale();
+export default async function QuotesPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const posts = await getQuotePosts(100, locale).catch(() => []);
 
   const t = {
@@ -65,9 +68,7 @@ export default async function QuotesPage() {
               ))
             ) : (
               <div className="postRow">
-                <div className="postMain">
-                  <h3>{t.empty}</h3>
-                </div>
+                <div className="postMain"><h3>{t.empty}</h3></div>
               </div>
             )}
           </div>
