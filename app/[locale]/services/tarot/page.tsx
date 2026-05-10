@@ -308,17 +308,17 @@ export default function TarotPage() {
     .s-card-inner { width:100%;height:100%;background-image:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(167,139,250,.1) 6px,rgba(167,139,250,.1) 7px);display:flex;align-items:center;justify-content:center; }
     .s-card-glow { position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(167,139,250,.3),transparent 65%);opacity:0;transition:opacity .3s; }
     .s-card:hover .s-card-glow,.s-card:active .s-card-glow{opacity:1;}
-    .flip-wrap { width:140px;height:240px;margin:0 auto 24px;flex-shrink:0;position:relative; }
+    .flip-wrap { width:200px;height:320px;margin:0 auto 24px;flex-shrink:0;position:relative; }
     .flip-inner { width:100%;height:100%;transition:opacity .4s ease; }
     .flip-front { position:absolute;inset:0;border-radius:12px;border:1px solid rgba(201,168,76,.25);background:linear-gradient(160deg,#1e1638,#12102a);display:flex;align-items:center;justify-content:center;background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(201,168,76,.07) 5px,rgba(201,168,76,.07) 6px);transition:opacity .4s ease; }
     .flip-back { position:absolute;inset:0;border-radius:12px;border:none;overflow:hidden;background:transparent;opacity:0;transition:opacity .4s ease .4s; }
     .flip-inner.flipped .flip-front{opacity:0;}
     .flip-inner.flipped .flip-back{opacity:1;}
-    .flip-back img { position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:.85;display:block; }
-    .flip-back-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(14,11,24,.9) 30%,rgba(14,11,24,.2) 100%); }
-    .flip-back-num { position:absolute;top:10px;left:0;right:0;text-align:center;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.9);z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.8); }
-    .flip-back-name { position:absolute;bottom:28px;left:8px;right:8px;font-family:'Noto Serif KR',serif;font-size:14px;color:#fff;z-index:1;text-align:center;line-height:1.3;font-weight:500;text-shadow:0 2px 8px rgba(0,0,0,.9); }
-    .flip-back-sub { position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:10px;color:rgba(255,255,255,.7);z-index:1;letter-spacing:1px;font-family:'Cinzel',serif;text-shadow:0 1px 4px rgba(0,0,0,.8); }
+    .flip-back img { position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:1;display:block; }
+    .flip-back-overlay { display:none; }
+    .flip-back-num { display:none; }
+    .flip-back-name { display:none; }
+    .flip-back-sub { display:none; }
     .rev-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.15);border:1.5px solid rgba(245,158,11,.4);border-radius:12px;padding:5px 12px;font-size:12px;color:#fde68a;font-weight:500;margin-bottom:14px; }
     .result-section { width:100%;max-width:420px;background:rgba(255,255,255,.06);border:1.5px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:10px; }
     .rs-label { font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px; }
@@ -465,6 +465,12 @@ export default function TarotPage() {
                     <div className="flip-back-sub">{pickedCard.keywords.slice(0,3).join(' · ')}</div>
                   </div>
                 </div>
+              </div>
+              <div className="fu" style={{ textAlign:'center', marginBottom:8 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", fontSize:10, letterSpacing:3, color:'rgba(196,181,253,0.7)', marginBottom:4 }}>
+                  {pickedCard.id <= 21 ? `The Major Arcana · ${ROMAN[pickedCard.id]}` : ''}
+                </div>
+                <div style={{ fontSize:16, fontWeight:700, color:'#f0ecff' }}>{cardName}</div>
               </div>
               {isReversed && <div className="rev-badge fu1">{t.reversed}</div>}
               <div className="result-section fu1">
