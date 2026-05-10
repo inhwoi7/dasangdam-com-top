@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useKakaoShare } from "@/lib/useKakaoShare";
+import { useLocale } from "next-intl";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
 type Message = {
@@ -10,11 +11,23 @@ type Message = {
   category: string;
   philosopher: string;
   quote: string;
+  quote_en?: string;
   comment: string;
+  comment_en?: string;
   is_active: boolean;
 };
 
-const CATEGORIES = ["전체", "자존감", "관계", "커리어", "휴식", "성장", "행복", "인생"];
+const CATEGORIES_KO = ["전체", "자존감", "관계", "커리어", "휴식", "성장", "행복", "인생"];
+const CATEGORIES_EN = ["All", "Self-esteem", "Relationship", "Career", "Rest", "Growth", "Happiness", "Life"];
+
+// KO 카테고리명 ↔ EN 카테고리명 매핑
+const CAT_KO_TO_EN: Record<string, string> = {
+  "전체": "All", "자존감": "Self-esteem", "관계": "Relationship",
+  "커리어": "Career", "휴식": "Rest", "성장": "Growth", "행복": "Happiness", "인생": "Life",
+};
+const CAT_EN_TO_KO: Record<string, string> = Object.fromEntries(
+  Object.entries(CAT_KO_TO_EN).map(([k, v]) => [v, k])
+);
 
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; emoji: string }> = {
   전체: { bg: "bg-zinc-100", text: "text-zinc-700", border: "border-zinc-200", emoji: "✨" },
@@ -27,29 +40,54 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string
   인생: { bg: "bg-sky-100", text: "text-sky-700", border: "border-sky-200", emoji: "🌊" },
 };
 
+// 카테고리 스타일은 항상 KO 키로 조회
+function getCatStyle(cat: string, locale: string) {
+  const koKey = locale === "en" ? (CAT_EN_TO_KO[cat] ?? cat) : cat;
+  return CATEGORY_STYLES[koKey] ?? CATEGORY_STYLES["전체"];
+}
+
 export default function MessagePage() {
+  const locale = useLocale();
   const [messages, setMessages] = useState<Message[]>([]);
   const [current, setCurrent] = useState<Message | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [selectedCategory, setSelectedCategory] = useState(locale === "en" ? "All" : "전체");
   const [loading, setLoading] = useState(true);
   const [isShaking, setIsShaking] = useState(false);
   const [seenIds, setSeenIds] = useState<number[]>([]);
   const { shareWithCapture } = useKakaoShare();
 
+  const CATEGORIES = locale === "en" ? CATEGORIES_EN : CATEGORIES_KO;
+
+  // DB 쿼리는 항상 KO 카테고리명으로
+  const dbCategory = locale === "en"
+    ? (CAT_EN_TO_KO[selectedCategory] ?? selectedCategory)
+    : selectedCategory;
+
+  const t = {
+    header:      locale === "en" ? "Today's Message for You"      : "오늘 나를 위한 메시지",
+    catLabel:    locale === "en" ? "Choose a category 😊"         : "카테고리를 선택하세요 😊",
+    loading:     locale === "en" ? "Loading messages..."           : "메시지를 불러오는 중...",
+    empty:       locale === "en" ? "No messages in this category." : "이 카테고리에 아직 문장이 없어요",
+    emptySub:    locale === "en" ? "Try another category."         : "다른 카테고리를 선택해보세요",
+    sunnyLabel:  locale === "en" ? "Sunny's Note"                  : "써니의 한마디",
+    shuffle:     locale === "en" ? "Draw Another Message"          : "다른 메시지 뽑기",
+    kakao:       locale === "en" ? "Share via KakaoTalk"           : "카카오로 공유하기",
+    countAll:    locale === "en" ? "All" : "전체",
+    countSuffix: locale === "en" ? "messages in this category"    : "개의 문장 중에서 뽑았어요",
+  };
+
   useEffect(() => {
-    setSeenIds([]); // 카테고리 바뀌면 히스토리 초기화
+    setSeenIds([]);
     fetchMessages();
   }, [selectedCategory]);
 
   async function fetchMessages() {
     setLoading(true);
-    let query = supabase
-      .from("messages")
-      .select("*")
-      .eq("is_active", true);
+    let query = supabase.from("messages").select("*").eq("is_active", true);
 
-    if (selectedCategory !== "전체") {
-      query = query.eq("category", selectedCategory);
+    const isAll = selectedCategory === "전체" || selectedCategory === "All";
+    if (!isAll) {
+      query = query.eq("category", dbCategory);
     }
 
     const { data, error } = await query;
@@ -69,17 +107,13 @@ export default function MessagePage() {
   }
 
   function pickRandom(pool: Message[], seen: number[], currentId?: number) {
-    // 아직 안 본 메시지 우선으로 선택
     const unseen = pool.filter((m) => !seen.includes(m.id));
-    // 다 봤으면 현재 메시지만 제외하고 전체에서 선택 (히스토리 리셋)
     const candidates = unseen.length > 0
       ? unseen
       : pool.filter((m) => m.id !== currentId);
     const finalPool = candidates.length > 0 ? candidates : pool;
-
     const chosen = finalPool[Math.floor(Math.random() * finalPool.length)];
     setCurrent(chosen);
-
     const newSeen = unseen.length > 0 ? [...seen, chosen.id] : [chosen.id];
     setSeenIds(newSeen);
   }
@@ -99,16 +133,26 @@ export default function MessagePage() {
 
   const handleShare = () => {
     if (!current) return;
+    const quoteText = locale === "en" && current.quote_en ? current.quote_en : current.quote;
     shareWithCapture({
       captureId: "message-capture",
-      title: `오늘 나를 위한 메시지`,
-      description: `"${current.quote}" — ${current.philosopher}`,
-      buttonText: "나도 메시지 받기 →",
+      title: locale === "en" ? "Today's Message for You" : "오늘 나를 위한 메시지",
+      description: `"${quoteText}" — ${current.philosopher}`,
+      buttonText: locale === "en" ? "Get my message →" : "나도 메시지 받기 →",
       pageUrl: "https://dasangdam.com/services/message",
     });
   };
 
-  const catStyle = CATEGORY_STYLES[current?.category ?? "전체"] ?? CATEGORY_STYLES["전체"];
+  // 현재 카드에 표시할 텍스트
+  const displayQuote   = locale === "en" && current?.quote_en   ? current.quote_en   : current?.quote;
+  const displayComment = locale === "en" && current?.comment_en ? current.comment_en : current?.comment;
+  const displayCat     = locale === "en"
+    ? (CAT_KO_TO_EN[current?.category ?? "전체"] ?? current?.category)
+    : current?.category;
+
+  const catStyle = getCatStyle(current?.category ?? "전체", "ko"); // 스타일은 KO 기준
+
+  const isAll = selectedCategory === "전체" || selectedCategory === "All";
 
   return (
     <main className="min-h-screen bg-[#F5F0E8] text-zinc-900">
@@ -120,7 +164,7 @@ export default function MessagePage() {
             <button onClick={handleBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200">
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div className="text-lg font-extrabold tracking-tight">오늘 나를 위한 메시지</div>
+            <div className="text-lg font-extrabold tracking-tight">{t.header}</div>
             <button onClick={handleShare} disabled={!current}
               className={`flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 transition ${current ? "bg-[#FEE500] ring-[#F0D800] hover:scale-105" : "bg-zinc-100 ring-zinc-200 opacity-40 cursor-not-allowed"}`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -132,13 +176,13 @@ export default function MessagePage() {
 
         <div className="px-4 pt-6 space-y-5">
 
-          {/* 카테고리 안내 레이블 */}
-          <p className="text-sm text-zinc-400 font-medium">카테고리를 선택하세요 😊</p>
+          <p className="text-sm text-zinc-400 font-medium">{t.catLabel}</p>
 
-          {/* 카테고리 선택 */}
+          {/* 카테고리 버튼 */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((cat) => {
-              const s = CATEGORY_STYLES[cat];
+              const koKey = locale === "en" ? (CAT_EN_TO_KO[cat] ?? cat) : cat;
+              const s = CATEGORY_STYLES[koKey] ?? CATEGORY_STYLES["전체"];
               const isSelected = selectedCategory === cat;
               return (
                 <button key={cat} onClick={() => setSelectedCategory(cat)}
@@ -152,13 +196,13 @@ export default function MessagePage() {
           {/* 메시지 카드 */}
           {loading ? (
             <div className="flex h-64 items-center justify-center">
-              <div className="text-sm text-zinc-400 animate-pulse">메시지를 불러오는 중...</div>
+              <div className="text-sm text-zinc-400 animate-pulse">{t.loading}</div>
             </div>
           ) : !current ? (
             <div className="flex h-64 items-center justify-center rounded-[32px] bg-white ring-1 ring-zinc-100">
               <div className="text-center text-sm text-zinc-400">
-                <p>이 카테고리에 아직 문장이 없어요</p>
-                <p className="mt-1">다른 카테고리를 선택해보세요</p>
+                <p>{t.empty}</p>
+                <p className="mt-1">{t.emptySub}</p>
               </div>
             </div>
           ) : (
@@ -169,58 +213,54 @@ export default function MessagePage() {
             >
               {/* 카테고리 뱃지 */}
               <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold mb-5 ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
-                {current.category} {catStyle.emoji}
+                {displayCat} {catStyle.emoji}
               </div>
 
               {/* 철학자 */}
               <div className="text-xs font-semibold text-zinc-400 mb-3">{current.philosopher}</div>
 
-              {/* 명언 */}
+              {/* 명언 — EN 있으면 EN 표시 */}
               <blockquote className="text-xl font-bold leading-8 text-zinc-900 mb-5">
-                "{current.quote}"
+                "{displayQuote}"
               </blockquote>
 
-              {/* 구분선 */}
               <div className="border-t border-zinc-100 my-4" />
 
-              {/* 써니의 한마디 */}
+              {/* 써니의 한마디 — EN 있으면 EN 표시 */}
               <div className="flex items-start gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm">
                   ☀️
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-amber-600 mb-1">써니의 한마디</div>
-                  <div className="text-sm leading-6 text-zinc-600">{current.comment}</div>
+                  <div className="text-[11px] font-bold text-amber-600 mb-1">{t.sunnyLabel}</div>
+                  <div className="text-sm leading-6 text-zinc-600">{displayComment}</div>
                 </div>
               </div>
 
-              {/* 워터마크 */}
               <div className="mt-5 text-right text-[11px] text-zinc-300">dasangdam.com</div>
             </div>
           )}
 
-          {/* 다시 뽑기 버튼 */}
+          {/* 버튼들 */}
           <button onClick={handleShuffle} disabled={loading || messages.length === 0}
             className="w-full rounded-[24px] bg-zinc-900 px-5 py-4 text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(0,0,0,0.16)] transition hover:translate-y-[-1px] flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
             <RefreshCw className={`h-4 w-4 ${isShaking ? "animate-spin" : ""}`} />
-            다른 메시지 뽑기
+            {t.shuffle}
           </button>
 
-          {/* 카카오 공유 */}
           {current && (
             <button onClick={handleShare}
               className="w-full rounded-[24px] bg-[#FEE500] px-5 py-4 text-sm font-extrabold text-zinc-900 shadow-[0_8px_24px_rgba(254,229,0,0.4)] transition hover:translate-y-[-1px] flex items-center justify-center gap-2">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
               </svg>
-              카카오로 공유하기
+              {t.kakao}
             </button>
           )}
 
-          {/* 문장 개수 안내 */}
           {!loading && messages.length > 0 && (
             <p className="text-center text-xs text-zinc-400">
-              {selectedCategory === "전체" ? "전체" : selectedCategory} {messages.length}개의 문장 중에서 뽑았어요
+              {isAll ? t.countAll : selectedCategory} {messages.length} {t.countSuffix}
             </p>
           )}
         </div>
