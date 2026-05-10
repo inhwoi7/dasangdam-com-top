@@ -25,6 +25,7 @@ interface TarotCard {
   meaning_rev_en?: string
   insight_up_en?: string
   insight_rev_en?: string
+  keywords_en?: string[]
 }
 
 /* ═══════════════════ TRANSLATIONS ═══════════════════ */
@@ -200,6 +201,7 @@ export default function TarotPage() {
         meaning_rev_en: c.meaning_rev_en ?? undefined,
         insight_up_en: c.insight_up_en ?? undefined,
         insight_rev_en: c.insight_rev_en ?? undefined,
+        keywords_en: c.keywords_en ?? undefined,
       }))
       setCards(mapped)
     })
@@ -460,7 +462,7 @@ export default function TarotPage() {
                     <div className="flip-back-overlay" />
                     <div className="flip-back-num">The Major Arcana · {ROMAN[pickedCard.id]}</div>
                     <div className="flip-back-name">{cardName}</div>
-                    <div className="flip-back-sub">{pickedCard.keywords.slice(0,3).join(' · ')}</div>
+                    <div className="flip-back-sub">{(locale === 'en' && pickedCard.keywords_en ? pickedCard.keywords_en : pickedCard.keywords).slice(0,3).join(' · ')}</div>
                   </div>
                 </div>
               </div>
@@ -468,7 +470,7 @@ export default function TarotPage() {
               <div className="result-section fu1">
                 <div className="rs-label">{t.keywords}</div>
                 <div className="rs-keywords">
-                  {pickedCard.keywords.map(k => <span key={k} className="kw">{k}</span>)}
+                  {(locale === 'en' && pickedCard.keywords_en ? pickedCard.keywords_en : pickedCard.keywords).map(k => <span key={k} className="kw">{k}</span>)}
                 </div>
               </div>
               <div className="result-section fu2">
