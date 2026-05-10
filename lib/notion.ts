@@ -180,6 +180,7 @@ export async function getArticlePostsPaginated(
       page_size: 100,
     });
 
+  
     let all: PostItem[] = data.results?.map(mapPost) ?? [];
     if (locale === "ko") {
       all = all.filter((p) => p.language !== "EN");
