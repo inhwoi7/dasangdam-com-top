@@ -21,6 +21,10 @@ interface TarotCard {
   meaning_rev: string
   insight_up: string
   insight_rev: string
+  meaning_up_en?: string
+  meaning_rev_en?: string
+  insight_up_en?: string
+  insight_rev_en?: string
 }
 
 /* ═══════════════════ TRANSLATIONS ═══════════════════ */
@@ -192,6 +196,10 @@ export default function TarotPage() {
         id: c.id, name_ko: c.name_ko, name_en: c.name_en, img: c.image_url,
         keywords: c.keywords ?? [], meaning_up: c.meaning_up, meaning_rev: c.meaning_rev,
         insight_up: c.insight_up, insight_rev: c.insight_rev,
+        meaning_up_en: c.meaning_up_en ?? undefined,
+        meaning_rev_en: c.meaning_rev_en ?? undefined,
+        insight_up_en: c.insight_up_en ?? undefined,
+        insight_rev_en: c.insight_rev_en ?? undefined,
       }))
       setCards(mapped)
     })
@@ -465,11 +473,17 @@ export default function TarotPage() {
               </div>
               <div className="result-section fu2">
                 <div className="rs-label">{t.meaning}</div>
-                <p className="rs-text">{isReversed ? pickedCard.meaning_rev : pickedCard.meaning_up}</p>
+                <p className="rs-text">{isReversed
+                  ? (locale === 'en' && pickedCard.meaning_rev_en ? pickedCard.meaning_rev_en : pickedCard.meaning_rev)
+                  : (locale === 'en' && pickedCard.meaning_up_en ? pickedCard.meaning_up_en : pickedCard.meaning_up)
+                }</p>
               </div>
               <div className="sunny-box fu3">
                 <div className="sunny-badge">{t.insight}</div>
-                <p className="sunny-text">{isReversed ? pickedCard.insight_rev : pickedCard.insight_up}</p>
+                <p className="sunny-text">{isReversed
+                  ? (locale === 'en' && pickedCard.insight_rev_en ? pickedCard.insight_rev_en : pickedCard.insight_rev)
+                  : (locale === 'en' && pickedCard.insight_up_en ? pickedCard.insight_up_en : pickedCard.insight_up)
+                }</p>
               </div>
               <button className="again-btn fu4" onClick={() => goTo('question')}>{t.again}</button>
               <button onClick={handleKakaoShare} className="fu4" style={{
