@@ -7,6 +7,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import { calculateSajuSimple, lunarToSolar } from "@fullstackfamily/manseryeok";
 import { useKakaoShare } from "@/lib/useKakaoShare";
+import { useLocale } from "next-intl";
 
 type EnergyType = { wood: number; fire: number; earth: number; metal: number; water: number };
 type PillarItem = { label: string; gan: string; ji: string; ganElement: string; jiElement: string };
@@ -15,7 +16,7 @@ type ResultType = {
   energy: EnergyType;
   dayMaster: string;
   dayBranch: string;
-  yearBranch: string; // ← 년주 지지 (띠 계산용)
+  yearBranch: string;
   dominantElement: string;
   solarDateText: string;
   inputDateText: string;
@@ -33,19 +34,27 @@ type BirthDataType = {
   unknownTime: "" | "false" | "true";
 };
 
-const ELEMENT_META: Record<string, { label: string; hanja: string; emoji: string; chipClass: string; barClass: string }> = {
-  목: { label: "목", hanja: "木", emoji: "🌿", chipClass: "bg-emerald-100 text-emerald-800 border-emerald-200", barClass: "bg-emerald-500" },
-  화: { label: "화", hanja: "火", emoji: "🔥", chipClass: "bg-rose-100 text-rose-800 border-rose-200", barClass: "bg-rose-500" },
-  토: { label: "토", hanja: "土", emoji: "🌏", chipClass: "bg-amber-100 text-amber-800 border-amber-200", barClass: "bg-amber-500" },
-  금: { label: "금", hanja: "金", emoji: "⚔️", chipClass: "bg-zinc-200 text-zinc-800 border-zinc-300", barClass: "bg-zinc-500" },
-  수: { label: "수", hanja: "Water", emoji: "💧", chipClass: "bg-blue-100 text-blue-800 border-blue-200", barClass: "bg-blue-500" },
+const ELEMENT_META: Record<string, { label: string; labelEn: string; hanja: string; emoji: string; chipClass: string; barClass: string }> = {
+  목: { label: "목", labelEn: "Wood", hanja: "木", emoji: "🌿", chipClass: "bg-emerald-100 text-emerald-800 border-emerald-200", barClass: "bg-emerald-500" },
+  화: { label: "화", labelEn: "Fire", hanja: "火", emoji: "🔥", chipClass: "bg-rose-100 text-rose-800 border-rose-200", barClass: "bg-rose-500" },
+  토: { label: "토", labelEn: "Earth", hanja: "土", emoji: "🌏", chipClass: "bg-amber-100 text-amber-800 border-amber-200", barClass: "bg-amber-500" },
+  금: { label: "금", labelEn: "Metal", hanja: "金", emoji: "⚔️", chipClass: "bg-zinc-200 text-zinc-800 border-zinc-300", barClass: "bg-zinc-500" },
+  수: { label: "수", labelEn: "Water", hanja: "水", emoji: "💧", chipClass: "bg-blue-100 text-blue-800 border-blue-200", barClass: "bg-blue-500" },
 };
 
-const BRANCH_ANIMALS: Record<string, { label: string; emoji: string }> = {
-  자: { label: "쥐", emoji: "🐭" }, 축: { label: "소", emoji: "🐮" }, 인: { label: "호랑이", emoji: "🐯" },
-  묘: { label: "토끼", emoji: "🐰" }, 진: { label: "용", emoji: "🐲" }, 사: { label: "뱀", emoji: "🐍" },
-  오: { label: "말", emoji: "🐴" }, 미: { label: "양", emoji: "🐑" }, 신: { label: "원숭이", emoji: "🐵" },
-  유: { label: "닭", emoji: "🐔" }, 술: { label: "개", emoji: "🐶" }, 해: { label: "돼지", emoji: "🐷" },
+const BRANCH_ANIMALS: Record<string, { label: string; labelEn: string; emoji: string }> = {
+  자: { label: "쥐", labelEn: "Rat", emoji: "🐭" },
+  축: { label: "소", labelEn: "Ox", emoji: "🐮" },
+  인: { label: "호랑이", labelEn: "Tiger", emoji: "🐯" },
+  묘: { label: "토끼", labelEn: "Rabbit", emoji: "🐰" },
+  진: { label: "용", labelEn: "Dragon", emoji: "🐲" },
+  사: { label: "뱀", labelEn: "Snake", emoji: "🐍" },
+  오: { label: "말", labelEn: "Horse", emoji: "🐴" },
+  미: { label: "양", labelEn: "Goat", emoji: "🐑" },
+  신: { label: "원숭이", labelEn: "Monkey", emoji: "🐵" },
+  유: { label: "닭", labelEn: "Rooster", emoji: "🐔" },
+  술: { label: "개", labelEn: "Dog", emoji: "🐶" },
+  해: { label: "돼지", labelEn: "Pig", emoji: "🐷" },
 };
 
 const STEM_ELEMENT_MAP: Record<string, string> = {
@@ -152,67 +161,160 @@ function computeSaju(birthData: BirthDataType): ResultType | null {
     const basisText = isLunar ? "음력 입력값을 양력으로 변환한 뒤 사주를 계산했어요" : "입력한 양력 기준으로 사주를 계산했어요";
     const dayMaster = dayPillarText[0] ?? "-";
     const dayBranch = dayPillarText[1] ?? "-";
-    const yearBranch = yearPillarText[1] ?? "-"; // ← 년주 지지 (띠)
+    const yearBranch = yearPillarText[1] ?? "-";
     const summaryText = `${yearPillarText}년 · ${monthPillarText}월 · ${dayPillarText}일${unknownTime ? " · 시주 미입력" : ` · ${hourPillarText}시`}`;
 
     return { pillars, energy, dayMaster, dayBranch, yearBranch, dominantElement, solarDateText, inputDateText, basisText, summaryText, yearPillarText, monthPillarText, dayPillarText, hourPillarText };
   } catch { return null; }
 }
 
-function getFortuneContent(result: ResultType) {
+function getFortuneContent(result: ResultType, locale: string) {
   const dayMasterElement = STEM_ELEMENT_MAP[result.dayMaster] || "-";
   const weakElements = getWeakElements(result.energy);
   const zeroElements = getZeroElements(result.energy);
+  const isEn = locale === "en";
 
-  const personalityMap: Record<string, string> = {
-    목: "일간이 목 기운에 놓여 있으면 기본적으로 성장과 확장을 중요하게 보는 편입니다. 정체된 분위기보다는 앞으로 나아가는 흐름에서 힘을 얻고, 사람이나 일의 가능성을 먼저 보는 장점이 있습니다. 다만 생각이 넓게 퍼지는 대신 한 번에 너무 많은 일을 끌어안으면 피로가 빨리 올 수 있어, 방향을 정한 뒤 속도를 조절하는 것이 중요합니다.",
-    화: "일간이 화 기운에 놓여 있으면 표현력과 추진력이 살아나는 편입니다. 분위기를 밝히거나 존재감을 드러내는 능력이 좋고, 마음이 움직일 때 실행으로 연결되는 힘도 강한 편입니다. 반면 열정이 큰 만큼 에너지 소모도 빨라질 수 있으니, 중요한 일일수록 리듬을 유지하는 습관이 도움이 됩니다.",
-    토: "일간이 토 기운에 놓여 있으면 중심감과 현실감각이 비교적 분명합니다. 급하게 흔들리기보다는 상황을 정리하고 안정시키는 역할에 강점이 있고, 주변에서 신뢰를 받기 쉬운 구조입니다. 다만 안정이 지나치면 변화 대응이 느려질 수 있으므로, 새로운 제안에 대한 유연함을 의식적으로 확보하면 더 좋습니다.",
-    금: "일간이 금 기운에 놓여 있으면 판단 기준이 뚜렷하고, 정리·분석·선별 능력이 잘 드러나는 편입니다. 핵심과 비핵심을 가르는 감각이 좋고, 불필요한 감정 소모를 줄이며 일의 선을 정하는 데 강점이 있습니다. 다만 기준이 분명한 만큼 스스로도 엄격해질 수 있으니, 완벽함보다 지속 가능성을 함께 보는 것이 좋습니다.",
-    수: "일간이 수 기운에 놓여 있으면 흐름을 읽고 유연하게 반응하는 감각이 좋습니다. 직접 밀어붙이기보다 상황과 사람을 파악한 뒤 움직이는 능력이 살아 있으며, 적응력과 연결 감각이 장점으로 작용할 가능성이 큽니다. 다만 마음속에서 생각이 오래 순환하면 결정을 늦출 수 있으니, 어느 시점에는 방향을 확정하는 습관이 필요합니다.",
-  };
-  const strengthMap: Record<string, string> = {
-    목: "대표 오행이 목이라는 것은 기획, 확장, 배움, 관계의 넓힘 같은 테마가 비교적 잘 살아 있다는 뜻입니다. 새로운 것을 익히거나 흐름을 키워가는 일에서 장점이 드러나기 쉽습니다.",
-    화: "대표 오행이 화라는 것은 표현, 실행, 대외 활동, 존재감, 추진력과 관련된 에너지가 비교적 잘 모인다는 뜻입니다. 눈에 보이는 성과나 반응을 만들어내는 방향에서 강점이 살아날 수 있습니다.",
-    토: "대표 오행이 토라는 것은 관리, 유지, 조율, 실무 운영, 안정적인 기반 만들기 쪽의 힘이 잘 드러날 가능성을 의미합니다. 단단하게 쌓아가는 방식이 잘 맞는 구조입니다.",
-    금: "대표 오행이 금이라는 것은 판단, 선별, 정리, 결단, 기준 설정 능력이 구조상 비교적 돋보일 수 있음을 뜻합니다. 복잡한 것을 정리해 핵심으로 모으는 힘이 강점이 됩니다.",
-    수: "대표 오행이 수라는 것은 정보 파악, 흐름 읽기, 대응력, 관계 조율, 상황 해석 쪽의 감각이 좋게 작동할 가능성을 의미합니다. 급하게 밀기보다 타이밍을 읽는 방식에 장점이 있습니다.",
-  };
-  const workMap: Record<string, string> = {
-    목: "기획·교육·콘텐츠·브랜딩처럼 아이디어를 확장하는 성격의 업무와 잘 맞을 수 있습니다. 시작만 많아지지 않도록 우선순위를 선명하게 두는 것이 중요합니다.",
-    화: "발표, 소통, 영업, 마케팅, 리더십처럼 외부와 맞닿는 영역에서 힘을 쓰기 쉬운 편입니다. 성과 압박이 클수록 감정 소모가 늘 수 있어 회복 루틴을 함께 가져가는 것이 좋습니다.",
-    토: "운영, 관리, 실무 총괄, 상담, 재무·행정처럼 안정성과 축적이 필요한 영역과 잘 맞을 수 있습니다. 변화가 필요한 시점을 놓치지 않는 것이 관건입니다.",
-    금: "기획 정리, 재무, 품질 관리, 법무, 분석처럼 정확도와 기준이 중요한 영역에서 강점이 드러나기 쉽습니다. 스스로 기대치가 높아 과부하가 오지 않도록 속도 조절이 필요합니다.",
-    수: "연구, 분석, 데이터, 컨설팅, 조율, 커뮤니케이션처럼 흐름을 읽고 연결하는 영역과 잘 맞을 수 있습니다. 마감 시점을 스스로 정해두면 안정적으로 성과를 내기 좋습니다.",
-  };
-  const relationshipMap: Record<string, string> = {
-    목: "상대의 가능성을 보고 먼저 마음을 열어주는 편일 수 있습니다. 기대치가 커질수록 서운함도 커질 수 있으니, 관계의 속도를 천천히 맞추는 것이 좋습니다.",
-    화: "표현이 분명하고 따뜻하게 다가가는 힘이 있습니다. 감정 기복이 커질 때 말이 앞서지 않도록 한 템포 쉬는 습관이 도움이 됩니다.",
-    토: "신뢰와 안정감을 주는 편입니다. 마음이 무거워질 때는 혼자 감당하지 말고 적절히 나누는 것이 좋습니다.",
-    금: "기준과 예의를 중요하게 보는 편입니다. 너무 정답 중심으로 흐르면 거리감이 생길 수 있어 부드러운 표현을 함께 가져가면 좋습니다.",
-    수: "상대의 기분과 흐름을 잘 읽는 장점이 있습니다. 중요한 관계일수록 생각을 말로 정리해 전달하는 것이 좋습니다.",
-  };
-  const weakAdviceMap: Record<string, string> = {
-    목: "목 기운 보완에는 산책, 스트레칭, 새로운 공부 시작, 공간에 초록 계열을 두는 방식이 도움이 될 수 있습니다.",
-    화: "화 기운 보완에는 햇빛을 받는 시간, 가벼운 운동, 감정을 말이나 글로 표현하는 습관이 도움이 됩니다.",
-    토: "토 기운 보완에는 식사 시간 일정하게 유지하기, 생활 공간 정리, 해야 할 일을 작게 나눠 쌓는 방식이 잘 맞습니다.",
-    금: "금 기운 보완에는 물건을 줄이거나, 업무 순서를 명확히 하거나, 하루 루틴을 일정한 틀로 잡는 것이 도움이 됩니다.",
-    수: "수 기운 보완에는 수면 리듬, 수분 섭취, 혼자 생각을 정리하는 시간이 도움이 됩니다.",
+  const personalityMap: Record<string, { ko: string; en: string }> = {
+    목: {
+      ko: "일간이 목 기운에 놓여 있으면 기본적으로 성장과 확장을 중요하게 보는 편입니다. 정체된 분위기보다는 앞으로 나아가는 흐름에서 힘을 얻고, 사람이나 일의 가능성을 먼저 보는 장점이 있습니다.",
+      en: "With Wood as your day master element, you naturally value growth and expansion. You gain energy from moving forward rather than stagnating, and you tend to see potential in people and situations.",
+    },
+    화: {
+      ko: "일간이 화 기운에 놓여 있으면 표현력과 추진력이 살아나는 편입니다. 분위기를 밝히거나 존재감을 드러내는 능력이 좋고, 마음이 움직일 때 실행으로 연결되는 힘도 강한 편입니다.",
+      en: "With Fire as your day master element, your expressiveness and drive come alive. You have a gift for brightening the atmosphere and making your presence felt, and you're strong at turning inspiration into action.",
+    },
+    토: {
+      ko: "일간이 토 기운에 놓여 있으면 중심감과 현실감각이 비교적 분명합니다. 급하게 흔들리기보다는 상황을 정리하고 안정시키는 역할에 강점이 있고, 주변에서 신뢰를 받기 쉬운 구조입니다.",
+      en: "With Earth as your day master element, you have a clear sense of grounding and practicality. Rather than being easily shaken, you excel at organizing situations and bringing stability — traits that earn you trust.",
+    },
+    금: {
+      ko: "일간이 금 기운에 놓여 있으면 판단 기준이 뚜렷하고, 정리·분석·선별 능력이 잘 드러나는 편입니다. 핵심과 비핵심을 가르는 감각이 좋고, 불필요한 감정 소모를 줄이며 일의 선을 정하는 데 강점이 있습니다.",
+      en: "With Metal as your day master element, your judgment is sharp and your ability to organize, analyze, and select stands out. You have a talent for separating the essential from the non-essential.",
+    },
+    수: {
+      ko: "일간이 수 기운에 놓여 있으면 흐름을 읽고 유연하게 반응하는 감각이 좋습니다. 직접 밀어붙이기보다 상황과 사람을 파악한 뒤 움직이는 능력이 살아 있으며, 적응력과 연결 감각이 장점으로 작용할 가능성이 큽니다.",
+      en: "With Water as your day master element, you have a strong sense for reading the flow and responding with flexibility. Rather than pushing directly, you prefer to understand the situation and people before acting.",
+    },
   };
 
-  const balanceText = zeroElements.length > 0
-    ? `${zeroElements.join(", ")} 기운이 현재 분포에서 비어 있거나 매우 약하게 나타납니다. 부족한 기운이 담당하는 생활 리듬과 환경을 조금씩 보완하는 것이 전체 균형에 도움이 됩니다.`
-    : `${weakElements.join(", ")} 기운이 상대적으로 약한 편이므로, 이미 강한 기운을 안정적으로 쓰면서 약한 부분을 보완하는 접근이 자연스럽습니다.`;
+  const strengthMap: Record<string, { ko: string; en: string }> = {
+    목: {
+      ko: "대표 오행이 목이라는 것은 기획, 확장, 배움, 관계의 넓힘 같은 테마가 비교적 잘 살아 있다는 뜻입니다.",
+      en: "Having Wood as your dominant element means themes like planning, expansion, learning, and broadening relationships are naturally active in you.",
+    },
+    화: {
+      ko: "대표 오행이 화라는 것은 표현, 실행, 대외 활동, 존재감, 추진력과 관련된 에너지가 비교적 잘 모인다는 뜻입니다.",
+      en: "Having Fire as your dominant element means energy related to expression, execution, public activity, presence, and drive tends to gather well.",
+    },
+    토: {
+      ko: "대표 오행이 토라는 것은 관리, 유지, 조율, 실무 운영, 안정적인 기반 만들기 쪽의 힘이 잘 드러날 가능성을 의미합니다.",
+      en: "Having Earth as your dominant element suggests strengths in management, maintenance, coordination, operations, and building a stable foundation.",
+    },
+    금: {
+      ko: "대표 오행이 금이라는 것은 판단, 선별, 정리, 결단, 기준 설정 능력이 구조상 비교적 돋보일 수 있음을 뜻합니다.",
+      en: "Having Metal as your dominant element means your judgment, discernment, organization, decisiveness, and ability to set standards tend to stand out.",
+    },
+    수: {
+      ko: "대표 오행이 수라는 것은 정보 파악, 흐름 읽기, 대응력, 관계 조율, 상황 해석 쪽의 감각이 좋게 작동할 가능성을 의미합니다.",
+      en: "Having Water as your dominant element suggests a well-functioning sense for gathering information, reading flows, adapting, coordinating relationships, and interpreting situations.",
+    },
+  };
+
+  const workMap: Record<string, { ko: string; en: string }> = {
+    목: {
+      ko: "기획·교육·콘텐츠·브랜딩처럼 아이디어를 확장하는 성격의 업무와 잘 맞을 수 있습니다.",
+      en: "You may find a good fit in roles that expand ideas — planning, education, content creation, and branding.",
+    },
+    화: {
+      ko: "발표, 소통, 영업, 마케팅, 리더십처럼 외부와 맞닿는 영역에서 힘을 쓰기 쉬운 편입니다.",
+      en: "You tend to thrive in externally-facing roles — presentations, communication, sales, marketing, and leadership.",
+    },
+    토: {
+      ko: "운영, 관리, 실무 총괄, 상담, 재무·행정처럼 안정성과 축적이 필요한 영역과 잘 맞을 수 있습니다.",
+      en: "You may fit well in areas requiring stability and accumulation — operations, management, consulting, finance, and administration.",
+    },
+    금: {
+      ko: "기획 정리, 재무, 품질 관리, 법무, 분석처럼 정확도와 기준이 중요한 영역에서 강점이 드러나기 쉽습니다.",
+      en: "Your strengths tend to show in areas where accuracy and standards matter — planning, finance, quality control, legal work, and analysis.",
+    },
+    수: {
+      ko: "연구, 분석, 데이터, 컨설팅, 조율, 커뮤니케이션처럼 흐름을 읽고 연결하는 영역과 잘 맞을 수 있습니다.",
+      en: "You may find a natural fit in research, analysis, data, consulting, coordination, and communication — areas that require reading and connecting flows.",
+    },
+  };
+
+  const relationshipMap: Record<string, { ko: string; en: string }> = {
+    목: {
+      ko: "상대의 가능성을 보고 먼저 마음을 열어주는 편일 수 있습니다. 기대치가 커질수록 서운함도 커질 수 있으니, 관계의 속도를 천천히 맞추는 것이 좋습니다.",
+      en: "You tend to see others' potential and open your heart first. As expectations grow, so can disappointment — pacing yourself in relationships helps.",
+    },
+    화: {
+      ko: "표현이 분명하고 따뜻하게 다가가는 힘이 있습니다. 감정 기복이 커질 때 말이 앞서지 않도록 한 템포 쉬는 습관이 도움이 됩니다.",
+      en: "You express yourself clearly and approach others with warmth. When emotions run high, it helps to pause before speaking.",
+    },
+    토: {
+      ko: "신뢰와 안정감을 주는 편입니다. 마음이 무거워질 때는 혼자 감당하지 말고 적절히 나누는 것이 좋습니다.",
+      en: "You naturally offer trust and stability. When things feel heavy, sharing instead of carrying it alone serves you better.",
+    },
+    금: {
+      ko: "기준과 예의를 중요하게 보는 편입니다. 너무 정답 중심으로 흐르면 거리감이 생길 수 있어 부드러운 표현을 함께 가져가면 좋습니다.",
+      en: "You value standards and courtesy. Being too answer-oriented can create distance — balancing it with softer expression helps.",
+    },
+    수: {
+      ko: "상대의 기분과 흐름을 잘 읽는 장점이 있습니다. 중요한 관계일수록 생각을 말로 정리해 전달하는 것이 좋습니다.",
+      en: "You read others' moods and rhythms well. In important relationships, putting your thoughts into words and expressing them clearly makes a big difference.",
+    },
+  };
+
+  const weakAdviceMap: Record<string, { ko: string; en: string }> = {
+    목: {
+      ko: "목 기운 보완에는 산책, 스트레칭, 새로운 공부 시작, 공간에 초록 계열을 두는 방식이 도움이 될 수 있습니다.",
+      en: "To support Wood energy: walks in nature, stretching, starting a new study, and adding green elements to your space can help.",
+    },
+    화: {
+      ko: "화 기운 보완에는 햇빛을 받는 시간, 가벼운 운동, 감정을 말이나 글로 표현하는 습관이 도움이 됩니다.",
+      en: "To support Fire energy: spending time in sunlight, light exercise, and the habit of expressing emotions through words or writing can help.",
+    },
+    토: {
+      ko: "토 기운 보완에는 식사 시간 일정하게 유지하기, 생활 공간 정리, 해야 할 일을 작게 나눠 쌓는 방식이 잘 맞습니다.",
+      en: "To support Earth energy: keeping regular meal times, organizing your living space, and breaking tasks into small steps work well.",
+    },
+    금: {
+      ko: "금 기운 보완에는 물건을 줄이거나, 업무 순서를 명확히 하거나, 하루 루틴을 일정한 틀로 잡는 것이 도움이 됩니다.",
+      en: "To support Metal energy: reducing clutter, clarifying your work order, and setting a consistent daily routine can help.",
+    },
+    수: {
+      ko: "수 기운 보완에는 수면 리듬, 수분 섭취, 혼자 생각을 정리하는 시간이 도움이 됩니다.",
+      en: "To support Water energy: maintaining sleep rhythms, staying hydrated, and taking time alone to organize your thoughts can help.",
+    },
+  };
+
+  const elementName = (key: string) => isEn ? (ELEMENT_META[key]?.labelEn ?? key) : key;
+
+  const balanceText = isEn
+    ? (zeroElements.length > 0
+      ? `The ${zeroElements.map(elementName).join(", ")} element(s) are absent or very weak in your chart. Gradually supplementing the rhythms and environments associated with these missing elements helps bring overall balance.`
+      : `The ${weakElements.map(elementName).join(", ")} element(s) are relatively weak. A natural approach is to use your stronger elements steadily while supplementing the weaker ones.`)
+    : (zeroElements.length > 0
+      ? `${zeroElements.join(", ")} 기운이 현재 분포에서 비어 있거나 매우 약하게 나타납니다. 부족한 기운이 담당하는 생활 리듬과 환경을 조금씩 보완하는 것이 전체 균형에 도움이 됩니다.`
+      : `${weakElements.join(", ")} 기운이 상대적으로 약한 편이므로, 이미 강한 기운을 안정적으로 쓰면서 약한 부분을 보완하는 접근이 자연스럽습니다.`);
+
+  const dm = dayMasterElement;
+  const dom = result.dominantElement;
 
   return {
-    overview: `이 사주는 일간 ${result.dayMaster}를 중심으로 볼 때 ${dayMasterElement}의 성향이 바탕을 이루고, 전체적으로는 ${result.dominantElement} 기운이 두드러지는 구조입니다.`,
-    personality: personalityMap[dayMasterElement] || "일간 기준 성향 해석을 불러오지 못했습니다.",
-    strength: strengthMap[result.dominantElement] || "대표 오행 중심의 강점 해석을 불러오지 못했습니다.",
-    work: workMap[result.dominantElement] || "일과 진로 흐름 해석을 불러오지 못했습니다.",
-    relationship: relationshipMap[dayMasterElement] || "관계 흐름 해석을 불러오지 못했습니다.",
+    overview: isEn
+      ? `This chart, centered on day master ${result.dayMaster}, is rooted in the ${elementName(dm)} nature, with ${elementName(dom)} energy standing out overall.`
+      : `이 사주는 일간 ${result.dayMaster}를 중심으로 볼 때 ${dm}의 성향이 바탕을 이루고, 전체적으로는 ${dom} 기운이 두드러지는 구조입니다.`,
+    personality: isEn ? (personalityMap[dm]?.en ?? "") : (personalityMap[dm]?.ko ?? ""),
+    strength: isEn ? (strengthMap[dom]?.en ?? "") : (strengthMap[dom]?.ko ?? ""),
+    work: isEn ? (workMap[dom]?.en ?? "") : (workMap[dom]?.ko ?? ""),
+    relationship: isEn ? (relationshipMap[dm]?.en ?? "") : (relationshipMap[dm]?.ko ?? ""),
     balance: balanceText,
-    lifestyleTips: weakElements.slice(0, 3).map((item) => weakAdviceMap[item]),
-    closing: "이 구조는 자신의 강점을 억누르기보다 제대로 활용하는 쪽에서 힘이 납니다. 오행 분포상 약한 부분을 생활 습관으로 천천히 보완해주면, 성향의 장점은 살리고 피로도는 줄이는 방향으로 흐름을 만들기 좋습니다.",
+    lifestyleTips: weakElements.slice(0, 3).map((item) => isEn ? (weakAdviceMap[item]?.en ?? "") : (weakAdviceMap[item]?.ko ?? "")),
+    closing: isEn
+      ? "This chart finds its strength not in suppressing your strengths, but in channeling them properly. Gradually supplementing the weaker elements through daily habits — while keeping your natural strengths alive — is the most sustainable path forward."
+      : "이 구조는 자신의 강점을 억누르기보다 제대로 활용하는 쪽에서 힘이 납니다. 오행 분포상 약한 부분을 생활 습관으로 천천히 보완해주면, 성향의 장점은 살리고 피로도는 줄이는 방향으로 흐름을 만들기 좋습니다.",
   };
 }
 
@@ -274,6 +376,82 @@ function SearchParamsLoader({ onLoad }: { onLoad: (data: BirthDataType) => void 
 }
 
 function SajuPageInner() {
+  const locale = useLocale();
+  const isEn = locale === "en";
+
+  const T = {
+    pageTitle:      isEn ? "Four Pillars (Saju)" : "정통사주",
+    birthInfo:      isEn ? "Birth Information" : "출생 정보",
+    birthSubtitle:  isEn ? "It's okay if you don't know your birth time." : "태어난 시간을 모르셔도 괜찮아요",
+    change:         isEn ? "Edit" : "변경",
+    yearLabel:      isEn ? "Birth Year" : "태어난 년",
+    monthLabel:     isEn ? "Birth Month" : "태어난 월",
+    dayLabel:       isEn ? "Birth Day" : "태어난 일",
+    selectPlaceholder: isEn ? "Select" : "선택",
+    hourLabel:      isEn ? "Birth Time (optional)" : "태어난 시간 (선택)",
+    hourPlaceholder: isEn ? "Unknown / Skip" : "모름 / 선택안함",
+    calendarLabel:  isEn ? "Calendar Type" : "달력 기준",
+    solar:          isEn ? "Solar" : "양력",
+    lunar:          isEn ? "Lunar" : "음력",
+    leapLabel:      isEn ? "Leap Month" : "윤달 여부",
+    leapFalse:      isEn ? "Regular Month" : "일반월",
+    leapTrue:       isEn ? "Leap Month" : "윤달",
+    calendarHint:   isEn ? "Please select Solar or Lunar calendar." : "달력 기준(양력/음력)을 선택해주세요",
+    calcBtn:        isEn ? "Analyze My Saju" : "사주 분석하기",
+    errorFill:      isEn ? "Please fill in all birth information." : "출생 정보를 모두 선택해주세요.",
+    errorCalc:      isEn ? "An error occurred. Please check your date or lunar settings." : "계산 중 오류가 발생했습니다. 날짜 또는 음력/윤달 입력값을 다시 확인해주세요.",
+    basisTitle:     isEn ? "Calculation Basis" : "기준 안내",
+    basisInput:     isEn ? "Input" : "입력",
+    basisSolar:     isEn ? "Solar date" : "기준 양력",
+    dominantElement: isEn ? "Dominant Element" : "대표 오행",
+    dominantSub:    isEn ? "Based on overall energy" : "전체 기운 분포 기준",
+    zodiacTitle:    isEn ? "Zodiac Animal" : "나의 띠",
+    zodiacSub:      isEn ? "Year Pillar basis" : "년주 기준",
+    yearPillarTitle: isEn ? "Year Pillar" : "년주",
+    yearPillarSub:  isEn ? "Based on Ipchun" : "입춘 기준 계산",
+    sajuStructure:  isEn ? "Saju Structure" : "사주 구조",
+    oneLineSummary: isEn ? "Summary" : "한 줄 요약",
+    fiveElements:   isEn ? "Five Elements Energy" : "오행 에너지",
+    fiveElementsSub: isEn ? "Simple distribution of Heavenly Stems & Earthly Branches" : "네 기둥의 천간·지지 기준 단순 분포",
+    strongestEnergy: isEn ? "Strongest energy" : "가장 강한 기운",
+    strongestLabel: isEn ? "energy is most prominent" : "기운이 가장 두드러집니다",
+    kakaoShare:     isEn ? "Share via KakaoTalk" : "카카오톡으로 공유하기",
+    manseryeokOpen: isEn ? "View Detailed Chart" : "만세력 보기",
+    manseryeokClose: isEn ? "Close Chart" : "만세력 닫기",
+    fortuneOpen:    isEn ? "View Fortune Reading" : "운세 풀이 보기",
+    fortuneClose:   isEn ? "Close Fortune Reading" : "운세 풀이 닫기",
+    manseryeokTitle: isEn ? "Detailed Chart" : "만세력 상세",
+    manseryeokSub:  isEn ? "View your four pillars at a glance." : "사주 원국을 표 형태로 한눈에 볼 수 있어요",
+    inputDate:      isEn ? "Input Date" : "입력일",
+    solarDate:      isEn ? "Solar Date" : "기준 양력",
+    stemRow:        isEn ? "Stem" : "천간",
+    stemElement:    isEn ? "Stem Element" : "천간 오행",
+    branchRow:      isEn ? "Branch" : "지지",
+    branchElement:  isEn ? "Branch Element" : "지지 오행",
+    pillarRow:      isEn ? "Pillar" : "기둥",
+    dayMasterLabel: isEn ? "Day Master" : "일간",
+    dayBranchLabel: isEn ? "Day Branch" : "일지",
+    fortuneTitle:   isEn ? "Fortune Reading" : "운세 풀이",
+    fortuneSub:     isEn ? "A natural reading of your tendencies and flow based on the day master and five elements." : "일간과 오행 분포를 바탕으로 성향과 흐름을 자연스럽게 풀어봤어요",
+    overviewLabel:  isEn ? "Overall Summary" : "전체 흐름 요약",
+    personalityLabel: isEn ? "Core Tendencies" : "기본 성향",
+    strengthLabel:  isEn ? "Natural Strengths" : "강하게 드러나는 장점",
+    workLabel:      isEn ? "Work & Career Flow" : "일과 관계 흐름",
+    balanceLabel:   isEn ? "Balance & Compensation" : "균형과 보완 포인트",
+    lifestyleLabel: isEn ? "Daily Life Tips" : "생활 속 보완 힌트",
+    closingLabel:   isEn ? "Closing Insight" : "마무리 해석",
+    infoTitle:      isEn ? "How to Use" : "이용 안내",
+    infoSub:        isEn ? "Useful things to know before entering." : "입력 전 알아두면 좋은 기준을 정리했어요",
+    infoConfirm:    isEn ? "Got it" : "확인했어요",
+    unknownHourNote: isEn ? "Time unknown" : "시간 모름",
+    hourPillarUnknown: isEn ? "Hour pillar not entered" : "시주 미입력",
+    yearSuffix:     isEn ? "" : "년",
+    monthSuffix:    isEn ? "" : "월",
+    daySuffix:      isEn ? "" : "일",
+    hourSuffix:     isEn ? ":00" : "시",
+    zodiacSuffix:   isEn ? "" : "띠",
+  };
+
   const years = useMemo(() => Array.from({ length: 2040 - 1930 + 1 }, (_, i) => 1930 + i), []);
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -321,39 +499,43 @@ function SajuPageInner() {
 
   const handleCalculate = useCallback(() => {
     setErrorMessage("");
-    if (!canCalculate) { setErrorMessage("출생 정보를 모두 선택해주세요."); return; }
+    if (!canCalculate) { setErrorMessage(T.errorFill); return; }
     const computed = computeSaju(birthData);
     if (computed) { setOpenedPanel(null); setResult(computed); }
-    else setErrorMessage("계산 중 오류가 발생했습니다. 날짜 또는 음력/윤달 입력값을 다시 확인해주세요.");
-  }, [birthData, canCalculate]);
+    else setErrorMessage(T.errorCalc);
+  }, [birthData, canCalculate, T.errorFill, T.errorCalc]);
 
   const handleBack = () => { if (typeof window !== "undefined") window.history.back(); };
 
   const handleKakaoShare = useCallback(() => {
     if (!result) return;
     const dominantMeta = ELEMENT_META[result.dominantElement] ?? ELEMENT_META["수"];
-    const yearAnimal = BRANCH_ANIMALS[result.yearBranch] ?? { label: "미상", emoji: "✨" };
+    const yearAnimal = BRANCH_ANIMALS[result.yearBranch] ?? { label: "미상", labelEn: "Unknown", emoji: "✨" };
     const params = new URLSearchParams({
       year: birthData.year, month: birthData.month, day: birthData.day, lunar: birthData.isLunar,
       ...(birthData.hour ? { hour: birthData.hour } : {}),
       ...(birthData.isLunar === "lunar" ? { leap: birthData.isLeapMonth } : {}),
     });
     const shareUrl = `https://dasangdam.com/services/saju?${params.toString()}`;
+    const animalLabel = isEn ? yearAnimal.labelEn : yearAnimal.label;
+    const elementLabel = isEn ? dominantMeta.labelEn : dominantMeta.label;
     shareWithCapture({
       captureId: "saju-capture",
-      title: `나의 사주 — 일간 ${result.dayMaster} · ${dominantMeta.emoji} ${dominantMeta.label}`,
-      description: `${yearAnimal.emoji} ${yearAnimal.label}띠 · ${result.summaryText}`,
-      buttonText: "나도 사주 보기 →",
+      title: isEn ? `My Saju — Day Master ${result.dayMaster} · ${dominantMeta.emoji} ${elementLabel}` : `나의 사주 — 일간 ${result.dayMaster} · ${dominantMeta.emoji} ${elementLabel}`,
+      description: `${yearAnimal.emoji} ${animalLabel} · ${result.summaryText}`,
+      buttonText: isEn ? "Check my Saju →" : "나도 사주 보기 →",
       pageUrl: shareUrl,
     });
-  }, [result, birthData, shareWithCapture]);
+  }, [result, birthData, shareWithCapture, isEn]);
 
   const dominantMeta = result ? ELEMENT_META[result.dominantElement] : ELEMENT_META["수"];
-  // ── 년주 지지 기준 띠 (사람들이 아는 "내 띠")
-  const yearAnimal = result ? (BRANCH_ANIMALS[result.yearBranch] ?? { label: "미상", emoji: "✨" }) : BRANCH_ANIMALS["해"];
-  // ── 일지 동물 (만세력 상세에서만 표시)
-  const dayAnimal = result ? (BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", emoji: "✨" }) : BRANCH_ANIMALS["해"];
-  const fortuneContent = result ? getFortuneContent(result) : null;
+  const yearAnimal = result ? (BRANCH_ANIMALS[result.yearBranch] ?? { label: "미상", labelEn: "Unknown", emoji: "✨" }) : BRANCH_ANIMALS["해"];
+  const dayAnimal = result ? (BRANCH_ANIMALS[result.dayBranch] ?? { label: "미상", labelEn: "Unknown", emoji: "✨" }) : BRANCH_ANIMALS["해"];
+  const fortuneContent = result ? getFortuneContent(result, locale) : null;
+
+  const animalLabel = isEn ? yearAnimal.labelEn : yearAnimal.label;
+  const dayAnimalLabel = isEn ? dayAnimal.labelEn : dayAnimal.label;
+  const elementLabel = isEn ? dominantMeta.labelEn : dominantMeta.label;
 
   return (
     <main className="min-h-screen bg-[#f6f4ef] text-zinc-900">
@@ -367,7 +549,7 @@ function SajuPageInner() {
             <button type="button" onClick={handleBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200">
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div className="text-lg font-extrabold tracking-tight">정통사주</div>
+            <div className="text-lg font-extrabold tracking-tight">{T.pageTitle}</div>
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => setInfoOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200">
                 <Info className="h-5 w-5" />
@@ -386,48 +568,48 @@ function SajuPageInner() {
           <section className="rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
-                <div className="text-lg font-extrabold">출생 정보</div>
-                <div className="mt-1 text-sm leading-relaxed text-zinc-500">태어난 시간을 모르셔도 괜찮아요</div>
+                <div className="text-lg font-extrabold">{T.birthInfo}</div>
+                <div className="mt-1 text-sm leading-relaxed text-zinc-500">{T.birthSubtitle}</div>
               </div>
-              <div className="rounded-full bg-yellow-300 px-4 py-2 text-xs font-extrabold text-zinc-900">변경</div>
+              <div className="rounded-full bg-yellow-300 px-4 py-2 text-xs font-extrabold text-zinc-900">{T.change}</div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <SelectField label="태어난 년" value={birthData.year} onChange={(value) => setBirthData((prev) => ({ ...prev, year: value, day: "" }))} icon={<CalendarDays className="h-3.5 w-3.5" />}>
-                <option value="">선택</option>
-                {years.map((y) => <option key={y} value={String(y)}>{y}년</option>)}
+              <SelectField label={T.yearLabel} value={birthData.year} onChange={(value) => setBirthData((prev) => ({ ...prev, year: value, day: "" }))} icon={<CalendarDays className="h-3.5 w-3.5" />}>
+                <option value="">{T.selectPlaceholder}</option>
+                {years.map((y) => <option key={y} value={String(y)}>{y}{T.yearSuffix}</option>)}
               </SelectField>
-              <SelectField label="태어난 월" value={birthData.month} onChange={(value) => setBirthData((prev) => ({ ...prev, month: value, day: "" }))}>
-                <option value="">선택</option>
-                {months.map((m) => <option key={m} value={String(m)}>{m}월</option>)}
+              <SelectField label={T.monthLabel} value={birthData.month} onChange={(value) => setBirthData((prev) => ({ ...prev, month: value, day: "" }))}>
+                <option value="">{T.selectPlaceholder}</option>
+                {months.map((m) => <option key={m} value={String(m)}>{m}{T.monthSuffix}</option>)}
               </SelectField>
-              <SelectField label="태어난 일" value={birthData.day} onChange={(value) => setBirthData((prev) => ({ ...prev, day: value }))} disabled={!birthData.year || !birthData.month}>
-                <option value="">선택</option>
-                {days.map((d) => <option key={d} value={String(d)}>{d}일</option>)}
+              <SelectField label={T.dayLabel} value={birthData.day} onChange={(value) => setBirthData((prev) => ({ ...prev, day: value }))} disabled={!birthData.year || !birthData.month}>
+                <option value="">{T.selectPlaceholder}</option>
+                {days.map((d) => <option key={d} value={String(d)}>{d}{T.daySuffix}</option>)}
               </SelectField>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <SelectField label="태어난 시간 (선택)" value={birthData.hour} onChange={(value) => setBirthData((prev) => ({ ...prev, hour: value, unknownTime: "false" }))} icon={<Clock3 className="h-3.5 w-3.5" />}>
-                <option value="">모름 / 선택안함</option>
-                {hours.map((h) => <option key={h} value={String(h)}>{String(h).padStart(2, "0")}시</option>)}
+              <SelectField label={T.hourLabel} value={birthData.hour} onChange={(value) => setBirthData((prev) => ({ ...prev, hour: value, unknownTime: "false" }))} icon={<Clock3 className="h-3.5 w-3.5" />}>
+                <option value="">{T.hourPlaceholder}</option>
+                {hours.map((h) => <option key={h} value={String(h)}>{String(h).padStart(2, "0")}{T.hourSuffix}</option>)}
               </SelectField>
-              <SelectField label="달력 기준" value={birthData.isLunar}
+              <SelectField label={T.calendarLabel} value={birthData.isLunar}
                 onChange={(value) => setBirthData((prev) => ({ ...prev, isLunar: value as "" | "solar" | "lunar", isLeapMonth: "" }))}
                 icon={birthData.isLunar === "solar" ? <SunMedium className="h-3.5 w-3.5" /> : birthData.isLunar === "lunar" ? <MoonStar className="h-3.5 w-3.5" /> : <CalendarDays className="h-3.5 w-3.5" />}>
-                <option value="">선택</option>
-                <option value="solar">양력</option>
-                <option value="lunar">음력</option>
+                <option value="">{T.selectPlaceholder}</option>
+                <option value="solar">{T.solar}</option>
+                <option value="lunar">{T.lunar}</option>
               </SelectField>
             </div>
             <div className="mt-4">
               {birthData.isLunar === "lunar" ? (
-                <SelectField label="윤달 여부" value={birthData.isLeapMonth} onChange={(value) => setBirthData((prev) => ({ ...prev, isLeapMonth: value as "" | "false" | "true" }))}>
-                  <option value="">선택</option>
-                  <option value="false">일반월</option>
-                  <option value="true">윤달</option>
+                <SelectField label={T.leapLabel} value={birthData.isLeapMonth} onChange={(value) => setBirthData((prev) => ({ ...prev, isLeapMonth: value as "" | "false" | "true" }))}>
+                  <option value="">{T.selectPlaceholder}</option>
+                  <option value="false">{T.leapFalse}</option>
+                  <option value="true">{T.leapTrue}</option>
                 </SelectField>
               ) : birthData.isLunar === "solar" ? null : (
                 <div className="rounded-3xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-4">
-                  <div className="text-sm font-semibold leading-relaxed text-zinc-500">달력 기준(양력/음력)을 선택해주세요</div>
+                  <div className="text-sm font-semibold leading-relaxed text-zinc-500">{T.calendarHint}</div>
                 </div>
               )}
             </div>
@@ -436,7 +618,7 @@ function SajuPageInner() {
             )}
             <button type="button" onClick={handleCalculate} disabled={!canCalculate}
               className={`mt-5 w-full rounded-[24px] px-5 py-4 text-sm font-extrabold text-white transition ${canCalculate ? "bg-zinc-900 shadow-[0_14px_30px_rgba(0,0,0,0.16)] hover:translate-y-[-1px]" : "cursor-not-allowed bg-zinc-300 shadow-none"}`}>
-              사주 분석하기
+              {T.calcBtn}
             </button>
           </section>
 
@@ -446,53 +628,55 @@ function SajuPageInner() {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white"><Sparkles className="h-5 w-5" /></div>
                   <div>
-                    <div className="text-sm font-extrabold text-zinc-900">기준 안내</div>
+                    <div className="text-sm font-extrabold text-zinc-900">{T.basisTitle}</div>
                     <div className="mt-1 text-sm leading-relaxed text-zinc-600">
-                      입력: {result.inputDateText}<br />기준 양력: {result.solarDateText}<br />{result.basisText}
+                      {T.basisInput}: {result.inputDateText}<br />{T.basisSolar}: {result.solarDateText}<br />{result.basisText}
                     </div>
                   </div>
                 </div>
               </section>
 
-              {/* ── 요약 카드: 대표오행 / 나의 띠(년주 기준) / 년주 ── */}
               <section className="mt-4 grid grid-cols-3 gap-3">
                 <SummaryCard
                   icon={<span className="text-xl">{dominantMeta.hanja}</span>}
-                  value={dominantMeta.label}
-                  title="대표 오행"
-                  sub="전체 기운 분포 기준"
+                  value={elementLabel}
+                  title={T.dominantElement}
+                  sub={T.dominantSub}
                 />
                 <SummaryCard
                   icon={<span className="text-2xl">{yearAnimal.emoji}</span>}
-                  value={`${yearAnimal.label}띠`}
-                  title="나의 띠"
-                  sub={`${result.yearPillarText} 년주 기준`}
+                  value={`${animalLabel}${T.zodiacSuffix}`}
+                  title={T.zodiacTitle}
+                  sub={`${result.yearPillarText} ${T.zodiacSub}`}
                 />
                 <SummaryCard
                   icon={<span className="text-lg font-black">{result.yearPillarText}</span>}
                   value={result.yearPillarText}
-                  title="년주"
-                  sub="입춘 기준 계산"
+                  title={T.yearPillarTitle}
+                  sub={T.yearPillarSub}
                 />
               </section>
 
               <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
-                <div className="text-lg font-extrabold">사주 구조</div>
+                <div className="text-lg font-extrabold">{T.sajuStructure}</div>
                 <div className="mt-1 text-sm leading-relaxed text-zinc-500">{result.summaryText}</div>
                 <div className="mt-5 grid grid-cols-4 gap-2">
                   {result.pillars.map((item) => <PillarBlock key={item.label} item={item} />)}
                 </div>
                 <div className="mt-5 rounded-3xl bg-zinc-50 p-4">
-                  <div className="text-xs font-bold text-zinc-400">한 줄 요약</div>
+                  <div className="text-xs font-bold text-zinc-400">{T.oneLineSummary}</div>
                   <div className="mt-2 text-sm leading-relaxed text-zinc-700">
-                    이 사주는 <span className="font-extrabold">{result.yearPillarText}년주</span>, <span className="font-extrabold">{result.monthPillarText}월주</span>, <span className="font-extrabold">{result.dayPillarText}일주</span>, <span className="font-extrabold">{result.hourPillarText === "시간 모름" ? "시주 미입력" : `${result.hourPillarText}시주`}</span>로 구성됩니다.
+                    {isEn
+                      ? <>Year <span className="font-extrabold">{result.yearPillarText}</span> · Month <span className="font-extrabold">{result.monthPillarText}</span> · Day <span className="font-extrabold">{result.dayPillarText}</span> · {result.hourPillarText === "시간 모름" ? "Hour pillar not entered" : <span className="font-extrabold">{result.hourPillarText} hour</span>}</>
+                      : <>이 사주는 <span className="font-extrabold">{result.yearPillarText}년주</span>, <span className="font-extrabold">{result.monthPillarText}월주</span>, <span className="font-extrabold">{result.dayPillarText}일주</span>, <span className="font-extrabold">{result.hourPillarText === "시간 모름" ? "시주 미입력" : `${result.hourPillarText}시주`}</span>로 구성됩니다.</>
+                    }
                   </div>
                 </div>
               </section>
 
               <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
-                <div className="text-lg font-extrabold">오행 에너지</div>
-                <div className="mt-1 text-sm text-zinc-500">네 기둥의 천간·지지 기준 단순 분포</div>
+                <div className="text-lg font-extrabold">{T.fiveElements}</div>
+                <div className="mt-1 text-sm text-zinc-500">{T.fiveElementsSub}</div>
                 <div className="mt-6 flex h-44 items-end justify-between gap-3 rounded-3xl bg-zinc-50 px-4 pb-4 pt-6">
                   {[
                     { label: "목", value: result.energy.wood }, { label: "화", value: result.energy.fire },
@@ -503,14 +687,14 @@ function SajuPageInner() {
                       <div key={item.label} className="flex w-full flex-col items-center justify-end gap-2">
                         <div className="text-[11px] font-bold text-zinc-500">{item.value}</div>
                         <div className={`w-9 rounded-t-2xl ${meta.barClass}`} style={{ height: `${Math.max(10, item.value * 22)}px` }} />
-                        <div className="text-[11px] font-semibold text-zinc-500">{item.label}</div>
+                        <div className="text-[11px] font-semibold text-zinc-500">{isEn ? meta.labelEn : meta.label}</div>
                       </div>
                     );
                   })}
                 </div>
                 <div className={`mt-4 rounded-3xl border p-4 ${dominantMeta.chipClass}`}>
-                  <div className="text-xs font-bold opacity-70">가장 강한 기운</div>
-                  <div className="mt-1 text-base font-extrabold">{dominantMeta.emoji} {dominantMeta.label} 기운이 가장 두드러집니다</div>
+                  <div className="text-xs font-bold opacity-70">{T.strongestEnergy}</div>
+                  <div className="mt-1 text-base font-extrabold">{dominantMeta.emoji} {elementLabel} {T.strongestLabel}</div>
                 </div>
               </section>
 
@@ -519,7 +703,7 @@ function SajuPageInner() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
                 </svg>
-                카카오톡으로 공유하기
+                {T.kakaoShare}
               </button>
 
               <p className="mt-3 text-center text-xs text-zinc-400">
@@ -529,49 +713,49 @@ function SajuPageInner() {
 
               <section className="mt-4 space-y-3">
                 <button type="button" onClick={() => setOpenedPanel((prev) => prev === "manseryeok" ? null : "manseryeok")} className="w-full rounded-[24px] bg-white px-5 py-4 text-sm font-bold text-zinc-900 shadow-[0_8px_24px_rgba(0,0,0,0.05)] ring-1 ring-zinc-100 transition hover:translate-y-[-1px]">
-                  {openedPanel === "manseryeok" ? "만세력 닫기" : "만세력 보기"}
+                  {openedPanel === "manseryeok" ? T.manseryeokClose : T.manseryeokOpen}
                 </button>
                 <button type="button" onClick={() => setOpenedPanel((prev) => prev === "fortune" ? null : "fortune")} className="w-full rounded-[24px] bg-zinc-900 px-5 py-4 text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(0,0,0,0.16)] transition hover:translate-y-[-1px]">
-                  {openedPanel === "fortune" ? "운세 풀이 닫기" : "운세 풀이 보기"}
+                  {openedPanel === "fortune" ? T.fortuneClose : T.fortuneOpen}
                 </button>
               </section>
 
               {openedPanel === "manseryeok" && (
                 <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
-                  <div className="text-lg font-extrabold">만세력 상세</div>
-                  <div className="mt-1 text-sm text-zinc-500">사주 원국을 표 형태로 한눈에 볼 수 있어요</div>
+                  <div className="text-lg font-extrabold">{T.manseryeokTitle}</div>
+                  <div className="mt-1 text-sm text-zinc-500">{T.manseryeokSub}</div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">입력일</div><div className="mt-1 text-sm font-bold text-zinc-900">{result.inputDateText}</div></div>
-                    <div className="rounded-2xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">기준 양력</div><div className="mt-1 text-sm font-bold text-zinc-900">{result.solarDateText}</div></div>
+                    <div className="rounded-2xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">{T.inputDate}</div><div className="mt-1 text-sm font-bold text-zinc-900">{result.inputDateText}</div></div>
+                    <div className="rounded-2xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">{T.solarDate}</div><div className="mt-1 text-sm font-bold text-zinc-900">{result.solarDateText}</div></div>
                   </div>
                   <div className="mt-4 overflow-hidden rounded-3xl border border-zinc-200">
                     <div className="overflow-x-auto">
                       <table className="min-w-full border-collapse text-center">
                         <thead className="bg-zinc-50">
                           <tr>
-                            <th className="px-3 py-3 text-[11px] font-bold text-zinc-400">구분</th>
+                            <th className="px-3 py-3 text-[11px] font-bold text-zinc-400"></th>
                             {result.pillars.map((item) => <th key={item.label} className="px-3 py-3 text-[11px] font-bold text-zinc-500">{item.label}</th>)}
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">천간</td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">{T.stemRow}</td>
                             {result.pillars.map((item) => <td key={`${item.label}-gan`} className="px-3 py-3"><span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(item.gan)}`}>{item.gan}</span></td>)}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">천간 오행</td>
-                            {result.pillars.map((item) => <td key={`${item.label}-gan-el`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{item.ganElement}</td>)}
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">{T.stemElement}</td>
+                            {result.pillars.map((item) => <td key={`${item.label}-gan-el`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{isEn ? (ELEMENT_META[item.ganElement]?.labelEn ?? item.ganElement) : item.ganElement}</td>)}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">지지</td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">{T.branchRow}</td>
                             {result.pillars.map((item) => <td key={`${item.label}-ji`} className="px-3 py-3"><span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-xl font-black ${getElementStyles(item.ji)}`}>{item.ji}</span></td>)}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">지지 오행</td>
-                            {result.pillars.map((item) => <td key={`${item.label}-ji-el`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{item.jiElement}</td>)}
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">{T.branchElement}</td>
+                            {result.pillars.map((item) => <td key={`${item.label}-ji-el`} className="px-3 py-3 text-sm font-semibold text-zinc-700">{isEn ? (ELEMENT_META[item.jiElement]?.labelEn ?? item.jiElement) : item.jiElement}</td>)}
                           </tr>
                           <tr className="border-t border-zinc-100">
-                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">기둥</td>
+                            <td className="bg-zinc-50 px-3 py-3 text-[11px] font-bold text-zinc-400">{T.pillarRow}</td>
                             {result.pillars.map((item) => <td key={`${item.label}-full`} className="px-3 py-3 text-base font-extrabold text-zinc-900">{item.gan}{item.ji}</td>)}
                           </tr>
                         </tbody>
@@ -580,12 +764,12 @@ function SajuPageInner() {
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
-                      <div className="text-[11px] font-bold text-blue-400">일간</div>
+                      <div className="text-[11px] font-bold text-blue-400">{T.dayMasterLabel}</div>
                       <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayMaster}</div>
                     </div>
                     <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
-                      <div className="text-[11px] font-bold text-amber-500">일지</div>
-                      <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayBranch} {dayAnimal.emoji} {dayAnimal.label}</div>
+                      <div className="text-[11px] font-bold text-amber-500">{T.dayBranchLabel}</div>
+                      <div className="mt-1 text-base font-extrabold text-zinc-900">{result.dayBranch} {dayAnimal.emoji} {dayAnimalLabel}</div>
                     </div>
                   </div>
                 </section>
@@ -593,21 +777,21 @@ function SajuPageInner() {
 
               {openedPanel === "fortune" && fortuneContent && (
                 <section className="mt-4 rounded-[32px] bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-100">
-                  <div className="text-lg font-extrabold">운세 풀이</div>
-                  <div className="mt-1 text-sm text-zinc-500">일간과 오행 분포를 바탕으로 성향과 흐름을 자연스럽게 풀어봤어요</div>
+                  <div className="text-lg font-extrabold">{T.fortuneTitle}</div>
+                  <div className="mt-1 text-sm text-zinc-500">{T.fortuneSub}</div>
                   <div className={`mt-4 rounded-3xl border p-4 ${dominantMeta.chipClass}`}>
-                    <div className="text-xs font-bold opacity-70">전체 흐름 요약</div>
+                    <div className="text-xs font-bold opacity-70">{T.overviewLabel}</div>
                     <div className="mt-2 text-sm leading-relaxed">{fortuneContent.overview}</div>
                   </div>
-                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">기본 성향</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.personality}</div></div>
-                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">강하게 드러나는 장점</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.strength}</div></div>
+                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">{T.personalityLabel}</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.personality}</div></div>
+                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">{T.strengthLabel}</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.strength}</div></div>
                   <div className="mt-3 rounded-3xl bg-zinc-50 p-4">
-                    <div className="text-[11px] font-bold text-zinc-400">일과 관계 흐름</div>
+                    <div className="text-[11px] font-bold text-zinc-400">{T.workLabel}</div>
                     <div className="mt-2 space-y-3 text-sm leading-7 text-zinc-700"><p>{fortuneContent.work}</p><p>{fortuneContent.relationship}</p></div>
                   </div>
-                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">균형과 보완 포인트</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.balance}</div></div>
+                  <div className="mt-3 rounded-3xl bg-zinc-50 p-4"><div className="text-[11px] font-bold text-zinc-400">{T.balanceLabel}</div><div className="mt-2 text-sm leading-7 text-zinc-700">{fortuneContent.balance}</div></div>
                   <div className="mt-3 rounded-3xl bg-white p-4 ring-1 ring-zinc-100">
-                    <div className="text-[11px] font-bold text-zinc-400">생활 속 보완 힌트</div>
+                    <div className="text-[11px] font-bold text-zinc-400">{T.lifestyleLabel}</div>
                     <div className="mt-3 space-y-2.5">
                       {fortuneContent.lifestyleTips.map((tip, index) => (
                         <div key={`${tip}-${index}`} className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700">{tip}</div>
@@ -615,7 +799,7 @@ function SajuPageInner() {
                     </div>
                   </div>
                   <div className="mt-4 rounded-3xl bg-zinc-900 p-4 text-white">
-                    <div className="text-xs font-bold text-white/60">마무리 해석</div>
+                    <div className="text-xs font-bold text-white/60">{T.closingLabel}</div>
                     <div className="mt-2 text-sm leading-7 text-white/90">{fortuneContent.closing}</div>
                   </div>
                 </section>
@@ -629,16 +813,27 @@ function SajuPageInner() {
         <div className="fixed inset-0 z-50 bg-black/40 px-4 py-6" onClick={() => setInfoOpen(false)}>
           <div className="mx-auto mt-10 max-w-md rounded-[32px] bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
-              <div><div className="text-lg font-extrabold text-zinc-900">이용 안내</div><div className="mt-1 text-sm text-zinc-500">입력 전 알아두면 좋은 기준을 정리했어요</div></div>
+              <div><div className="text-lg font-extrabold text-zinc-900">{T.infoTitle}</div><div className="mt-1 text-sm text-zinc-500">{T.infoSub}</div></div>
               <button type="button" onClick={() => setInfoOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-700"><X className="h-5 w-5" /></button>
             </div>
             <div className="mt-4 space-y-3">
-              <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">달력 기준</div><div className="mt-1 text-sm leading-6 text-zinc-600">양력은 입력한 날짜 그대로 계산하고, 음력은 먼저 양력으로 변환한 뒤 계산합니다.</div></div>
-              <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">출생 시간</div><div className="mt-1 text-sm leading-6 text-zinc-600">시간을 모르면 시주는 제외한 흐름으로 보고, 시간을 알면 시주까지 포함해 계산합니다.</div></div>
-              <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">결과 해석 기준</div><div className="mt-1 text-sm leading-6 text-zinc-600">만세력은 연·월·일·시 기둥과 오행 분포를 보여주고, 운세 풀이는 그 구조를 바탕으로 성향과 흐름을 읽기 쉽게 정리한 요약 해석입니다.</div></div>
-              <div className="rounded-3xl bg-blue-50 p-4 ring-1 ring-blue-100"><div className="text-sm font-extrabold text-zinc-900">입력 팁</div><div className="mt-1 text-sm leading-6 text-zinc-600">년, 월, 일을 먼저 고른 뒤 달력 기준을 선택하면 바로 분석할 수 있어요. 시간은 알면 입력하고, 몰라도 괜찮아요.</div></div>
+              {isEn ? (
+                <>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">Calendar Type</div><div className="mt-1 text-sm leading-6 text-zinc-600">Solar dates are calculated as entered. Lunar dates are first converted to solar, then calculated.</div></div>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">Birth Time</div><div className="mt-1 text-sm leading-6 text-zinc-600">If you don't know your birth time, the hour pillar will be excluded. If you do know it, all four pillars will be included.</div></div>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">Reading Basis</div><div className="mt-1 text-sm leading-6 text-zinc-600">The detailed chart shows the four pillars and five elements distribution. The fortune reading is a summarized interpretation based on that structure.</div></div>
+                  <div className="rounded-3xl bg-blue-50 p-4 ring-1 ring-blue-100"><div className="text-sm font-extrabold text-zinc-900">Tip</div><div className="mt-1 text-sm leading-6 text-zinc-600">Select year, month, and day first, then choose your calendar type. Birth time is optional but adds accuracy.</div></div>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">달력 기준</div><div className="mt-1 text-sm leading-6 text-zinc-600">양력은 입력한 날짜 그대로 계산하고, 음력은 먼저 양력으로 변환한 뒤 계산합니다.</div></div>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">출생 시간</div><div className="mt-1 text-sm leading-6 text-zinc-600">시간을 모르면 시주는 제외한 흐름으로 보고, 시간을 알면 시주까지 포함해 계산합니다.</div></div>
+                  <div className="rounded-3xl bg-zinc-50 p-4"><div className="text-sm font-extrabold text-zinc-900">결과 해석 기준</div><div className="mt-1 text-sm leading-6 text-zinc-600">만세력은 연·월·일·시 기둥과 오행 분포를 보여주고, 운세 풀이는 그 구조를 바탕으로 성향과 흐름을 읽기 쉽게 정리한 요약 해석입니다.</div></div>
+                  <div className="rounded-3xl bg-blue-50 p-4 ring-1 ring-blue-100"><div className="text-sm font-extrabold text-zinc-900">입력 팁</div><div className="mt-1 text-sm leading-6 text-zinc-600">년, 월, 일을 먼저 고른 뒤 달력 기준을 선택하면 바로 분석할 수 있어요. 시간은 알면 입력하고, 몰라도 괜찮아요.</div></div>
+                </>
+              )}
             </div>
-            <button type="button" onClick={() => setInfoOpen(false)} className="mt-4 w-full rounded-[22px] bg-zinc-900 px-5 py-4 text-sm font-extrabold text-white">확인했어요</button>
+            <button type="button" onClick={() => setInfoOpen(false)} className="mt-4 w-full rounded-[22px] bg-zinc-900 px-5 py-4 text-sm font-extrabold text-white">{T.infoConfirm}</button>
           </div>
         </div>
       )}
