@@ -186,7 +186,7 @@ export default function NamingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
-  const years  = Array.from({ length: 2024-1930+1 }, (_,i) => 2024-i);
+  const years  = Array.from({ length: 2027-1930+1 }, (_,i) => 2027-i);
   const months = Array.from({ length: 12 }, (_,i) => i+1);
   const days   = birthYear && birthMonth ? Array.from({ length: new Date(+birthYear,+birthMonth,0).getDate() }, (_,i) => i+1) : [];
   const hours  = Array.from({ length: 24 }, (_,i) => i);
