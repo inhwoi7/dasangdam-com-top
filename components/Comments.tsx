@@ -31,7 +31,18 @@ export default function Comments({ slug }: { slug: string }) {
     return () => unsub();
   }, [slug]);
 
-  const login = () => signInWithPopup(auth, googleProvider);
+  const isInAppBrowser = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    return /kakaotalk|instagram|line|naver|daum|fbav|fban/.test(ua);
+  };
+
+  const login = () => {
+    if (isInAppBrowser()) {
+      alert("카카오톡 내 브라우저에서는 Google 로그인이 제한됩니다.\n\n오른쪽 상단 메뉴(⋯) → '다른 브라우저로 열기'를 눌러\nChrome 또는 Safari에서 접속해주세요.");
+      return;
+    }
+    signInWithPopup(auth, googleProvider);
+  };
   const logout = () => signOut(auth);
 
   const submit = async () => {
