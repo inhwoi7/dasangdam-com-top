@@ -1,9 +1,4 @@
 @import "tailwindcss";
-
-/* ── Pretendard (한국어 본문 폰트) ── */
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
-
-/* ── Inter (영문 전용 폰트) ── */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
 :root {
@@ -44,8 +39,7 @@ body {
     linear-gradient(180deg, #f8f3ea 0%, #f3ede3 100%);
   color: var(--text);
   font-family:
-    "Inter",                  /* 영문 우선 */
-    "Pretendard Variable",    /* 한국어 */
+    "Pretendard Variable",
     "Pretendard",
     "Apple SD Gothic Neo",
     "Noto Sans KR",
@@ -54,17 +48,7 @@ body {
   line-height: 1.6;
 }
 
-/* 한국어 텍스트는 Pretendard 우선 적용 */
-:lang(ko) {
-  font-family:
-    "Pretendard Variable",
-    "Pretendard",
-    "Inter",
-    "Apple SD Gothic Neo",
-    "Noto Sans KR",
-    "Malgun Gothic",
-    sans-serif;
-}
+/* 영어도 Pretendard 동일 적용 — KO/EN 폰트 통일 */
 
 body {
   min-height: 100vh;
@@ -744,4 +728,10 @@ select {
   .notionProse summary {
     font-size: 15px;
   }
+}
+
+/* 영문 버전 폰트 — layout.tsx의 font-en 클래스와 연결 */
+.font-en,
+.font-en body {
+  font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
 }
