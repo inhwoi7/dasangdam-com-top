@@ -17,21 +17,24 @@ const ALL_ANIMALS = [
   { id: 'sheep',  emoji: '🐑', name: '양',     nameEn: 'Sheep' },
 ]
 
-// 인원수에 따라 결과 슬롯 생성: 당첨 1개 + 순위 나머지
-function buildResultSlots(count: number, isEn: boolean): string[] {
-  const rankLabels: string[] = []
-  for (let i = 1; i < count; i++) {
-    if (i === 1) rankLabels.push(isEn ? '🥇 1st' : '🥇 1등')
-    else if (i === 2) rankLabels.push(isEn ? '🥈 2nd' : '🥈 2등')
-    else if (i === 3) rankLabels.push(isEn ? '🥉 3rd' : '🥉 3등')
-    else rankLabels.push(isEn ? `${i}th` : `${i}등`)
-  }
-  const slots = [...rankLabels, isEn ? '🎉 Winner' : '🎉 당첨']
+// 슬롯 타입: 'winner' | '1' | '2' | ... (순수 데이터, 렌더는 컴포넌트에서)
+function buildResultSlots(count: number): string[] {
+  const slots: string[] = []
+  for (let i = 1; i < count; i++) slots.push(String(i))
+  slots.push('winner')
   for (let i = slots.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [slots[i], slots[j]] = [slots[j], slots[i]]
   }
   return slots
+}
+
+// 슬롯 값 → 표시 텍스트
+function slotLabel(slot: string, isEn: boolean): string {
+  if (slot === 'winner') return isEn ? 'Winner' : '당첨'
+  const n = Number(slot)
+  if (isEn) return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`
+  return `${n}등`
 }
 
 const LADDER_ROWS = 12
@@ -90,7 +93,7 @@ export default function LadderPage() {
   const startGame = useCallback(() => {
     const chosen = ALL_ANIMALS.slice(0, count)
     const newRungs = generateRungs(count)
-    const newSlots = buildResultSlots(count, isEn)
+    const newSlots = buildResultSlots(count)
     setAnimals(chosen)
     setRungs(newRungs)
     setResultSlots(newSlots)
@@ -148,10 +151,11 @@ export default function LadderPage() {
   }
 
   const handleKakaoShare = useCallback(() => {
-    const resultLines = resultSlots.map((label, col) => {
+    const resultLines = resultSlots.map((slot, col) => {
       const winner = Object.entries(revealedPaths).find(([, path]) => path[LADDER_ROWS] === col)
       const winAnimal = winner ? animals.find(a => a.id === winner[0]) : null
       const animalName = winAnimal ? (isEn ? winAnimal.nameEn : winAnimal.name) : '❓'
+      const label = slotLabel(slot, isEn)
       return `${winAnimal ? winAnimal.emoji + ' ' + animalName : '❓'} → ${label}`
     }).join(' | ')
 
@@ -356,9 +360,9 @@ export default function LadderPage() {
         {phase !== 'done' ? (
           <>
             <div className="relative flex mt-1 mb-2" style={{ height: 56 }}>
-              {resultSlots.map((label, col) => {
-                const isWinner = label.includes('당첨') || label.includes('Winner')
-                const parts = label.split(' ')
+              {resultSlots.map((slot, col) => {
+                const isWinner = slot === 'winner'
+                const label = slotLabel(slot, isEn)
                 return (
                   <div key={col}
                     style={{ position: 'absolute', left: cx(col) - 22, width: 44 }}
@@ -366,14 +370,13 @@ export default function LadderPage() {
                     <button
                       onClick={() => phase === 'play' && setEditingCol(editingCol === col ? null : col)}
                       disabled={phase === 'animating'}
-                      className={`w-11 h-11 rounded-2xl flex flex-col items-center justify-center text-center leading-tight shadow transition-all
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center text-center shadow transition-all
                         ${isWinner
                           ? 'bg-amber-500 text-white ring-2 ring-amber-400'
                           : editingCol === col
-                          ? 'bg-amber-300 text-amber-900 ring-2 ring-amber-500'
+                          ? 'bg-amber-200 text-amber-900 ring-2 ring-amber-400'
                           : 'bg-white text-amber-800 hover:bg-amber-50'}`}>
-                      <span className="text-base leading-none">{parts[0]}</span>
-                      <span className="text-[9px] font-bold mt-0.5">{parts.slice(1).join(' ')}</span>
+                      <span className="text-[11px] font-bold leading-tight">{label}</span>
                     </button>
                   </div>
                 )
@@ -381,9 +384,7 @@ export default function LadderPage() {
             </div>
             {phase === 'play' && (
               <p className="text-center text-xs text-amber-700/40 mb-3">
-                {isEn
-                  ? '↑ Tap a slot to change it (🎉 Winner is placed automatically)'
-                  : '↑ 결과를 눌러 내용을 바꿀 수 있어요 (🎉 당첨은 자동 배치)'}
+                {isEn ? '↑ Tap to edit · Winner placed automatically' : '↑ 탭해서 편집 · 당첨은 자동 배치'}
               </p>
             )}
             {phase === 'animating' && (
@@ -399,37 +400,51 @@ export default function LadderPage() {
             )}
           </>
         ) : (
-          /* 최종 결과 카드 */
-          <div className="mt-3 mb-4 grid gap-2"
+          /* ── 최종 결과 카드: 통일된 디자인 ── */
+          <div className="mt-4 mb-4 grid gap-2"
             style={{ gridTemplateColumns: `repeat(${Math.min(count, 4)}, 1fr)` }}>
-            {resultSlots.map((label, col) => {
+            {resultSlots.map((slot, col) => {
               const winner = Object.entries(revealedPaths).find(([, path]) => path[LADDER_ROWS] === col)
               const winAnimal = winner ? animals.find(a => a.id === winner[0]) : null
-              const isWinner = label.includes('당첨') || label.includes('Winner')
-              const parts = label.split(' ')
+              const isWinner = slot === 'winner'
+              const rank = isWinner ? null : Number(slot)
+              const label = slotLabel(slot, isEn)
+
+              // 순위별 뱃지 색상 (모두 동일한 구조, 색만 다름)
+              const badgeColor = isWinner
+                ? 'bg-amber-500 text-white'
+                : rank === 1
+                ? 'bg-yellow-400 text-yellow-900'
+                : rank === 2
+                ? 'bg-slate-300 text-slate-700'
+                : rank === 3
+                ? 'bg-orange-300 text-orange-800'
+                : 'bg-amber-100 text-amber-700'
+
               return (
                 <motion.div key={col}
-                  initial={{ opacity: 0, scale: 0.7, y: 16 }}
+                  initial={{ opacity: 0, scale: 0.75, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: col * 0.07, type: 'spring', stiffness: 260, damping: 18 }}
-                  className={`rounded-2xl p-3 flex flex-col items-center gap-1.5 border
+                  transition={{ delay: col * 0.06, type: 'spring', stiffness: 280, damping: 20 }}
+                  className={`rounded-2xl p-3 flex flex-col items-center gap-2 border
                     ${isWinner
-                      ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-400 shadow-lg'
-                      : 'bg-white border-amber-100 shadow-md'}`}>
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-4xl
-                    ${isWinner ? 'bg-amber-100' : 'bg-amber-50'} shadow-sm`}>
+                      ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-400 shadow-lg'
+                      : 'bg-white border-amber-100 shadow-sm'}`}>
+
+                  {/* 동물 이모지 */}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl bg-amber-50">
                     {winAnimal ? winAnimal.emoji : '❓'}
                   </div>
-                  <span className={`text-xs font-bold ${isWinner ? 'text-amber-600' : 'text-amber-800'}`}>
-                    {winAnimal
-                      ? (isEn ? winAnimal.nameEn : winAnimal.name)
-                      : (isEn ? 'Unknown' : '미결')}
+
+                  {/* 동물 이름 */}
+                  <span className="text-[11px] font-bold text-amber-800 leading-none">
+                    {winAnimal ? (isEn ? winAnimal.nameEn : winAnimal.name) : (isEn ? '—' : '—')}
                   </span>
-                  <div className={`w-full rounded-xl py-1.5 flex flex-col items-center
-                    ${isWinner ? 'bg-amber-500' : 'bg-amber-300'}`}>
-                    <span className="text-lg leading-none">{parts[0]}</span>
-                    <span className="text-[10px] font-bold text-white mt-0.5">{parts.slice(1).join(' ')}</span>
-                  </div>
+
+                  {/* 순위 뱃지 — 모두 동일한 pill 형태로 통일 */}
+                  <span className={`w-full text-center text-[11px] font-bold py-1.5 rounded-xl ${badgeColor}`}>
+                    {isWinner ? `🎉 ${label}` : label}
+                  </span>
                 </motion.div>
               )
             })}
@@ -444,7 +459,7 @@ export default function LadderPage() {
               className="bg-white rounded-2xl p-4 mb-3 shadow-lg border border-amber-100">
               <p className="text-xs text-amber-700 mb-2 text-center font-bold">
                 {isEn ? `Slot ${editingCol + 1} settings` : `${editingCol + 1}번 칸 결과 설정`}
-                {(resultSlots[editingCol].includes('당첨') || resultSlots[editingCol].includes('Winner')) && (
+                {resultSlots[editingCol] === 'winner' && (
                   <span className="ml-2 text-amber-500">
                     {isEn ? '(Winner slot — auto assigned)' : '(당첨 칸은 자동 지정)'}
                   </span>
