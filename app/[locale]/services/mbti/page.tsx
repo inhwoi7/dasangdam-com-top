@@ -2,14 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { useKakaoShare } from '@/lib/useKakaoShare'; // ✅ 추가
+import { useLocale } from 'next-intl'; // ✅ 추가
+import { useKakaoShare } from '@/lib/useKakaoShare';
 
 type MbtiResult = {
   relation_type: string;
+  relation_type_en: string;   // ✅ 추가
   score: number;
   summary: string;
+  summary_en: string;         // ✅ 추가
   detail_analysis: string;
+  detail_analysis_en: string; // ✅ 추가
   advice_tips: string;
+  advice_tips_en: string;     // ✅ 추가
 };
 
 const supabase = createClient(
@@ -23,12 +28,15 @@ const mbtiList = [
 ];
 
 export default function Home() {
+  const locale = useLocale(); // ✅ 추가
+  const isEn = locale === 'en'; // ✅ 편의 변수
+
   const [myMbti, setMyMbti] = useState('');
   const [yourMbti, setYourMbti] = useState('');
   const [result, setResult] = useState<MbtiResult | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { shareWithCapture } = useKakaoShare(); // ✅ 추가
+  const { shareWithCapture } = useKakaoShare();
 
   useEffect(() => {
     setResult(null);
@@ -36,7 +44,7 @@ export default function Home() {
 
   const handleAnalyze = async () => {
     if (!myMbti || !yourMbti) {
-      alert('분석을 위해 MBTI를 선택해 주세요.');
+      alert(isEn ? 'Please select both MBTI types.' : '분석을 위해 MBTI를 선택해 주세요.');
       return;
     }
     setLoading(true);
@@ -51,24 +59,30 @@ export default function Home() {
       setResult(data as MbtiResult);
     } catch (error) {
       console.error('DB 연동 에러:', error);
-      alert('데이터베이스에서 정보를 가져오지 못했습니다.');
+      alert(isEn ? 'Failed to load data. Please try again.' : '데이터베이스에서 정보를 가져오지 못했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ 카카오 공유 핸들러
+  // ✅ locale에 따라 표시할 값 선택하는 헬퍼
+  const d = useCallback((ko: string, en: string) => {
+    return isEn && en ? en : ko;
+  }, [isEn]);
+
   const handleKakaoShare = useCallback(() => {
     if (!result) return;
     const params = new URLSearchParams({ my: myMbti, your: yourMbti });
+    const relationType = d(result.relation_type, result.relation_type_en);
+    const summary = d(result.summary, result.summary_en);
     shareWithCapture({
       captureId: 'mbti-capture',
-      title: `${myMbti} ♥ ${yourMbti} — ${result.score}점 · ${result.relation_type}`,
-      description: `"${result.summary}"`,
-      buttonText: '나도 궁합 보기 →',
+      title: `${myMbti} ♥ ${yourMbti} — ${result.score}${isEn ? 'pts' : '점'} · ${relationType}`,
+      description: `"${summary}"`,
+      buttonText: isEn ? 'Check your chemistry →' : '나도 궁합 보기 →',
       pageUrl: `https://dasangdam.com/services/mbti?${params.toString()}`,
     });
-  }, [result, myMbti, yourMbti, shareWithCapture]);
+  }, [result, myMbti, yourMbti, shareWithCapture, d, isEn]);
 
   return (
     <div style={{
@@ -80,10 +94,10 @@ export default function Home() {
     }}>
       <header style={{ marginBottom: '40px' }}>
         <h2 style={{ color: '#ff4d4d', letterSpacing: '-1.5px', fontSize: '2rem', fontWeight: 800 }}>
-          다상담 MBTI 정밀 분석
+          {isEn ? 'Dasangdam MBTI Analysis' : '다상담 MBTI 정밀 분석'}
         </h2>
         <p style={{ color: '#888', fontSize: '0.95rem', marginTop: '10px' }}>
-          Cloud Database 연동 정밀 진단 시스템 v8.1
+          {isEn ? 'Cloud Database Precision Diagnosis System v8.1' : 'Cloud Database 연동 정밀 진단 시스템 v8.1'}
         </p>
       </header>
 
@@ -97,10 +111,12 @@ export default function Home() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '35px' }}>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '10px' }}>나의 유형</p>
+            <p style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '10px' }}>
+              {isEn ? 'My Type' : '나의 유형'}
+            </p>
             <select value={myMbti} onChange={(e) => setMyMbti(e.target.value)}
               style={{ width: '100%', padding: '16px', borderRadius: '18px', border: '2px solid #f0f0f0', fontWeight: 'bold', backgroundColor: '#fff' }}>
-              <option value="">선택</option>
+              <option value="">{isEn ? 'Select' : '선택'}</option>
               {mbtiList.map((mbti) => <option key={mbti} value={mbti}>{mbti}</option>)}
             </select>
           </div>
@@ -108,10 +124,12 @@ export default function Home() {
           <div style={{ width: '40px', alignSelf: 'flex-end', paddingBottom: '15px', color: '#ff4d4d', fontSize: '1.2rem' }}>♥</div>
 
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '10px' }}>상대 유형</p>
+            <p style={{ fontSize: '0.8rem', color: '#aaa', marginBottom: '10px' }}>
+              {isEn ? "Partner's Type" : '상대 유형'}
+            </p>
             <select value={yourMbti} onChange={(e) => setYourMbti(e.target.value)}
               style={{ width: '100%', padding: '16px', borderRadius: '18px', border: '2px solid #f0f0f0', fontWeight: 'bold', backgroundColor: '#fff' }}>
-              <option value="">선택</option>
+              <option value="">{isEn ? 'Select' : '선택'}</option>
               {mbtiList.map((mbti) => <option key={mbti} value={mbti}>{mbti}</option>)}
             </select>
           </div>
@@ -122,7 +140,10 @@ export default function Home() {
             width: '100%', padding: '22px', borderRadius: '22px', border: 'none',
             backgroundColor: '#ff4d4d', color: '#fff', fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer',
           }}>
-          {loading ? '데이터 엔진 가동 중...' : '분석 리포트 생성'}
+          {loading
+            ? (isEn ? 'Analyzing...' : '데이터 엔진 가동 중...')
+            : (isEn ? 'Generate Report' : '분석 리포트 생성')
+          }
         </button>
 
         {result && (
@@ -136,31 +157,39 @@ export default function Home() {
                 backgroundColor: '#fff0f0', color: '#ff4d4d',
                 padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold',
               }}>
-                {result.relation_type}
+                {/* ✅ locale에 따라 relation_type 선택 */}
+                {d(result.relation_type, result.relation_type_en)}
               </span>
               <h2 style={{ fontSize: '4rem', color: '#111', margin: '15px 0' }}>
-                {result.score}<span style={{ fontSize: '1.5rem' }}>점</span>
+                {result.score}<span style={{ fontSize: '1.5rem' }}>{isEn ? 'pts' : '점'}</span>
               </h2>
               <p style={{ color: '#444', fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.4 }}>
-                "{result.summary}"
+                {/* ✅ locale에 따라 summary 선택 */}
+                "{d(result.summary, result.summary_en)}"
               </p>
             </div>
 
             <div style={{ backgroundColor: '#f9f9f9', padding: '25px', borderRadius: '25px', marginBottom: '15px' }}>
-              <h4 style={{ fontSize: '1rem', color: '#222', marginBottom: '15px' }}>전문가 상세분석 리포트</h4>
+              <h4 style={{ fontSize: '1rem', color: '#222', marginBottom: '15px' }}>
+                {isEn ? 'Detailed Analysis Report' : '전문가 상세분석 리포트'}
+              </h4>
               <p style={{ fontSize: '1rem', color: '#666', lineHeight: 1.7, wordBreak: 'keep-all' }}>
-                {result.detail_analysis}
+                {/* ✅ locale에 따라 detail_analysis 선택 */}
+                {d(result.detail_analysis, result.detail_analysis_en)}
               </p>
             </div>
 
             <div style={{ backgroundColor: '#fff9f0', padding: '20px', borderRadius: '25px', borderLeft: '5px solid #ffa500' }}>
-              <h4 style={{ fontSize: '1rem', color: '#e67e22', marginBottom: '8px' }}>다상담의 현실 조언</h4>
+              <h4 style={{ fontSize: '1rem', color: '#e67e22', marginBottom: '8px' }}>
+                {isEn ? "Dasangdam's Honest Advice" : '다상담의 현실 조언'}
+              </h4>
               <p style={{ fontSize: '0.95rem', color: '#7f8c8d', lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                {result.advice_tips}
+                {/* ✅ locale에 따라 advice_tips 선택 */}
+                {d(result.advice_tips, result.advice_tips_en)}
               </p>
             </div>
 
-            {/* ✅ 카카오 공유 버튼 */}
+            {/* 카카오 공유 버튼 */}
             <button onClick={handleKakaoShare}
               style={{
                 marginTop: '24px', width: '100%', padding: '18px',
@@ -172,12 +201,12 @@ export default function Home() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
               </svg>
-              카카오톡으로 공유하기
+              {isEn ? 'Share via KakaoTalk' : '카카오톡으로 공유하기'}
             </button>
 
-            {/* ✅ 다상담 링크 */}
+            {/* 다상담 링크 */}
             <p style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.75rem', color: '#bbb' }}>
-              다상담{' '}
+              {isEn ? 'Dasangdam ' : '다상담 '}
               <a href="https://dasangdam.com" target="_blank" rel="noopener noreferrer"
                 style={{ textDecoration: 'underline', color: '#bbb' }}>
                 dasangdam.com
@@ -188,7 +217,10 @@ export default function Home() {
       </main>
 
       <footer style={{ marginTop: '60px', fontSize: '0.8rem', color: '#bbb' }}>
-        © 2026 Sunny Lab & Dasangdam. 모든 데이터는 Cloud DB에서 실시간으로 호출됩니다.
+        {isEn
+          ? '© 2026 Sunny Lab & Dasangdam. All data is loaded in real-time from Cloud DB.'
+          : '© 2026 Sunny Lab & Dasangdam. 모든 데이터는 Cloud DB에서 실시간으로 호출됩니다.'
+        }
       </footer>
 
       <style jsx>{`
