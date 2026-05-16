@@ -282,7 +282,7 @@ function cls(...names: Array<string | false | null | undefined>) {
   return names.filter(Boolean).join(' ');
 }
 
-function computeScores(answers: Record<number, number>, questions: Question[], t: typeof T['ko']) {
+function computeScores(answers: Record<number, number>, questions: Question[], t: typeof T['ko'] | typeof T['en']) {
   const grouped: Record<Factor, number[]> = { 외향성: [], 친화성: [], 성실성: [], 신경증: [], 개방성: [] };
   questions.forEach((q) => {
     const raw = answers[q.id];
@@ -295,7 +295,7 @@ function computeScores(answers: Record<number, number>, questions: Question[], t
       const sum = arr.reduce((a, b) => a + b, 0);
       const avg = arr.length ? sum / arr.length : 0;
       const percent = avg ? ((avg - 1) / 4) * 100 : 0;
-      const lvls = t.levels as Record<string, string>;
+      const lvls: Record<string, string> = { ...t.levels };
       let level: string = lvls.low;
       if (avg >= 4) level = lvls.vhigh;
       else if (avg >= 3.4) level = lvls.high;
