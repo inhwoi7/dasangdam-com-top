@@ -6,7 +6,19 @@ import { castHexagram, generateReading, lineValueName } from './lib/iching-logic
 import type { Line, ReadingResult } from './lib/iching-logic';
 import hexagramsData from './data/hexagrams.json';
 
-// ✅ useKakaoShare 인라인 (독립 앱이라 @/lib 경로 없음)
+// ── 용어 정리 ─────────────────────────────────────────────
+// 본괘   → 현재 나의 운세
+// 지괘   → 미래의 결과
+// 괘사   → 종합 분석
+// 효사   → 오늘의 행동 지침
+// 상사   → 핵심 요약
+// 단사   → 상세 조언
+// 상괘   → 주변 상황
+// 하괘   → 나의 태도
+// 변효   → 바뀌는 효 (그대로 유지, 직관적)
+// 다시 점치기 · 再占 → 다시 점치기
+// ──────────────────────────────────────────────────────────
+
 const KAKAO_JS_KEY = '60eb58888334fc1d1771a472c2730fb0';
 
 function useKakaoShare() {
@@ -124,9 +136,16 @@ function CastingAnimation() {
         ))}
       </div>
       <motion.div className="text-sm text-stone-700 tracking-widest" animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 2.4, delay: 0.6 }}>
-        6효를 형성하고 있습니다
+        6개의 효를 뽑는 중...
       </motion.div>
     </div>
+  );
+}
+
+// ── 탭 설명 툴팁 ─────────────────────────────────────────
+function TabTooltip({ text }: { text: string }) {
+  return (
+    <span className="ml-1 text-[10px] font-normal text-stone-400 hidden sm:inline">· {text}</span>
   );
 }
 
@@ -134,105 +153,180 @@ function ResultCard({ reading, onReset, question, onShare }: {
   reading: ReadingResult; onReset: () => void; question: string; onShare: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<'original' | 'changed' | 'lines'>('original');
-  const hexData = (num: number): HexagramData | undefined => hexagramsData.hexagrams.find((h) => h.number === num) as HexagramData | undefined;
+  const hexData = (num: number): HexagramData | undefined =>
+    hexagramsData.hexagrams.find((h) => h.number === num) as HexagramData | undefined;
   const orig = hexData(reading.original.hexagramNumber);
   const chan = reading.changed ? hexData(reading.changed.hexagramNumber) : null;
   if (!orig) return null;
 
+  // ── 탭 구성 (쉬운 용어로) ──
   const tabs = [
-    { key: 'original' as const, label: '괘사' },
-    ...(reading.hasChangingLines && chan ? [{ key: 'changed' as const, label: `지괘 ${chan.chineseName}` }] : []),
-    { key: 'lines' as const, label: '효사' },
+    { key: 'original' as const, label: '종합 분석', sub: '이 괘의 전체 흐름' },
+    ...(reading.hasChangingLines && chan
+      ? [{ key: 'changed' as const, label: `미래의 결과`, sub: `${chan.chineseName} · ${chan.koreanName}` }]
+      : []),
+    { key: 'lines' as const, label: '오늘의 행동 지침', sub: '각 효의 구체적 메시지' },
   ];
 
   return (
     <motion.div className="w-full" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
 
+      {/* ── 본괘/지괘 표시 영역 ── */}
       <div className={`flex ${reading.hasChangingLines && chan ? 'flex-col sm:flex-row' : 'flex-col'} items-center justify-center gap-6 mb-8`}>
+        {/* 본괘 → "현재 나의 운세" */}
         <div className="text-center">
-          <div className="text-sm text-stone-700 tracking-widest mb-2 font-medium">本卦 본괘</div>
+          <div className="text-sm text-stone-700 tracking-widest mb-1 font-bold">현재 나의 운세</div>
+          <div className="text-xs text-stone-400 mb-3 tracking-wide">지금 뽑힌 괘</div>
           <HexagramDisplay lines={reading.original.lines} animate={false} />
           <div className="mt-3 text-3xl font-bold text-stone-900">{orig.chineseName}</div>
           <div className="text-base text-stone-800 font-medium mt-1">{orig.koreanName} · {orig.meaning}</div>
-          <div className="text-sm text-stone-600 mt-1">第{orig.number}卦</div>
+          <div className="text-xs text-stone-500 mt-1">제{orig.number}괘</div>
         </div>
+
+        {/* 지괘 → "미래의 결과" */}
         {reading.hasChangingLines && chan && (
           <>
             <div className="flex sm:flex-col items-center justify-center gap-1">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-stone-700 text-2xl font-bold">
                 <span className="hidden sm:block">↓</span><span className="block sm:hidden">→</span>
               </motion.div>
-              <div className="text-xs text-amber-700 tracking-widest font-medium">변효</div>
+              <div className="text-xs text-amber-700 tracking-widest font-medium">바뀌는 효</div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-amber-700 tracking-widest mb-2 font-medium">之卦 지괘</div>
+              <div className="text-sm text-amber-700 tracking-widest mb-1 font-bold">미래의 결과</div>
+              <div className="text-xs text-amber-500 mb-3 tracking-wide">내 행동에 따라 변할 미래</div>
               <HexagramDisplay lines={reading.changed!.lines} animate={false} />
               <div className="mt-3 text-3xl font-bold text-amber-900">{chan.chineseName}</div>
               <div className="text-base text-amber-800 font-medium mt-1">{chan.koreanName} · {chan.meaning}</div>
-              <div className="text-sm text-amber-700 mt-1">第{chan.number}卦</div>
+              <div className="text-xs text-amber-600 mt-1">제{chan.number}괘</div>
             </div>
           </>
         )}
       </div>
 
+      {/* ── 탭 네비게이션 ── */}
       <div className="flex border-b-2 border-stone-300 mb-6">
         {tabs.map((tab) => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-4 py-3 text-sm sm:text-base tracking-wide transition-all duration-200 border-b-2 font-medium ${activeTab === tab.key ? 'border-stone-900 text-stone-900' : 'border-transparent text-stone-600 hover:text-stone-800'}`}>
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-3 py-3 text-sm sm:text-base tracking-wide transition-all duration-200 border-b-2 font-medium ${
+              activeTab === tab.key
+                ? 'border-stone-900 text-stone-900'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
+            }`}
+          >
             {tab.label}
+            <TabTooltip text={tab.sub} />
           </button>
         ))}
       </div>
 
+      {/* ── 탭 콘텐츠 ── */}
       <AnimatePresence mode="wait">
         <motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.25 }}>
+
+          {/* 종합 분석 탭 (= 괘사) */}
           {activeTab === 'original' && (
             <div className="space-y-4">
+              {/* 핵심 요약 (= 상사) */}
               <div className="bg-stone-100 rounded-xl p-4 border border-stone-300">
-                <div className="text-sm text-stone-700 mb-2 tracking-widest font-bold">象辭 상사</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-bold text-stone-800">💡 핵심 요약</span>
+                  <span className="text-[10px] text-stone-400 font-normal">象辭 상사</span>
+                </div>
                 <p className="text-stone-800 text-base leading-relaxed italic">{orig.image}</p>
               </div>
+              {/* 상세 조언 (= 단사) */}
               <div className="bg-white rounded-xl p-4 border border-stone-400">
-                <div className="text-sm text-stone-700 mb-2 tracking-widest font-bold">彖辭 단사</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-bold text-stone-800">📖 상세 조언</span>
+                  <span className="text-[10px] text-stone-400 font-normal">彖辭 단사</span>
+                </div>
                 <p className="text-stone-900 text-base leading-relaxed">{orig.judgment}</p>
               </div>
+              {/* 주변 상황 / 나의 태도 (= 상괘/하괘) */}
               <div className="grid grid-cols-2 gap-3 text-sm text-center">
                 <div className="bg-stone-100 rounded-lg p-3 border border-stone-300">
-                  <div className="text-stone-700 mb-1 font-medium">上卦</div>
+                  <div className="text-[10px] text-stone-400 font-medium mb-0.5">上卦 · 주변 상황</div>
                   <div className="font-bold text-stone-900">{orig.upperTrigram}</div>
                 </div>
                 <div className="bg-stone-100 rounded-lg p-3 border border-stone-300">
-                  <div className="text-stone-700 mb-1 font-medium">下卦</div>
+                  <div className="text-[10px] text-stone-400 font-medium mb-0.5">下卦 · 나의 태도</div>
                   <div className="font-bold text-stone-900">{orig.lowerTrigram}</div>
                 </div>
               </div>
             </div>
           )}
+
+          {/* 미래의 결과 탭 (= 지괘) */}
           {activeTab === 'changed' && chan && (
             <div className="space-y-4">
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 mb-1">
+                <p className="text-amber-800 text-sm leading-relaxed">
+                  ✨ <strong>바뀌는 효</strong>가 있어요. 지금의 선택과 행동에 따라 <strong>{chan.koreanName}({chan.chineseName})</strong>의 흐름으로 나아갈 수 있습니다.
+                </p>
+              </div>
               <div className="bg-amber-50 rounded-xl p-4 border border-amber-300">
-                <div className="text-sm text-amber-800 mb-2 tracking-widest font-bold">象辭 상사</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-bold text-amber-800">💡 핵심 요약</span>
+                  <span className="text-[10px] text-amber-500 font-normal">象辭 상사</span>
+                </div>
                 <p className="text-amber-900 text-base leading-relaxed italic">{chan.image}</p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-amber-400">
-                <div className="text-sm text-amber-800 mb-2 tracking-widest font-bold">彖辭 단사</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-bold text-amber-800">📖 상세 조언</span>
+                  <span className="text-[10px] text-amber-500 font-normal">彖辭 단사</span>
+                </div>
                 <p className="text-amber-900 text-base leading-relaxed">{chan.judgment}</p>
               </div>
             </div>
           )}
+
+          {/* 오늘의 행동 지침 탭 (= 효사) */}
           {activeTab === 'lines' && (
             <div className="space-y-3">
+              {/* 설명 */}
+              <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-3">
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  각 줄(효)마다 구체적인 메시지가 담겨 있어요.
+                  <span className="text-amber-700 font-bold"> 주황색</span>으로 표시된 항목이 지금 당신에게 특히 해당하는 메시지예요.
+                </p>
+              </div>
               {reading.original.lines.map((line, idx) => {
                 const lineNum = idx + 1;
                 const lineText = orig.changingLines[String(lineNum)];
                 const isChanging = line.isChanging;
+                // 효 위치 이름 (아래부터: 초효, 2효 ... 상효)
+                const linePositionLabel =
+                  lineNum === 1 ? '첫 번째 (초효)' :
+                  lineNum === 2 ? '두 번째' :
+                  lineNum === 3 ? '세 번째' :
+                  lineNum === 4 ? '네 번째' :
+                  lineNum === 5 ? '다섯 번째' : '맨 위 (상효)';
                 return (
-                  <motion.div key={idx} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.06 }} className={`rounded-xl p-4 border ${isChanging ? 'bg-amber-50 border-amber-400' : 'bg-stone-100 border-stone-300'}`}>
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.06 }}
+                    className={`rounded-xl p-4 border ${isChanging ? 'bg-amber-50 border-amber-400' : 'bg-stone-100 border-stone-200'}`}
+                  >
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className={`text-sm font-bold tracking-widest ${isChanging ? 'text-amber-800' : 'text-stone-700'}`}>{lineNum}爻</span>
-                      {isChanging && <span className="text-xs bg-amber-300 text-amber-900 px-2 py-0.5 rounded-full font-bold">변효 {lineValueName(line.value)}</span>}
-                      <span className="text-xs text-stone-600 font-medium">{line.isYang ? '— 양(陽)' : '-- 음(陰)'}</span>
+                      <span className={`text-sm font-bold ${isChanging ? 'text-amber-800' : 'text-stone-600'}`}>
+                        {linePositionLabel} 줄
+                      </span>
+                      <span className="text-[10px] text-stone-400">{lineNum}爻 · {line.isYang ? '양(陽)' : '음(陰)'}</span>
+                      {isChanging && (
+                        <span className="text-xs bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full font-bold">
+                          ✨ 지금 당신의 메시지 ({lineValueName(line.value)})
+                        </span>
+                      )}
                     </div>
-                    <p className={`leading-relaxed text-base ${isChanging ? 'text-amber-900 font-semibold' : 'text-stone-800'}`}>{lineText}</p>
+                    <p className={`leading-relaxed text-base ${isChanging ? 'text-amber-900 font-semibold' : 'text-stone-700'}`}>
+                      {lineText}
+                    </p>
                   </motion.div>
                 );
               })}
@@ -241,10 +335,12 @@ function ResultCard({ reading, onReset, question, onShare }: {
         </motion.div>
       </AnimatePresence>
 
-      {/* ✅ 카카오 공유 버튼 */}
+      {/* ── 카카오 공유 버튼 ── */}
       <div className="mt-8 flex flex-col items-center gap-3">
-        <button onClick={onShare}
-          className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#FEE500] text-zinc-900 rounded-full font-bold text-sm tracking-wide shadow-md active:scale-95 transition-all w-full max-w-xs">
+        <button
+          onClick={onShare}
+          className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#FEE500] text-zinc-900 rounded-full font-bold text-sm tracking-wide shadow-md active:scale-95 transition-all w-full max-w-xs"
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 3C6.477 3 2 6.71 2 11.28c0 2.913 1.792 5.481 4.5 7.012L5.5 21l3.663-1.98C10.005 19.33 10.99 19.5 12 19.5c5.523 0 10-3.71 10-8.22C22 6.71 17.523 3 12 3z" fill="#3C1E1E" />
           </svg>
@@ -256,9 +352,13 @@ function ResultCard({ reading, onReset, question, onShare }: {
         </p>
       </div>
 
+      {/* ── 다시 점치기 버튼 (한자 제거) ── */}
       <motion.div className="mt-4 flex justify-center" whileTap={{ scale: 0.97 }}>
-        <button onClick={onReset} className="px-8 py-3 border-2 border-stone-500 rounded-full text-stone-700 text-base font-medium tracking-widest hover:border-stone-800 hover:text-stone-900 transition-all duration-300">
-          다시 점치기 · 再占
+        <button
+          onClick={onReset}
+          className="px-8 py-3 border-2 border-stone-400 rounded-full text-stone-600 text-base font-medium tracking-wider hover:border-stone-800 hover:text-stone-900 transition-all duration-300"
+        >
+          다시 점치기
         </button>
       </motion.div>
     </motion.div>
@@ -292,7 +392,7 @@ export default function IChingPage() {
   const [selectedHistory, setSelectedHistory] = useState<(ReadingResult & { timestamp: Date }) | null>(null);
   const castTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { shareWithCapture } = useKakaoShare(); // ✅ 인라인 훅 사용
+  const { shareWithCapture } = useKakaoShare();
 
   const handleCast = useCallback(() => {
     if (appState === 'casting') return;
@@ -315,7 +415,6 @@ export default function IChingPage() {
     setSelectedHistory(null);
   }, []);
 
-  // ✅ 카카오 공유 핸들러
   const handleShare = useCallback(() => {
     const reading = selectedHistory ?? currentReading;
     if (!reading) return;
@@ -326,7 +425,7 @@ export default function IChingPage() {
 
     const title = chan
       ? `주역점 ${orig.chineseName}(${orig.koreanName}) → ${chan.chineseName}(${chan.koreanName})`
-      : `주역점 第${orig.number}卦 ${orig.chineseName} · ${orig.koreanName}`;
+      : `주역점 제${orig.number}괘 ${orig.chineseName} · ${orig.koreanName}`;
     const description = question ? `"${question}" · ${orig.meaning}` : orig.meaning;
 
     shareWithCapture({
@@ -352,12 +451,15 @@ export default function IChingPage() {
         <button onClick={handleReset} className="flex items-center gap-3 hover:opacity-70 transition-opacity">
           <div className="w-9 h-9 border-2 border-stone-700 rounded-sm flex items-center justify-center text-base text-stone-800 font-bold">易</div>
           <div>
-            <div className="text-base font-bold tracking-wider text-stone-900">周易占</div>
-            <div className="text-xs text-stone-600 tracking-widest font-medium">I CHING ORACLE</div>
+            <div className="text-base font-bold tracking-wider text-stone-900">주역점</div>
+            <div className="text-xs text-stone-500 tracking-widest font-medium">I CHING ORACLE</div>
           </div>
         </button>
         {history.length > 0 && (
-          <button onClick={() => { setShowHistory(!showHistory); setSelectedHistory(null); }} className={`text-xs sm:text-sm font-medium tracking-widest px-3 py-2 rounded-full border-2 transition-all duration-200 ${showHistory ? 'bg-stone-800 text-stone-100 border-stone-800' : 'border-stone-600 text-stone-700 hover:border-stone-900'}`}>
+          <button
+            onClick={() => { setShowHistory(!showHistory); setSelectedHistory(null); }}
+            className={`text-xs sm:text-sm font-medium tracking-widest px-3 py-2 rounded-full border-2 transition-all duration-200 ${showHistory ? 'bg-stone-800 text-stone-100 border-stone-800' : 'border-stone-600 text-stone-700 hover:border-stone-900'}`}
+          >
             기록 ({history.length})
           </button>
         )}
@@ -368,7 +470,7 @@ export default function IChingPage() {
           {showHistory && history.length > 0 && (
             <motion.aside className="lg:w-64 flex-shrink-0" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="sticky top-8">
-                <div className="text-sm text-stone-700 font-bold tracking-widest mb-3">오늘의 점사 기록</div>
+                <div className="text-sm text-stone-700 font-bold tracking-widest mb-3">오늘의 점 기록</div>
                 <div className="space-y-2">
                   {history.map((h, i) => (
                     <HistoryItem key={i} reading={h} onClick={() => { setSelectedHistory(h); setShowHistory(false); setAppState('revealed'); }} />
@@ -388,24 +490,52 @@ export default function IChingPage() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-sm text-stone-700 tracking-[0.4em] uppercase font-medium">Book of Changes</motion.div>
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-base text-stone-800 leading-relaxed max-w-xs mx-auto">
                     마음을 고요히 하고 묻고자 하는 것을 떠올리세요.<br />
-                    <span className="text-stone-700">천지는 성심으로 구하는 자에게 응합니다.</span>
+                    <span className="text-stone-600">천지는 성심으로 구하는 자에게 응합니다.</span>
                   </motion.p>
                 </div>
+
                 <motion.div className="w-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                  <textarea value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="점을 치고자 하는 질문을 적어보세요 (선택사항)" className="w-full px-4 py-3 bg-white border-2 border-stone-400 rounded-xl text-base text-stone-900 placeholder-stone-500 resize-none focus:outline-none focus:border-stone-700 transition-colors" rows={2} />
+                  <textarea
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    placeholder="궁금한 것을 적어보세요 (선택사항)"
+                    className="w-full px-4 py-3 bg-white border-2 border-stone-400 rounded-xl text-base text-stone-900 placeholder-stone-400 resize-none focus:outline-none focus:border-stone-700 transition-colors"
+                    rows={2}
+                  />
                 </motion.div>
-                <motion.div className="w-full" style={{display:'grid', gridTemplateColumns:'repeat(8,1fr)', gap:'2px', fontSize:'12px', textAlign:'center'}} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+
+                <motion.div
+                  className="w-full"
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: '2px', fontSize: '12px', textAlign: 'center' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
                   {hexagramsData.hexagrams.slice(0, 64).map((h) => (
-                    <div key={h.number} title={`${h.number}. ${h.chineseName}(${h.koreanName}) - ${h.meaning}`} className="aspect-square flex items-center justify-center text-xs text-stone-600 hover:text-stone-900 hover:bg-stone-300 rounded transition-colors cursor-default font-medium">
+                    <div
+                      key={h.number}
+                      title={`${h.number}. ${h.chineseName}(${h.koreanName}) - ${h.meaning}`}
+                      className="aspect-square flex items-center justify-center text-xs text-stone-500 hover:text-stone-900 hover:bg-stone-300 rounded transition-colors cursor-default font-medium"
+                    >
                       {h.chineseName}
                     </div>
                   ))}
                 </motion.div>
-                <motion.button onClick={handleCast} className="px-12 py-4 bg-stone-900 text-stone-100 rounded-full text-base font-medium tracking-[0.3em] hover:bg-stone-800 active:scale-95 transition-all duration-300 shadow-lg" whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+
+                <motion.button
+                  onClick={handleCast}
+                  className="px-12 py-4 bg-stone-900 text-stone-100 rounded-full text-base font-medium tracking-[0.3em] hover:bg-stone-800 active:scale-95 transition-all duration-300 shadow-lg"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
                   占 · 점을 치다
                 </motion.button>
-                <motion.div className="text-center text-sm text-stone-700 font-medium" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-                  擲錢法 척전법 · 동전 세 개를 여섯 번 던집니다
+
+                <motion.div className="text-center text-sm text-stone-600 font-medium" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+                  동전 세 개를 여섯 번 던져 괘를 뽑습니다
                 </motion.div>
               </motion.div>
             )}
@@ -428,14 +558,19 @@ export default function IChingPage() {
                     &ldquo;{displayQuestion}&rdquo;
                   </motion.div>
                 )}
+                {/* 효 그림 카드 */}
                 <motion.div className="bg-white rounded-2xl p-5 border-2 border-stone-300 shadow-sm mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                   <HexagramDisplay lines={displayReading.original.lines} animate={!selectedHistory} />
                   {displayReading.hasChangingLines && (
                     <motion.div className="mt-4 pt-4 border-t-2 border-stone-200 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
-                      <span className="text-sm text-amber-800 tracking-widest font-bold">● 주황 = 변효 · {displayReading.changingLineIndices.length}개 변효</span>
+                      <span className="text-sm text-amber-800 tracking-widest font-bold">
+                        ● 주황 = 바뀌는 효 · {displayReading.changingLineIndices.length}개
+                      </span>
                     </motion.div>
                   )}
                 </motion.div>
+
+                {/* 결과 카드 */}
                 <motion.div className="bg-white rounded-2xl p-5 border-2 border-stone-300 shadow-sm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                   <ResultCard
                     reading={displayReading}
@@ -450,9 +585,9 @@ export default function IChingPage() {
         </main>
       </div>
 
-      <footer className="relative z-10 text-center py-6 text-sm text-stone-700 tracking-widest font-medium">
-        <div>周易 · Book of Changes · 64괘 완전판</div>
-        <div className="mt-1">擲錢法 알고리즘 기반 · King Wen 순서</div>
+      <footer className="relative z-10 text-center py-6 text-sm text-stone-600 tracking-widest font-medium">
+        <div>주역 · Book of Changes · 64괘 완전판</div>
+        <div className="mt-1">동전 던지기(擲錢法) 알고리즘 기반 · King Wen 순서</div>
       </footer>
     </div>
   );
