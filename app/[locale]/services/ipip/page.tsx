@@ -295,12 +295,13 @@ function computeScores(answers: Record<number, number>, questions: Question[], t
       const sum = arr.reduce((a, b) => a + b, 0);
       const avg = arr.length ? sum / arr.length : 0;
       const percent = avg ? ((avg - 1) / 4) * 100 : 0;
-      let level = t.levels.low;
-      if (avg >= 4) level = t.levels.vhigh;
-      else if (avg >= 3.4) level = t.levels.high;
-      else if (avg >= 2.6) level = t.levels.mid;
-      else if (avg >= 1.8) level = t.levels.low;
-      else level = t.levels.vlow;
+      const lvls = t.levels as Record<string, string>;
+      let level: string = lvls.low;
+      if (avg >= 4) level = lvls.vhigh;
+      else if (avg >= 3.4) level = lvls.high;
+      else if (avg >= 2.6) level = lvls.mid;
+      else if (avg >= 1.8) level = lvls.low;
+      else level = lvls.vlow;
       return { factor, sum, avg, percent, level };
     })
     .sort((a, b) => b.avg - a.avg);
