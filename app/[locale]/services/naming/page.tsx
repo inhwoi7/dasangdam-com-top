@@ -144,7 +144,6 @@ function StepBar({ current }: { current: number }) {
   );
 }
 
-// ── 점수 계산 순수 함수 ────────────────────────────
 function calcScore(result: AnalysisResult, selectedHanja: (SelectedHanja|null)[], nameChars: string[], weakEls: string[]) {
   const avgScore = Math.round([result.namingScore.fourGuk.wonGuk, result.namingScore.fourGuk.hyeongGuk, result.namingScore.fourGuk.iGuk, result.namingScore.fourGuk.jeonGuk]
     .reduce((a, d) => a + getRatingScore(d.rating), 0) / 4);
@@ -164,25 +163,18 @@ function calcScore(result: AnalysisResult, selectedHanja: (SelectedHanja|null)[]
 // ════════════════════════════════════════════════
 export default function NamingPage() {
   const [step, setStep] = useState(1);
-
-  // STEP 1
   const [birthYear, setBirthYear]   = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay]     = useState("");
   const [birthHour, setBirthHour]   = useState("");
   const [isLunar, setIsLunar]       = useState("solar");
   const [sajuData, setSajuData]     = useState<{ energy: SajuEnergy; weakElements: string[]; pillars: string }|null>(null);
-
-  // STEP 2
   const [nameInput, setNameInput]           = useState("");
   const [surnameStrokes, setSurnameStrokes] = useState(0);
-
-  // STEP 3 — 한자 선택 + 실시간 결과
   const [hanjaOptions, setHanjaOptions]     = useState<HanjaOption[][]>([]);
   const [selectedHanja, setSelectedHanja]   = useState<(SelectedHanja|null)[]>([]);
   const [result, setResult]                 = useState<AnalysisResult|null>(null);
   const [analyzing, setAnalyzing]           = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
@@ -194,11 +186,10 @@ export default function NamingPage() {
   const nameChars   = Array.from(nameInput);
   const allSelected = nameChars.every((_,i) => i===0 || selectedHanja[i] !== null);
 
-  // 한자 선택 시 자동으로 분석 실행
   const analyzeAuto = useCallback(async (selected: (SelectedHanja|null)[]) => {
     const chars = Array.from(nameInput);
     const strokesList = chars.map((_,i) => i===0 ? surnameStrokes : (selected[i]?.strokes ?? 0));
-    if (strokesList.some(s => !s)) return; // 아직 모두 선택 안 됨
+    if (strokesList.some(s => !s)) return;
     setAnalyzing(true);
     try {
       const res = await fetch("/api/naming/analyze", {
@@ -215,10 +206,9 @@ export default function NamingPage() {
     const next = [...selectedHanja];
     next[idx] = { hanja: opt.hanja, meaning: opt.meaning, strokes: opt.strokes_original, element: opt.five_elements };
     setSelectedHanja(next);
-    analyzeAuto(next); // 자동 분석!
+    analyzeAuto(next);
   }
 
-  // STEP 1 완료
   function handleStep1() {
     if (!birthYear || !birthMonth || !birthDay) { setError("생년월일을 모두 입력해주세요."); return; }
     try {
@@ -227,7 +217,6 @@ export default function NamingPage() {
     } catch { setError("사주 계산 중 오류가 발생했어요."); }
   }
 
-  // STEP 2: 이름 입력
   function handleNameChange(val: string) {
     const t = val.replace(/\s/g,"").slice(0,4);
     setNameInput(t);
@@ -237,7 +226,6 @@ export default function NamingPage() {
     setError("");
   }
 
-  // STEP 2 → STEP 3
   async function handleStep2() {
     if (nameInput.length < 2) { setError("성씨 포함 2글자 이상 입력해주세요."); return; }
     if (!surnameStrokes) { setError("성씨 획수를 입력해주세요."); return; }
@@ -258,12 +246,10 @@ export default function NamingPage() {
     finally { setLoading(false); }
   }
 
-  // 이름만 바꾸기 (생년월일 유지)
   function handleChangeName() {
     setNameInput(""); setSelectedHanja([]); setResult(null); setHanjaOptions([]); setStep(2);
   }
 
-  // 전체 처음부터
   function handleReset() {
     setStep(1); setNameInput(""); setSelectedHanja([]); setResult(null);
     setSajuData(null); setBirthYear(""); setBirthMonth(""); setBirthDay("");
@@ -273,7 +259,7 @@ export default function NamingPage() {
   const scoreData = result && allSelected ? calcScore(result, selectedHanja, nameChars, weakEls) : null;
 
   // ════════════════════════════════════════════════
-  // STEP 1 — 사주 입력
+  // STEP 1
   // ════════════════════════════════════════════════
   if (step === 1) return (
     <main className="page">
@@ -284,14 +270,12 @@ export default function NamingPage() {
           사주의 부족한 오행을 이름으로 보완하는 <strong>진짜 작명</strong>을 해드려요.
         </p>
         <StepBar current={1} />
-
         <div style={{ padding:"14px 16px", marginBottom:20, borderRadius:12, background:"#eff6ff", border:"1px solid #bfdbfe" }}>
           <p style={{ fontSize:13, color:"#1d4ed8", fontWeight:700, marginBottom:4 }}>💡 왜 사주가 필요한가요?</p>
           <p style={{ fontSize:13, color:"#1e40af", lineHeight:1.6 }}>
             사주에서 부족한 오행(목·화·토·금·수)을 이름 한자로 보완하면 더 좋은 이름이 돼요. 수리성명학만으로는 반쪽짜리 작명이에요.
           </p>
         </div>
-
         <div style={{ background:"var(--card-bg)", borderRadius:16, padding:"20px", border:"1px solid var(--border)", marginBottom:16 }}>
           <p style={{ fontSize:14, fontWeight:700, marginBottom:16 }}>태어난 날짜를 입력하세요</p>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:12 }}>
@@ -319,9 +303,7 @@ export default function NamingPage() {
             </SelectField>
           </div>
         </div>
-
         {error && <p style={{ color:"#dc2626", fontSize:13, marginBottom:12 }}>{error}</p>}
-
         <button onClick={handleStep1} disabled={!birthYear||!birthMonth||!birthDay}
           style={{ width:"100%", padding:"16px", fontSize:17, fontWeight:700, border:"none", borderRadius:14, cursor: (birthYear&&birthMonth&&birthDay) ? "pointer" : "not-allowed",
             background: (birthYear&&birthMonth&&birthDay) ? "#1e293b" : "var(--border)",
@@ -334,7 +316,7 @@ export default function NamingPage() {
   );
 
   // ════════════════════════════════════════════════
-  // STEP 2 — 이름 입력
+  // STEP 2
   // ════════════════════════════════════════════════
   if (step === 2) return (
     <main className="page">
@@ -344,8 +326,6 @@ export default function NamingPage() {
           ← 생년월일 다시 입력
         </button>
         <StepBar current={2} />
-
-        {/* 사주 오행 요약 */}
         {sajuData && (
           <div style={{ marginBottom:20, padding:"16px", background:"var(--card-bg)", borderRadius:16, border:"1px solid var(--border)" }}>
             <p style={{ fontSize:13, fontWeight:700, marginBottom:10 }}>📊 사주 오행 분석</p>
@@ -376,8 +356,6 @@ export default function NamingPage() {
             </div>
           </div>
         )}
-
-        {/* 이름 입력 */}
         <div style={{ marginBottom:16 }}>
           <p style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>이름을 입력하세요</p>
           <div onClick={() => (document.getElementById("name-input") as HTMLInputElement)?.focus()}
@@ -400,7 +378,6 @@ export default function NamingPage() {
           </div>
           <p style={{ fontSize:12, color:"var(--text-faint)", marginTop:8, textAlign:"center" }}>👆 칸을 탭해서 입력 (성씨 포함 2~4글자)</p>
         </div>
-
         {nameInput.length > 0 && (
           <div style={{ padding:"12px 16px", marginBottom:16, borderRadius:12, background: surnameStrokes?"#f0fdf4":"#fef9c3", border:`1px solid ${surnameStrokes?"#bbf7d0":"#fde68a"}` }}>
             {surnameStrokes
@@ -415,9 +392,7 @@ export default function NamingPage() {
                 </div>}
           </div>
         )}
-
         {error && <p style={{ color:"#dc2626", fontSize:13, marginBottom:12 }}>{error}</p>}
-
         <button onClick={handleStep2} disabled={loading||nameInput.length<2||!surnameStrokes}
           style={{ width:"100%", padding:"16px", fontSize:17, fontWeight:700, border:"none", borderRadius:14,
             cursor: (nameInput.length>=2&&surnameStrokes) ? "pointer" : "not-allowed",
@@ -430,7 +405,7 @@ export default function NamingPage() {
   );
 
   // ════════════════════════════════════════════════
-  // STEP 3 — 한자 선택 + 실시간 결과 (한 화면에!)
+  // STEP 3 — sticky 결과 카드 + 한자 선택
   // ════════════════════════════════════════════════
   const hanjaName = nameChars.map((_,i) => i===0 ? "" : selectedHanja[i]?.hanja ?? "·").join("");
   const overallStyle = result ? getRatingStyle(result.namingScore.overallRating) : getRatingStyle("");
@@ -438,6 +413,7 @@ export default function NamingPage() {
   return (
     <main className="page">
       <div className="container" style={{ maxWidth:460 }}>
+        {/* 헤더 */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
           <button onClick={handleChangeName} style={{ fontSize:13, color:"var(--text-faint)", background:"none", border:"none", cursor:"pointer", padding:0 }}>
             ← 이름 바꾸기
@@ -448,75 +424,71 @@ export default function NamingPage() {
         </div>
         <StepBar current={3} />
 
-        {/* ── 상단: 실시간 결과 카드 ── */}
-        <div style={{ padding:"20px", borderRadius:16, marginBottom:20, textAlign:"center",
+        {/* ── ✅ STICKY 결과 카드 ── */}
+        <div style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
           background: result ? overallStyle.bg : "var(--card-bg)",
           border: `2px solid ${result ? overallStyle.color+"33" : "var(--border)"}`,
-          transition:"all 0.3s ease" }}>
-          {/* 이름 표시 */}
-          <div style={{ fontSize:28, fontWeight:800, letterSpacing:6, marginBottom:4 }}>{nameInput}</div>
-          <div style={{ fontSize:20, letterSpacing:8, marginBottom:12, fontWeight:700,
-            color: result ? overallStyle.color : "var(--text-faint)" }}>
-            {hanjaName || "· · ·"}
+          borderRadius: 16,
+          marginBottom: 16,
+          padding: "12px 16px",
+          transition: "all 0.3s ease",
+          boxShadow: "0 2px 16px rgba(0,0,0,0.10)",
+        }}>
+          {/* 이름 + 한자 한 줄 */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12, marginBottom:8 }}>
+            <span style={{ fontSize:20, fontWeight:800, letterSpacing:4 }}>{nameInput}</span>
+            <span style={{ fontSize:16, letterSpacing:6, fontWeight:700, color: result ? overallStyle.color : "var(--text-faint)" }}>
+              {hanjaName || "· · ·"}
+            </span>
           </div>
 
-          {/* 한자 뜻 태그 */}
-          {result && (
-            <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:16, flexWrap:"wrap" }}>
-              {nameChars.map((_,i) => {
-                if (i===0) return null;
-                const sel = selectedHanja[i];
-                const ec = sel ? ELEMENT_COLOR[sel.element] : null;
-                return sel ? (
-                  <div key={i} style={{ padding:"5px 12px", borderRadius:10, background:ec?.bg, border:`1px solid ${ec?.color}33` }}>
-                    <div style={{ fontSize:13, fontWeight:700 }}>{nameChars[i]} {sel.hanja}</div>
-                    <div style={{ fontSize:11, color:ec?.color, fontWeight:600 }}>{sel.meaning}</div>
-                  </div>
-                ) : null;
-              })}
-            </div>
-          )}
-
-          {analyzing && (
-            <p style={{ fontSize:13, color:"var(--text-faint)", marginBottom:8 }}>⏳ 분석 중...</p>
-          )}
-
-          {!result && !analyzing && (
-            <p style={{ fontSize:13, color:"var(--text-faint)" }}>아래에서 한자를 선택하면 바로 결과가 나와요</p>
-          )}
-
-          {result && scoreData && (
+          {analyzing ? (
+            <p style={{ fontSize:12, color:"var(--text-faint)", textAlign:"center", margin:0 }}>⏳ 분석 중...</p>
+          ) : result && scoreData ? (
             <>
-              {/* 종합 점수 */}
-              <div style={{ display:"flex", gap:10, justifyContent:"center", marginBottom:12 }}>
-                <div style={{ textAlign:"center" }}>
-                  <p style={{ fontSize:11, color:"var(--text-faint)", margin:0 }}>수리성명학</p>
-                  <p style={{ fontSize:20, fontWeight:800, color:overallStyle.color, margin:0 }}>{scoreData.avgScore}점</p>
+              {/* 점수 3개 항상 보임 */}
+              <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:8 }}>
+                <div style={{ flex:1, textAlign:"center", padding:"8px 4px", background:"var(--card-bg)", borderRadius:12, border:"1px solid var(--border)" }}>
+                  <p style={{ fontSize:10, color:"var(--text-faint)", margin:"0 0 2px" }}>수리성명학</p>
+                  <p style={{ fontSize:20, fontWeight:800, color:overallStyle.color, margin:0 }}>
+                    {scoreData.avgScore}<span style={{fontSize:11, fontWeight:500}}>점</span>
+                  </p>
                 </div>
-                <div style={{ width:1, background:"var(--border)" }} />
-                <div style={{ textAlign:"center" }}>
-                  <p style={{ fontSize:11, color:"var(--text-faint)", margin:0 }}>사주오행보완</p>
-                  <p style={{ fontSize:20, fontWeight:800, color: scoreData.elementScore>=50?"#15803d":"#b91c1c", margin:0 }}>{scoreData.elementScore}점</p>
+                <div style={{ flex:1, textAlign:"center", padding:"8px 4px", background:"var(--card-bg)", borderRadius:12, border:"1px solid var(--border)" }}>
+                  <p style={{ fontSize:10, color:"var(--text-faint)", margin:"0 0 2px" }}>사주오행보완</p>
+                  <p style={{ fontSize:20, fontWeight:800, color: scoreData.elementScore>=50?"#15803d":"#b91c1c", margin:0 }}>
+                    {scoreData.elementScore}<span style={{fontSize:11, fontWeight:500}}>점</span>
+                  </p>
                 </div>
-                <div style={{ width:1, background:"var(--border)" }} />
-                <div style={{ textAlign:"center" }}>
-                  <p style={{ fontSize:11, color:"var(--text-faint)", margin:0 }}>종합</p>
-                  <p style={{ fontSize:20, fontWeight:800, color: scoreData.total>=70?"#15803d":scoreData.total>=40?"#b45309":"#b91c1c", margin:0 }}>{scoreData.total}점</p>
+                <div style={{ flex:1, textAlign:"center", padding:"8px 4px", background:"var(--card-bg)", borderRadius:12,
+                  border:`2px solid ${scoreData.total>=70?"#16a34a":scoreData.total>=40?"#d97706":"#dc2626"}` }}>
+                  <p style={{ fontSize:10, color:"var(--text-faint)", margin:"0 0 2px" }}>종합</p>
+                  <p style={{ fontSize:20, fontWeight:800, color: scoreData.total>=70?"#15803d":scoreData.total>=40?"#b45309":"#b91c1c", margin:0 }}>
+                    {scoreData.total}<span style={{fontSize:11, fontWeight:500}}>점</span>
+                  </p>
                 </div>
               </div>
-              <div style={{ background:"#e5e7eb", borderRadius:999, height:10, overflow:"hidden", marginBottom:6 }}>
+              {/* 점수 바 */}
+              <div style={{ background:"#e5e7eb", borderRadius:999, height:6, overflow:"hidden", marginBottom:4 }}>
                 <div style={{ width:`${scoreData.total}%`, height:"100%", borderRadius:999, transition:"width 0.5s ease",
                   background: scoreData.total>=70?"#16a34a":scoreData.total>=40?"#d97706":"#dc2626" }} />
               </div>
-              <p style={{ fontSize:12, color:"var(--text-faint)", marginBottom:0 }}>
+              <p style={{ fontSize:11, color:"var(--text-faint)", textAlign:"center", margin:0 }}>
                 {scoreData.total>=70 ? "👍 좋은 이름이에요!" : scoreData.total>=40 ? "😐 보통 수준이에요" : "😅 한자를 바꿔보세요"}
-                {scoreData.veryBadCount>0 && ` · ⚠️ 매우나쁨 격 ${scoreData.veryBadCount}개`}
+                {scoreData.veryBadCount>0 && ` · ⚠️ 매우나쁨 ${scoreData.veryBadCount}개`}
               </p>
             </>
+          ) : (
+            <p style={{ fontSize:12, color:"var(--text-faint)", textAlign:"center", margin:0 }}>
+              아래에서 한자를 선택하면 바로 결과가 나와요 👇
+            </p>
           )}
         </div>
 
-        {/* ── 한자 선택 섹션 ── */}
+        {/* 사주 보완 오행 안내 */}
         {weakEls.length > 0 && (
           <div style={{ marginBottom:14, padding:"10px 14px", background:"#fef2f2", borderRadius:10, border:"1px solid #fecaca" }}>
             <p style={{ fontSize:13, color:"#b91c1c", fontWeight:700, margin:0 }}>
@@ -527,6 +499,7 @@ export default function NamingPage() {
           </div>
         )}
 
+        {/* ── 한자 선택 섹션 ── */}
         {nameChars.map((char, charIdx) => {
           if (charIdx === 0) return null;
           const rawOptions = hanjaOptions[charIdx] ?? [];
@@ -605,7 +578,7 @@ export default function NamingPage() {
           );
         })}
 
-        {/* 상세 분석 (결과 있을 때만) */}
+        {/* 상세 분석 */}
         {result && (
           <div style={{ borderTop:"1px solid var(--border)", paddingTop:20, marginTop:8 }}>
             <h2 style={{ fontSize:15, fontWeight:700, marginBottom:12 }}>4격 수리 분석</h2>
