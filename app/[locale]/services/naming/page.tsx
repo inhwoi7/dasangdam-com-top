@@ -359,7 +359,6 @@ export default function NamingPage(){
   // STEP 2
   if(step===2)return(
     <main className="page">
-      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}`}</style>
       <div className="container" style={{maxWidth:460}}>
         <button onClick={()=>setStep(1)} style={{fontSize:13,color:"var(--text-faint)",background:"none",border:"none",cursor:"pointer",padding:0,marginBottom:12}}>← 생년월일 다시 입력</button>
         <StepBar current={2}/>
@@ -389,21 +388,53 @@ export default function NamingPage(){
         )}
         <div style={{marginBottom:16}}>
           <p style={{fontSize:13,fontWeight:700,marginBottom:12}}>이름을 입력하세요</p>
-          <div onClick={()=>(document.getElementById("name-input") as HTMLInputElement)?.focus()}
-            style={{display:"flex",gap:12,justifyContent:"center",padding:"24px 20px",borderRadius:16,border:"2px solid var(--border)",background:"var(--card-bg)",cursor:"text",position:"relative"}}>
-            {[0,1,2].map(i=>{  // ✅ 3칸으로 변경
-              const char=nameInput[i];const isCurrent=nameInput.length===i;
+          {/* ✅ 숨긴 input 대신 실제 보이는 input으로 변경 - 한글 바로 입력 가능 */}
+          <div style={{display:"flex",gap:12,justifyContent:"center",alignItems:"center"}}>
+            {[0,1,2].map(i=>{
+              const char=nameInput[i]??"";
+              const isCurrent=nameInput.length===i;
+              const isDone=!!nameInput[i];
               return(
-                <div key={i} style={{width:80,height:80,borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,border:`2px solid ${char?"#2563eb":isCurrent?"#93c5fd":"#e5e7eb"}`,background:char?"#eff6ff":isCurrent?"#f0f9ff":"#f9fafb"}}>
-                  {char?<span style={{fontSize:32,fontWeight:800,color:"#1e293b"}}>{char}</span>
-                    :<>{isCurrent&&<span style={{display:"inline-block",width:2,height:28,background:"#2563eb",borderRadius:2,animation:"blink 1s step-end infinite"}}/>}<span style={{fontSize:11,color:"#9ca3af"}}>{i===0?"성씨":i===1?"이름 1":"이름 2"}</span></>}
+                <div key={i} style={{position:"relative",flex:1}}>
+                  {/* 글자 표시 레이어 */}
+                  <div style={{
+                    width:"100%",height:80,borderRadius:14,
+                    display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,
+                    border:`2px solid ${isDone?"#2563eb":isCurrent?"#93c5fd":"#e5e7eb"}`,
+                    background:isDone?"#eff6ff":isCurrent?"#f0f9ff":"#f9fafb",
+                    pointerEvents:"none",
+                  }}>
+                    {isDone
+                      ?<span style={{fontSize:32,fontWeight:800,color:"#1e293b"}}>{char}</span>
+                      :<span style={{fontSize:12,color:"#9ca3af"}}>{i===0?"성씨":i===1?"이름 1":"이름 2"}</span>}
+                  </div>
                 </div>
               );
             })}
-            <input id="name-input" type="text" value={nameInput} onChange={e=>handleNameChange(e.target.value)} maxLength={3}
-              style={{position:"absolute",opacity:0,pointerEvents:"none",width:1,height:1,top:0,left:0}}/>
           </div>
-          <p style={{fontSize:12,color:"var(--text-faint)",marginTop:8,textAlign:"center"}}>👆 칸을 탭해서 입력 (성씨 포함 3글자)</p>
+          {/* ✅ 실제 입력 받는 input - 글자 칸 아래에 표시, 한글 직접 입력 */}
+          <div style={{marginTop:12,position:"relative"}}>
+            <input
+              id="name-input"
+              type="text"
+              value={nameInput}
+              onChange={e=>handleNameChange(e.target.value)}
+              maxLength={3}
+              lang="ko"
+              placeholder="여기에 이름을 입력하세요 (예: 김태현)"
+              autoComplete="off"
+              style={{
+                width:"100%",padding:"14px 16px",fontSize:17,fontWeight:700,
+                border:"2px solid #93c5fd",borderRadius:14,
+                background:"white",color:"#1e293b",
+                outline:"none",textAlign:"center",letterSpacing:8,
+                caretColor:"#2563eb",
+              }}
+              onFocus={e=>e.target.style.borderColor="#2563eb"}
+              onBlur={e=>e.target.style.borderColor="#93c5fd"}
+            />
+          </div>
+          <p style={{fontSize:12,color:"var(--text-faint)",marginTop:8,textAlign:"center"}}>👆 위에 이름을 입력하세요 (성씨 포함 3글자)</p>
         </div>
         {nameInput.length>0&&(
           <div style={{padding:"12px 16px",marginBottom:16,borderRadius:12,background:surnameStrokes?"#f0fdf4":"#fef9c3",border:`1px solid ${surnameStrokes?"#bbf7d0":"#fde68a"}`}}>
