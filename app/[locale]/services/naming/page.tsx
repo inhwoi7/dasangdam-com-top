@@ -421,7 +421,7 @@ export default function NamingPage(){
               onChange={e=>handleNameChange(e.target.value)}
               maxLength={3}
               lang="ko"
-              placeholder="여기에 이름을 입력하세요 (예: 김태현)"
+              placeholder="여기에 이름을 입력하세요 (예: 홍길동)"
               autoComplete="off"
               style={{
                 width:"100%",padding:"14px 16px",fontSize:17,fontWeight:700,
