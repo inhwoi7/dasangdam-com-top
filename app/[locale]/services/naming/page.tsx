@@ -144,7 +144,7 @@ function ResultPanel({result,scoreData,analyzing,nameInput,selectedHanja,nameCha
   return(
     <div className="space-y-4">
       {/* 종합 점수 카드 */}
-      <div className="rounded-[28px] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1" style={{background:overallStyle.bg,ringColor:overallStyle.color+"33"}}>
+      <div className="rounded-[28px] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-zinc-200" style={{background:overallStyle.bg}}>
         <div className="text-center mb-4">
           <span className="text-2xl font-black tracking-widest">{nameInput}</span>
           {hanjaName&&<span className="text-xl font-bold tracking-widest ml-3" style={{color:overallStyle.color}}>{hanjaName}</span>}
