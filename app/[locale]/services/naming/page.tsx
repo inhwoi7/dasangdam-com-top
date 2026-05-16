@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { calculateSajuSimple, lunarToSolar } from "@fullstackfamily/manseryeok";
 import { ChevronDown } from "lucide-react";
@@ -248,6 +248,7 @@ export default function NamingPage(){
   const [analyzing,setAnalyzing]=useState(false);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
+  const resultRef=useRef<HTMLDivElement>(null); // ✅ 결과 영역 ref
 
   const years=Array.from({length:2027-1930+1},(_,i)=>2027-i);
   const months=Array.from({length:12},(_,i)=>i+1);
@@ -266,7 +267,13 @@ export default function NamingPage(){
     try{
       const res=await fetch("/api/naming/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nameHangul:nameInput,strokesList})});
       const data=await res.json();
-      if(data.ok)setResult(data.result);
+      if(data.ok){
+        setResult(data.result);
+        // ✅ 결과 영역으로 자동 스크롤
+        setTimeout(()=>{
+          resultRef.current?.scrollIntoView({behavior:"smooth",block:"start"});
+        },100);
+      }
     }catch{}
     finally{setAnalyzing(false);}
   },[nameInput,surnameStrokes]);
@@ -285,13 +292,13 @@ export default function NamingPage(){
   }
 
   function handleNameChange(val:string){
-    const t=val.replace(/\s/g,"").slice(0,4);
+    const t=val.replace(/\s/g,"").slice(0,3); // ✅ 최대 3글자 (성씨+이름2자)
     setNameInput(t);setSurnameStrokes(SURNAME_STROKES[t[0]]??0);
     setSelectedHanja(Array(t.length).fill(null));setResult(null);setError("");
   }
 
   async function handleStep2(){
-    if(nameInput.length<2){setError("성씨 포함 2글자 이상 입력해주세요.");return;}
+    if(nameInput.length<3){setError("성씨 포함 3글자를 입력해주세요.");return;}  // ✅ 3글자 필수
     if(!surnameStrokes){setError("성씨 획수를 입력해주세요.");return;}
     setLoading(true);
     try{
@@ -384,19 +391,19 @@ export default function NamingPage(){
           <p style={{fontSize:13,fontWeight:700,marginBottom:12}}>이름을 입력하세요</p>
           <div onClick={()=>(document.getElementById("name-input") as HTMLInputElement)?.focus()}
             style={{display:"flex",gap:12,justifyContent:"center",padding:"24px 20px",borderRadius:16,border:"2px solid var(--border)",background:"var(--card-bg)",cursor:"text",position:"relative"}}>
-            {[0,1,2,3].map(i=>{
+            {[0,1,2].map(i=>{  // ✅ 3칸으로 변경
               const char=nameInput[i];const isCurrent=nameInput.length===i;
               return(
-                <div key={i} style={{width:64,height:72,borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,border:`2px solid ${char?"#2563eb":isCurrent?"#93c5fd":"#e5e7eb"}`,background:char?"#eff6ff":isCurrent?"#f0f9ff":"#f9fafb"}}>
-                  {char?<span style={{fontSize:28,fontWeight:800,color:"#1e293b"}}>{char}</span>
-                    :<>{isCurrent&&<span style={{display:"inline-block",width:2,height:28,background:"#2563eb",borderRadius:2,animation:"blink 1s step-end infinite"}}/>}<span style={{fontSize:11,color:"#9ca3af"}}>{i===0?"성씨":`${i}번째`}</span></>}
+                <div key={i} style={{width:80,height:80,borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,border:`2px solid ${char?"#2563eb":isCurrent?"#93c5fd":"#e5e7eb"}`,background:char?"#eff6ff":isCurrent?"#f0f9ff":"#f9fafb"}}>
+                  {char?<span style={{fontSize:32,fontWeight:800,color:"#1e293b"}}>{char}</span>
+                    :<>{isCurrent&&<span style={{display:"inline-block",width:2,height:28,background:"#2563eb",borderRadius:2,animation:"blink 1s step-end infinite"}}/>}<span style={{fontSize:11,color:"#9ca3af"}}>{i===0?"성씨":i===1?"이름 1":"이름 2"}</span></>}
                 </div>
               );
             })}
-            <input id="name-input" type="text" value={nameInput} onChange={e=>handleNameChange(e.target.value)} maxLength={4}
+            <input id="name-input" type="text" value={nameInput} onChange={e=>handleNameChange(e.target.value)} maxLength={3}
               style={{position:"absolute",opacity:0,pointerEvents:"none",width:1,height:1,top:0,left:0}}/>
           </div>
-          <p style={{fontSize:12,color:"var(--text-faint)",marginTop:8,textAlign:"center"}}>👆 칸을 탭해서 입력 (성씨 포함 2~4글자)</p>
+          <p style={{fontSize:12,color:"var(--text-faint)",marginTop:8,textAlign:"center"}}>👆 칸을 탭해서 입력 (성씨 포함 3글자)</p>
         </div>
         {nameInput.length>0&&(
           <div style={{padding:"12px 16px",marginBottom:16,borderRadius:12,background:surnameStrokes?"#f0fdf4":"#fef9c3",border:`1px solid ${surnameStrokes?"#bbf7d0":"#fde68a"}`}}>
@@ -413,8 +420,8 @@ export default function NamingPage(){
           </div>
         )}
         {error&&<p style={{color:"#dc2626",fontSize:13,marginBottom:12}}>{error}</p>}
-        <button onClick={handleStep2} disabled={loading||nameInput.length<2||!surnameStrokes}
-          style={{width:"100%",padding:"16px",fontSize:17,fontWeight:700,border:"none",borderRadius:14,cursor:(nameInput.length>=2&&surnameStrokes)?"pointer":"not-allowed",background:(nameInput.length>=2&&surnameStrokes)?"#1e293b":"var(--border)",color:(nameInput.length>=2&&surnameStrokes)?"white":"var(--text-faint)"}}>
+        <button onClick={handleStep2} disabled={loading||nameInput.length<3||!surnameStrokes}
+          style={{width:"100%",padding:"16px",fontSize:17,fontWeight:700,border:"none",borderRadius:14,cursor:(nameInput.length>=3&&surnameStrokes)?"pointer":"not-allowed",background:(nameInput.length>=3&&surnameStrokes)?"#1e293b":"var(--border)",color:(nameInput.length>=3&&surnameStrokes)?"white":"var(--text-faint)"}}>
           {loading?"⏳ 한자 불러오는 중...":"다음 — 한자 선택하기 →"}
         </button>
       </div>
@@ -504,7 +511,7 @@ export default function NamingPage(){
 
               {/* ✅ 마지막 글자 선택 영역 아래에 결과 바로 표시 */}
               {isLastChar&&(
-                <div style={{borderTop:"2px dashed var(--border)",paddingTop:20,marginTop:4}}>
+                <div ref={resultRef} style={{borderTop:"2px dashed var(--border)",paddingTop:20,marginTop:4}}>
                   <ResultPanel
                     result={result}
                     scoreData={scoreData}
