@@ -735,3 +735,28 @@ select {
 .font-en body {
   font-family: "Inter", "Apple SD Gothic Neo", sans-serif;
 }
+
+/* ── 영문 heading weight 보정 ────────────────────────────────
+   Inter는 Pretendard보다 획이 두껍게 렌더링되므로
+   영문일 때 font-weight를 한 단계 낮춰 시각적 균형을 맞춥니다.
+   800 → 600, 700 → 500
+────────────────────────────────────────────────────────── */
+:lang(en) .brandText h1,
+:lang(en) .sectionHeader h2,
+:lang(en) .recommendCopy h2,
+:lang(en) .postMain h3,
+:lang(en) .postTitle,
+:lang(en) .commentsCard h2,
+:lang(en) .notionProse h1,
+:lang(en) .notionProse h2,
+:lang(en) .notionProse h3 {
+  font-weight: 600;
+}
+
+:lang(en) .serviceText strong {
+  font-weight: 600;
+}
+
+:lang(en) .recommendAction {
+  font-weight: 600;
+}
