@@ -3,6 +3,7 @@ import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 import { getLocale, getTranslations } from "next-intl/server";
 import LangSwitch from "@/components/LangSwitch";
+import { supabase } from "@/lib/community";
 
 export const revalidate = 0;
 
@@ -22,9 +23,18 @@ function formatDate(dateString: string, locale: string) {
   }).format(date);
 }
 
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "방금";
+  if (mins < 60) return `${mins}분 전`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}시간 전`;
+  return `${Math.floor(hrs / 24)}일 전`;
+}
+
 async function fetchData(locale: string) {
   const todayPick = await getFeaturedQuote(locale).catch(() => null);
-  // ✅ locale 전달 → KO면 Language=KO 글만, EN이면 Language=EN 글만
   const articlePosts = await getArticlePosts(3, locale).catch(() => []);
   return { todayPick, articlePosts };
 }
@@ -34,6 +44,13 @@ export default async function HomePage() {
   const { todayPick, articlePosts } = await fetchData(locale);
   const t = await getTranslations();
   const hasTodayPickLink = Boolean(todayPick?.slug);
+
+  // 커뮤니티 최신 글 3개
+  const { data: recentPosts } = await supabase
+    .from("community_posts")
+    .select("id, nickname, category, content, created_at")
+    .order("created_at", { ascending: false })
+    .limit(3);
 
   const SERVICES: ServiceItem[] = [
     { title: t("menu_message"), description: locale === "en" ? "Discover your daily inspiration." : "매일 나에게 꼭 필요한 한 문장을 뽑아보세요.", href: "/services/message", icon: "message" },
@@ -152,7 +169,6 @@ export default async function HomePage() {
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">{locale === "en" ? "Traces of Thought" : "생각의 흔적"}</span>
-              {/* ✅ 써니의 생각 (오타 수정) */}
               <h2>{locale === "en" ? "Sunny's Thoughts" : "써니의 생각"}</h2>
             </div>
             <Link href="/blog" style={{
@@ -193,27 +209,77 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ===== 커뮤니티 섹션 (이야기 나눠요 대체) ===== */}
         <section className="librarySection" style={{ marginTop: "36px" }}>
           <div className="sectionHeader" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <span className="sectionMini">{locale === "en" ? "Together" : "함께하는 이야기"}</span>
-              <h2>{t("section_talk")}</h2>
+              <h2>{locale === "en" ? "Community" : "이야기 나눠요"}</h2>
             </div>
-            <Link href="/talk" style={{
+            <Link href={`/${locale}/community`} style={{
               fontSize: "13px", color: "var(--text-faint)", textDecoration: "none",
               fontWeight: "600", marginBottom: "2px", display: "inline-flex", alignItems: "center", gap: "4px"
             }}>
               {t("read_more")} →
             </Link>
           </div>
-          <Link href="/talk" className="postRow" style={{ textDecoration: "none" }}>
-            <div className="postMain">
-              <h3>{locale === "en" ? "A space to connect" : "소통하는 공간이에요"}</h3>
-              <p>{locale === "en" ? "Feel free to leave a message. Just a nickname is enough 😊" : "편하게 글 남겨주세요. 닉네임만 있으면 돼요 😊"}</p>
+
+          {/* 최신 글 미리보기 */}
+          {recentPosts && recentPosts.length > 0 ? (
+            <div className="postList">
+              {recentPosts.map((post) => (
+                <Link key={post.id} href={`/${locale}/community`} className="postRow" style={{ textDecoration: "none" }}>
+                  <div className="postMain">
+                    <div className="postMeta">
+                      <span className="categoryTag">{post.category}</span>
+                      <span className="postDate">{timeAgo(post.created_at)}</span>
+                    </div>
+                    <h3 style={{ fontSize: "16px", fontWeight: 600 }}>{post.nickname}</h3>
+                    <p style={{
+                      margin: "4px 0 0",
+                      fontSize: "14px",
+                      color: "var(--text-soft)",
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}>
+                      {post.content}
+                    </p>
+                  </div>
+                  <div className="postArrow"><ArrowRightIcon /></div>
+                </Link>
+              ))}
             </div>
-            <div className="postArrow"><ArrowRightIcon /></div>
+          ) : (
+            <div className="postList">
+              <Link href={`/${locale}/community`} className="postRow" style={{ textDecoration: "none" }}>
+                <div className="postMain">
+                  <h3>{locale === "en" ? "Be the first to share your story" : "첫 번째 이야기를 남겨보세요 🌿"}</h3>
+                  <p>{locale === "en" ? "Just a nickname is enough 😊" : "닉네임만 있으면 바로 쓸 수 있어요 ✏️"}</p>
+                </div>
+                <div className="postArrow"><ArrowRightIcon /></div>
+              </Link>
+            </div>
+          )}
+
+          {/* 글쓰기 유도 버튼 */}
+          <Link href={`/${locale}/community`} style={{
+            display: "block",
+            marginTop: "12px",
+            textAlign: "center",
+            fontSize: "14px",
+            color: "#c8915a",
+            background: "#fdf8f2",
+            border: "1px dashed #d4b896",
+            borderRadius: "16px",
+            padding: "12px",
+            textDecoration: "none",
+          }}>
+            {locale === "en" ? "Share your story today ✏️" : "오늘 나의 이야기를 남겨보세요 ✏️"}
           </Link>
         </section>
+
       </div>
     </main>
   );
