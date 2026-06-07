@@ -1,11 +1,14 @@
 import PostFeed from '@/components/community/PostFeed'
+import { getLocale } from 'next-intl/server'
 
-export const revalidate = 0 // 커뮤니티는 항상 최신 데이터
+export const revalidate = 0
 
-export default function CommunityPage() {
+export default async function CommunityPage() {
+  const locale = await getLocale()
+
   return (
     <main className="max-w-4xl mx-auto px-4">
-      <PostFeed />
+      <PostFeed locale={locale} />
     </main>
   )
 }
