@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import AnnouncementPopup from "@/components/AnnouncementPopup";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -78,6 +79,7 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <AnnouncementPopup locale={locale} />
           {children}
           <Footer />
         </NextIntlClientProvider>
