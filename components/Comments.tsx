@@ -1,23 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth, db, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { db } from "@/lib/firebase";
 import {
-  collection, addDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp
+  collection, addDoc, deleteDoc, doc, query, where,
+  orderBy, onSnapshot, serverTimestamp
 } from "firebase/firestore";
+import bcrypt from "bcryptjs";
 
-const ADMIN_UID = "Q8EZ66KrudQHy7kzAGDvIBPuxRf1";
+// 관리자 비밀번호 (환경변수로 관리 권장)
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_COMMENT_PASSWORD || "sunny-admin-2024";
+
+type Comment = {
+  id: string;
+  slug: string;
+  text: string;
+  nickname: string;
+  passwordHash: string;
+  createdAt: any;
+};
 
 export default function Comments({ slug }: { slug: string }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [nickname, setNickname] = useState("");
+  const [password, setPassword] = useState("");
   const [text, setText] = useState("");
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
-    return () => unsub();
-  }, []);
+  const [submitting, setSubmitting] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminPwInput, setAdminPwInput] = useState("");
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -26,100 +37,148 @@ export default function Comments({ slug }: { slug: string }) {
       orderBy("createdAt", "asc")
     );
     const unsub = onSnapshot(q, (snap) => {
-      setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setComments(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment)));
     });
     return () => unsub();
   }, [slug]);
 
-  const isInAppBrowser = () => {
-    const ua = navigator.userAgent.toLowerCase();
-    return /kakaotalk|instagram|line|naver|daum|fbav|fban/.test(ua);
+  const submit = async () => {
+    if (!text.trim()) return alert("댓글을 입력해주세요.");
+    if (!nickname.trim()) return alert("닉네임을 입력해주세요.");
+    if (!password.trim()) return alert("비밀번호를 입력해주세요 (삭제할 때 필요해요).");
+    setSubmitting(true);
+    try {
+      const passwordHash = await bcrypt.hash(password, 10);
+      await addDoc(collection(db, "comments"), {
+        slug,
+        text: text.trim(),
+        nickname: nickname.trim(),
+        passwordHash,
+        createdAt: serverTimestamp(),
+      });
+      setText("");
+      setPassword("");
+    } catch {
+      alert("댓글 등록 중 오류가 발생했어요.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const login = () => {
-    if (isInAppBrowser()) {
-      alert("카카오톡 내 브라우저에서는 Google 로그인이 제한됩니다.\n\n오른쪽 상단 메뉴(⋯) → '다른 브라우저로 열기'를 눌러\nChrome 또는 Safari에서 접속해주세요.");
+  const deleteComment = async (id: string, passwordHash: string) => {
+    if (adminMode) {
+      if (!confirm("댓글을 삭제할까요?")) return;
+      await deleteDoc(doc(db, "comments", id));
       return;
     }
-    signInWithPopup(auth, googleProvider);
-  };
-  const logout = () => signOut(auth);
-
-  const submit = async () => {
-    if (!text.trim() || !user) return;
-    await addDoc(collection(db, "comments"), {
-      slug,
-      text: text.trim(),
-      uid: user.uid,
-      name: user.displayName,
-      photo: user.photoURL,
-      createdAt: serverTimestamp(),
-    });
-    setText("");
-  };
-
-  const deleteComment = async (id: string) => {
-    if (!confirm("댓글을 삭제할까요?")) return;
+    const pw = prompt("삭제하려면 비밀번호를 입력해주세요.");
+    if (!pw) return;
+    const isValid = await bcrypt.compare(pw, passwordHash);
+    if (!isValid) return alert("비밀번호가 맞지 않아요.");
     await deleteDoc(doc(db, "comments", id));
   };
 
-  const isAdmin = user?.uid === ADMIN_UID;
+  const handleAdminLogin = async () => {
+    if (adminPwInput === ADMIN_PASSWORD) {
+      setAdminMode(true);
+      setShowAdminLogin(false);
+      setAdminPwInput("");
+    } else {
+      alert("비밀번호가 틀렸어요.");
+    }
+  };
+
+  const timeAgo = (ts: any) => {
+    if (!ts?.seconds) return "";
+    const diff = Date.now() - ts.seconds * 1000;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "방금";
+    if (mins < 60) return `${mins}분 전`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}시간 전`;
+    return `${Math.floor(hrs / 24)}일 전`;
+  };
 
   return (
     <div style={{ marginTop: "60px", borderTop: "1px solid #e8e0d5", paddingTop: "40px" }}>
-      <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#3d2f22", marginBottom: "24px" }}>댓글</h3>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+        <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#3d2f22", margin: 0 }}>댓글</h3>
+        <div>
+          {adminMode ? (
+            <span style={{ fontSize: "12px", color: "#c8a882", cursor: "pointer" }}
+              onClick={() => setAdminMode(false)}>관리자 모드 종료</span>
+          ) : (
+            <span style={{ fontSize: "11px", color: "#d0c8c0", cursor: "pointer" }}
+              onClick={() => setShowAdminLogin(v => !v)}>●●●</span>
+          )}
+        </div>
+      </div>
 
+      {/* 관리자 로그인 */}
+      {showAdminLogin && !adminMode && (
+        <div style={{ background: "#faf7f3", border: "1px solid #e8e0d5", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
+          <p style={{ fontSize: "13px", color: "#8c7a62", marginBottom: "10px" }}>관리자 확인</p>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input type="password" placeholder="관리자 비밀번호" value={adminPwInput}
+              onChange={e => setAdminPwInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleAdminLogin()}
+              style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "14px" }} />
+            <button onClick={handleAdminLogin}
+              style={{ padding: "8px 16px", background: "#c8a882", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 댓글 목록 */}
       {comments.length === 0 && (
         <p style={{ color: "#b0a090", fontSize: "14px", marginBottom: "24px" }}>첫 댓글을 남겨보세요!</p>
       )}
       {comments.map((c) => (
         <div key={c.id} style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "flex-start" }}>
-          {c.photo && <img src={c.photo} alt="" style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0 }} />}
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0,
+            background: "linear-gradient(135deg, #f5e8d5, #e8d0b0)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "14px", color: "#a07850", fontWeight: "600"
+          }}>
+            {c.nickname?.[0] ?? "?"}
+          </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: "13px", fontWeight: "600", color: "#3d2f22", margin: "0 0 4px" }}>{c.name}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#3d2f22" }}>{c.nickname}</span>
+              <span style={{ fontSize: "12px", color: "#c0b0a0" }}>{timeAgo(c.createdAt)}</span>
+            </div>
             <p style={{ fontSize: "15px", color: "#4a3b2e", margin: 0 }}>{c.text}</p>
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => deleteComment(c.id)}
-              style={{ fontSize: "12px", color: "#e57373", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
-            >
-              삭제
-            </button>
-          )}
+          <button
+            onClick={() => deleteComment(c.id, c.passwordHash)}
+            style={{ fontSize: "12px", color: adminMode ? "#e57373" : "#d0c0b0", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
+          >
+            {adminMode ? "삭제" : "✕"}
+          </button>
         </div>
       ))}
 
-      {user ? (
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-            {user.photoURL && <img src={user.photoURL} alt="" style={{ width: "32px", height: "32px", borderRadius: "50%" }} />}
-            <span style={{ fontSize: "14px", color: "#3d2f22" }}>{user.displayName}</span>
-            {isAdmin && <span style={{ fontSize: "11px", background: "#c8a882", color: "white", padding: "2px 8px", borderRadius: "10px" }}>관리자</span>}
-            <button onClick={logout} style={{ fontSize: "12px", color: "#b0a090", background: "none", border: "none", cursor: "pointer" }}>로그아웃</button>
-          </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="댓글을 입력하세요..."
-            style={{ width: "100%", minHeight: "80px", padding: "12px", borderRadius: "8px", border: "1px solid #e8e0d5", fontSize: "14px", resize: "vertical", boxSizing: "border-box" }}
-          />
-          <button
-            onClick={submit}
-            style={{ marginTop: "8px", padding: "10px 20px", background: "#c8a882", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}
-          >
-            등록
-          </button>
+      {/* 댓글 입력 */}
+      <div style={{ borderTop: "1px solid #f0e8de", paddingTop: "20px", marginTop: "8px" }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+          <input type="text" placeholder="닉네임 *" value={nickname}
+            onChange={e => setNickname(e.target.value)} maxLength={20}
+            style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "10px", fontSize: "14px" }} />
+          <input type="password" placeholder="비밀번호 * (삭제용)" value={password}
+            onChange={e => setPassword(e.target.value)}
+            style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "10px", fontSize: "14px" }} />
         </div>
-      ) : (
-        <button
-          onClick={login}
-          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: "white", border: "1px solid #e8e0d5", borderRadius: "8px", cursor: "pointer", fontSize: "14px", color: "#3d2f22" }}
-        >
-          <img src="https://www.google.com/favicon.ico" alt="" style={{ width: "16px" }} />
-          Google로 로그인하고 댓글 달기
+        <textarea value={text} onChange={e => setText(e.target.value)}
+          placeholder="댓글을 입력하세요..."
+          style={{ width: "100%", minHeight: "80px", padding: "12px", borderRadius: "10px", border: "1px solid #e8e0d5", fontSize: "14px", resize: "vertical", boxSizing: "border-box" }} />
+        <button onClick={submit} disabled={submitting}
+          style={{ marginTop: "8px", padding: "10px 20px", background: submitting ? "#e0d0c0" : "#c8a882", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+          {submitting ? "등록 중..." : "등록"}
         </button>
-      )}
+      </div>
     </div>
   );
 }
