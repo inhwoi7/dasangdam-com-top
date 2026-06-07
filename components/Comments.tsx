@@ -6,9 +6,8 @@ import {
   collection, addDoc, deleteDoc, doc, query, where,
   orderBy, onSnapshot, serverTimestamp
 } from "firebase/firestore";
-import bcrypt from "bcryptjs";
+import CryptoJS from "crypto-js";
 
-// 관리자 비밀번호 (환경변수로 관리 권장)
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_COMMENT_PASSWORD || "sunny-admin-2024";
 
 type Comment = {
@@ -19,6 +18,10 @@ type Comment = {
   passwordHash: string;
   createdAt: any;
 };
+
+function hashPassword(pw: string): string {
+  return CryptoJS.SHA256(pw).toString();
+}
 
 export default function Comments({ slug }: { slug: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -43,17 +46,16 @@ export default function Comments({ slug }: { slug: string }) {
   }, [slug]);
 
   const submit = async () => {
-    if (!text.trim()) return alert("댓글을 입력해주세요.");
     if (!nickname.trim()) return alert("닉네임을 입력해주세요.");
     if (!password.trim()) return alert("비밀번호를 입력해주세요 (삭제할 때 필요해요).");
+    if (!text.trim()) return alert("댓글을 입력해주세요.");
     setSubmitting(true);
     try {
-      const passwordHash = await bcrypt.hash(password, 10);
       await addDoc(collection(db, "comments"), {
         slug,
         text: text.trim(),
         nickname: nickname.trim(),
-        passwordHash,
+        passwordHash: hashPassword(password),
         createdAt: serverTimestamp(),
       });
       setText("");
@@ -73,12 +75,11 @@ export default function Comments({ slug }: { slug: string }) {
     }
     const pw = prompt("삭제하려면 비밀번호를 입력해주세요.");
     if (!pw) return;
-    const isValid = await bcrypt.compare(pw, passwordHash);
-    if (!isValid) return alert("비밀번호가 맞지 않아요.");
+    if (hashPassword(pw) !== passwordHash) return alert("비밀번호가 맞지 않아요.");
     await deleteDoc(doc(db, "comments", id));
   };
 
-  const handleAdminLogin = async () => {
+  const handleAdminLogin = () => {
     if (adminPwInput === ADMIN_PASSWORD) {
       setAdminMode(true);
       setShowAdminLogin(false);
