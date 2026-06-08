@@ -16,6 +16,7 @@ type Comment = {
   text: string;
   nickname: string;
   passwordHash: string;
+  isSecret: boolean;
   createdAt: any;
 };
 
@@ -28,10 +29,13 @@ export default function Comments({ slug }: { slug: string }) {
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [text, setText] = useState("");
+  const [isSecret, setIsSecret] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [adminMode, setAdminMode] = useState(false);
   const [adminPwInput, setAdminPwInput] = useState("");
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  // 비밀댓글 열람: { [commentId]: true }
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const q = query(
@@ -47,7 +51,7 @@ export default function Comments({ slug }: { slug: string }) {
 
   const submit = async () => {
     if (!nickname.trim()) return alert("닉네임을 입력해주세요.");
-    if (!password.trim()) return alert("비밀번호를 입력해주세요 (삭제할 때 필요해요).");
+    if (!password.trim()) return alert("비밀번호를 입력해주세요 (삭제·열람에 필요해요).");
     if (!text.trim()) return alert("댓글을 입력해주세요.");
     setSubmitting(true);
     try {
@@ -56,10 +60,12 @@ export default function Comments({ slug }: { slug: string }) {
         text: text.trim(),
         nickname: nickname.trim(),
         passwordHash: hashPassword(password),
+        isSecret: isSecret,
         createdAt: serverTimestamp(),
       });
       setText("");
       setPassword("");
+      setIsSecret(false);
     } catch {
       alert("댓글 등록 중 오류가 발생했어요.");
     } finally {
@@ -79,11 +85,27 @@ export default function Comments({ slug }: { slug: string }) {
     await deleteDoc(doc(db, "comments", id));
   };
 
+  // 비밀댓글 열람 (본인 비번 or 관리자모드)
+  const revealSecret = async (id: string, passwordHash: string) => {
+    if (adminMode) {
+      setRevealed(prev => ({ ...prev, [id]: true }));
+      return;
+    }
+    const pw = prompt("비밀댓글입니다. 비밀번호를 입력해주세요.");
+    if (!pw) return;
+    if (hashPassword(pw) !== passwordHash) return alert("비밀번호가 맞지 않아요.");
+    setRevealed(prev => ({ ...prev, [id]: true }));
+  };
+
   const handleAdminLogin = () => {
     if (adminPwInput === ADMIN_PASSWORD) {
       setAdminMode(true);
       setShowAdminLogin(false);
       setAdminPwInput("");
+      // 관리자 모드 진입 시 모든 비밀댓글 자동 열람
+      const allRevealed: Record<string, boolean> = {};
+      comments.forEach(c => { if (c.isSecret) allRevealed[c.id] = true; });
+      setRevealed(allRevealed);
     } else {
       alert("비밀번호가 틀렸어요.");
     }
@@ -107,7 +129,7 @@ export default function Comments({ slug }: { slug: string }) {
         <div>
           {adminMode ? (
             <span style={{ fontSize: "12px", color: "#c8a882", cursor: "pointer" }}
-              onClick={() => setAdminMode(false)}>관리자 모드 종료</span>
+              onClick={() => { setAdminMode(false); setRevealed({}); }}>관리자 모드 종료</span>
           ) : (
             <span style={{ fontSize: "11px", color: "#d0c8c0", cursor: "pointer" }}
               onClick={() => setShowAdminLogin(v => !v)}>●●●</span>
@@ -136,31 +158,67 @@ export default function Comments({ slug }: { slug: string }) {
       {comments.length === 0 && (
         <p style={{ color: "#b0a090", fontSize: "14px", marginBottom: "24px" }}>첫 댓글을 남겨보세요!</p>
       )}
-      {comments.map((c) => (
-        <div key={c.id} style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "flex-start" }}>
-          <div style={{
-            width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0,
-            background: "linear-gradient(135deg, #f5e8d5, #e8d0b0)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "14px", color: "#a07850", fontWeight: "600"
+      {comments.map((c) => {
+        const isRevealed = revealed[c.id];
+        const isHidden = c.isSecret && !isRevealed;
+
+        return (
+          <div key={c.id} style={{
+            display: "flex", gap: "12px", marginBottom: "20px", alignItems: "flex-start",
+            background: c.isSecret ? "#fdf8f2" : "transparent",
+            border: c.isSecret ? "1px solid #f0e4cc" : "none",
+            borderRadius: c.isSecret ? "14px" : "0",
+            padding: c.isSecret ? "12px" : "0",
           }}>
-            {c.nickname?.[0] ?? "?"}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "13px", fontWeight: "600", color: "#3d2f22" }}>{c.nickname}</span>
-              <span style={{ fontSize: "12px", color: "#c0b0a0" }}>{timeAgo(c.createdAt)}</span>
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0,
+              background: c.isSecret
+                ? "linear-gradient(135deg, #f5deb3, #daa060)"
+                : "linear-gradient(135deg, #f5e8d5, #e8d0b0)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "14px", color: "#a07850", fontWeight: "600"
+            }}>
+              {c.isSecret ? "🔒" : (c.nickname?.[0] ?? "?")}
             </div>
-            <p style={{ fontSize: "15px", color: "#4a3b2e", margin: 0 }}>{c.text}</p>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: "#3d2f22" }}>{c.nickname}</span>
+                {c.isSecret && (
+                  <span style={{
+                    fontSize: "10px", background: "#f5e0c0", color: "#a06820",
+                    padding: "2px 7px", borderRadius: "10px", fontWeight: "600"
+                  }}>비밀댓글</span>
+                )}
+                <span style={{ fontSize: "12px", color: "#c0b0a0" }}>{timeAgo(c.createdAt)}</span>
+              </div>
+
+              {isHidden ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <p style={{ fontSize: "14px", color: "#c0a880", margin: 0, fontStyle: "italic" }}>
+                    🔒 비밀댓글입니다.
+                  </p>
+                  <button onClick={() => revealSecret(c.id, c.passwordHash)}
+                    style={{
+                      fontSize: "12px", color: "#c8a882", background: "none",
+                      border: "1px solid #e8d0b0", borderRadius: "8px",
+                      padding: "2px 8px", cursor: "pointer"
+                    }}>
+                    열람
+                  </button>
+                </div>
+              ) : (
+                <p style={{ fontSize: "15px", color: "#4a3b2e", margin: 0 }}>{c.text}</p>
+              )}
+            </div>
+            <button
+              onClick={() => deleteComment(c.id, c.passwordHash)}
+              style={{ fontSize: "12px", color: adminMode ? "#e57373" : "#d0c0b0", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
+            >
+              {adminMode ? "삭제" : "✕"}
+            </button>
           </div>
-          <button
-            onClick={() => deleteComment(c.id, c.passwordHash)}
-            style={{ fontSize: "12px", color: adminMode ? "#e57373" : "#d0c0b0", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
-          >
-            {adminMode ? "삭제" : "✕"}
-          </button>
-        </div>
-      ))}
+        );
+      })}
 
       {/* 댓글 입력 */}
       <div style={{ borderTop: "1px solid #f0e8de", paddingTop: "20px", marginTop: "8px" }}>
@@ -168,17 +226,30 @@ export default function Comments({ slug }: { slug: string }) {
           <input type="text" placeholder="닉네임 *" value={nickname}
             onChange={e => setNickname(e.target.value)} maxLength={20}
             style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "10px", fontSize: "14px" }} />
-          <input type="password" placeholder="비밀번호 * (삭제용)" value={password}
+          <input type="password" placeholder="비밀번호 * (삭제·열람용)" value={password}
             onChange={e => setPassword(e.target.value)}
             style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "10px", fontSize: "14px" }} />
         </div>
         <textarea value={text} onChange={e => setText(e.target.value)}
           placeholder="댓글을 입력하세요..."
           style={{ width: "100%", minHeight: "80px", padding: "12px", borderRadius: "10px", border: "1px solid #e8e0d5", fontSize: "14px", resize: "vertical", boxSizing: "border-box" }} />
-        <button onClick={submit} disabled={submitting}
-          style={{ marginTop: "8px", padding: "10px 20px", background: submitting ? "#e0d0c0" : "#c8a882", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
-          {submitting ? "등록 중..." : "등록"}
-        </button>
+
+        {/* 비밀댓글 토글 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", color: "#8c7a62" }}>
+            <input
+              type="checkbox"
+              checked={isSecret}
+              onChange={e => setIsSecret(e.target.checked)}
+              style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "#c8a882" }}
+            />
+            🔒 비밀댓글 (나와 방장만 볼 수 있어요)
+          </label>
+          <button onClick={submit} disabled={submitting}
+            style={{ padding: "10px 20px", background: submitting ? "#e0d0c0" : "#c8a882", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>
+            {submitting ? "등록 중..." : "등록"}
+          </button>
+        </div>
       </div>
     </div>
   );
