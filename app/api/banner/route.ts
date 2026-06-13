@@ -6,6 +6,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function GET() {
   const { data, error } = await supabase
     .from("banner")
@@ -16,13 +26,8 @@ export async function GET() {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ quote: null }, { status: 200 });
+    return NextResponse.json({ quote: null }, { headers: corsHeaders });
   }
 
-  return NextResponse.json(data, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "s-maxage=3600, stale-while-revalidate",
-    },
-  });
+  return NextResponse.json(data, { headers: corsHeaders });
 }
