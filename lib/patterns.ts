@@ -220,8 +220,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~할 돈이 없다",
     pattern_en: "can't afford to ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I can't afford to buy a new car.", text_ko: "새 차를 살 돈이 없어." },
-      { speaker: "K", text_en: "Maybe a used one, then?", text_ko: "그럼 중고차는 어때?" },
+      { speaker: "E", text_en: "I want to buy the new iPhone, but it's too expensive.", text_ko: "새 아이폰 사고 싶은데 너무 비싸네." },
+      { speaker: "K", text_en: "Yeah, I can't afford to spend that much money right now either.", text_ko: "맞아, 나도 지금은 그만큼 큰돈을 쓸 여유가 없어." },
+      { speaker: "E", text_en: "Are you coming to the party tonight?", text_ko: "오늘 밤 파티에 올 거야?" },
+      { speaker: "K", text_en: "I wish I could, but I can't afford to waste any time. I have an exam tomorrow.", text_ko: "가고 싶지만 시간을 낭비할 여유가 없어. 내일 시험이 있거든." },
     ],
   },
   {
@@ -231,8 +233,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~하기로 되어 있다",
     pattern_en: "be supposed to ~",
     example_dialogue: [
-      { speaker: "E", text_en: "You're supposed to be here at nine.", text_ko: "너 9시까지 오기로 되어 있잖아." },
-      { speaker: "K", text_en: "Sorry, I overslept.", text_ko: "미안, 늦잠 잤어." },
+      { speaker: "E", text_en: "What time are we meeting tomorrow?", text_ko: "우리 내일 몇 시에 만나기로 했지?" },
+      { speaker: "K", text_en: "We are supposed to meet at the coffee shop at 10 AM.", text_ko: "오전 10시에 커피숍에서 만나기로 되어 있어." },
+      { speaker: "E", text_en: "You aren't supposed to smoke inside this building.", text_ko: "이 건물 안에서는 담배를 피우면 안 됩니다." },
+      { speaker: "K", text_en: "Oh, I'm sorry. I didn't see the sign.", text_ko: "아, 죄송합니다. 표지판을 못 봤네요." },
     ],
   },
   {
@@ -242,8 +246,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~한지 봅시다",
     pattern_en: "see ~",
     example_dialogue: [
-      { speaker: "E", text_en: "Let's see how it goes.", text_ko: "어떻게 되는지 봅시다." },
-      { speaker: "K", text_en: "Okay, we'll wait and see.", text_ko: "그래, 두고 보자." },
+      { speaker: "E", text_en: "Is the laptop still working?", text_ko: "노트북 아직 잘 작동해?" },
+      { speaker: "K", text_en: "Let me see if it turns on properly.", text_ko: "전원이 잘 켜지는지 한번 볼게." },
+      { speaker: "E", text_en: "Do we have enough milk for breakfast?", text_ko: "우리 아침 먹을 우유 충분히 있나?" },
+      { speaker: "K", text_en: "I'll check the refrigerator and see.", text_ko: "냉장고를 확인해서 알아볼게." },
     ],
   },
   {
@@ -253,8 +259,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~하면서 …했다",
     pattern_en: "did …, doing ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I hurt my hand cooking dinner.", text_ko: "저녁을 하면서 손을 다쳤어." },
-      { speaker: "K", text_en: "Are you okay?", text_ko: "괜찮아?" },
+      { speaker: "E", text_en: "How did you spend your weekend?", text_ko: "주말 어떻게 보냈어?" },
+      { speaker: "K", text_en: "I just stayed home, watching movies all day.", text_ko: "그냥 집에 머물면서 하루 종일 영화 봤어." },
+      { speaker: "E", text_en: "He hurt his ankle while playing basketball yesterday.", text_ko: "그는 어제 농구 하다가 발목을 다쳤어." },
+      { speaker: "K", text_en: "Oh, that's too bad. Is he okay now?", text_ko: "아, 안됐다. 지금은 괜찮대?" },
     ],
   },
   {
@@ -264,8 +272,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~인 채로 두다",
     pattern_en: "leave + 목적어 + ~",
     example_dialogue: [
-      { speaker: "E", text_en: "Please leave the door open.", text_ko: "문을 열어둔 채로 둬." },
-      { speaker: "K", text_en: "Sure, no problem.", text_ko: "알겠어." },
+      { speaker: "E", text_en: "Don't leave the door open. It's freezing outside.", text_ko: "문 열어둔 채로 두지 마. 밖이 엄청 추워." },
+      { speaker: "K", text_en: "Sorry, I'll close it right away.", text_ko: "미안, 바로 닫을게." },
+      { speaker: "E", text_en: "Why did you leave the lights on all night?", text_ko: "왜 밤새 불을 켜둔 채로 둔 거야?" },
+      { speaker: "K", text_en: "I fell asleep while reading a book.", text_ko: "책 읽다가 잠들어서 그랬어." },
     ],
   },
   {
@@ -275,8 +285,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~한 것 같진 않아",
     pattern_en: "I doubt (that) ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I doubt that he'll come.", text_ko: "그가 올 것 같진 않아." },
-      { speaker: "K", text_en: "Let's wait a bit more.", text_ko: "조금 더 기다려보자." },
+      { speaker: "E", text_en: "Do you think it will rain tomorrow?", text_ko: "내일 비가 올 것 같아?" },
+      { speaker: "K", text_en: "I doubt that it will rain. The sky is completely clear.", text_ko: "비가 올 것 같지는 않아. 하늘이 완전히 맑거든." },
+      { speaker: "E", text_en: "Will he show up on time for the meeting?", text_ko: "그가 회의에 제시간에 나타날까?" },
+      { speaker: "K", text_en: "I doubt it. He is always late.", text_ko: "그럴 리가 없어. 그는 항상 늦잖아." },
     ],
   },
   {
@@ -286,8 +298,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~처럼 보인다",
     pattern_en: "It appears (that) ~",
     example_dialogue: [
-      { speaker: "E", text_en: "It appears that they're closed.", text_ko: "문을 닫은 것처럼 보여." },
-      { speaker: "K", text_en: "Let's try another place.", text_ko: "다른 데 가보자." },
+      { speaker: "E", text_en: "It appears that there is a problem with the server.", text_ko: "서버에 문제가 생긴 것처럼 보입니다." },
+      { speaker: "K", text_en: "Let's call the IT department right now.", text_ko: "지금 바로 IT 부서에 연락해 봅시다." },
+      { speaker: "E", text_en: "She looks very happy today.", text_ko: "그녀는 오늘 무척 행복해 보이네." },
+      { speaker: "K", text_en: "Yes, it appears she passed the final interview.", text_ko: "응, 최종 면접에 합격한 것 같아." },
     ],
   },
   {
@@ -374,8 +388,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "…한 것은 ~이다",
     pattern_en: "What S + V is ~",
     example_dialogue: [
-      { speaker: "E", text_en: "What I need is a little rest.", text_ko: "내게 필요한 건 약간의 휴식이야." },
-      { speaker: "K", text_en: "You deserve it.", text_ko: "그럴 자격 있어." },
+      { speaker: "E", text_en: "I'm not sure if I can complete this project by myself.", text_ko: "이 프로젝트를 나 혼자 끝낼 수 있을지 잘 모르겠어." },
+      { speaker: "K", text_en: "Don't worry. What you need is a little bit of help from others.", text_ko: "걱정 마. 네게 필요한 것은 다른 사람들의 약간의 도움이야." },
+      { speaker: "E", text_en: "Did you understand what the professor said today?", text_ko: "오늘 교수님이 하신 말씀 이해했어?" },
+      { speaker: "K", text_en: "Not really. What he meant was completely unclear to me.", text_ko: "아니 전혀. 그가 의미한 것은 나에게 완전히 모호했어." },
     ],
   },
   {
@@ -385,8 +401,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "(단지) …라고는 ~뿐이다",
     pattern_en: "All S + V is ~",
     example_dialogue: [
-      { speaker: "E", text_en: "All I want is some peace.", text_ko: "내가 바라는 건 평온함뿐이야." },
-      { speaker: "K", text_en: "I understand.", text_ko: "이해해." },
+      { speaker: "E", text_en: "How can I start using this new software?", text_ko: "이 새 소프트웨어는 어떻게 쓰기 시작하면 돼?" },
+      { speaker: "K", text_en: "It's very simple. All you have to do is enter your email address here.", text_ko: "아주 간단해. 넌 여기 이메일 주소를 입력하기만 하면 돼." },
+      { speaker: "E", text_en: "What did you buy at the shopping mall yesterday?", text_ko: "어제 쇼핑몰에서 뭐 샀어?" },
+      { speaker: "K", text_en: "All I bought was a cheap T-shirt. Nothing else.", text_ko: "내가 산 거라고는 저렴한 티셔츠 한 장뿐이야. 다른 건 없어." },
     ],
   },
   {
@@ -396,8 +414,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~일지도 모르니까",
     pattern_en: "In case S + V",
     example_dialogue: [
-      { speaker: "E", text_en: "Take an umbrella in case it rains.", text_ko: "비가 올지도 모르니까 우산 챙겨." },
-      { speaker: "K", text_en: "Good idea.", text_ko: "좋은 생각이야." },
+      { speaker: "E", text_en: "The weather looks a bit unstable today.", text_ko: "오늘 날씨가 좀 불안정해 보이네." },
+      { speaker: "K", text_en: "Take an umbrella with you in case it rains this afternoon.", text_ko: "오후에 비가 올지도 모르니까 우산을 챙겨가." },
+      { speaker: "E", text_en: "Why are you bringing two credit cards?", text_ko: "신용카드를 왜 두 장이나 챙겨?" },
+      { speaker: "K", text_en: "Just in case one of them doesn't work.", text_ko: "혹시 하나가 안 될 경우를 대비해서 그런 거야." },
     ],
   },
   {
@@ -407,8 +427,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~하게 되다",
     pattern_en: "get + 형용사/PP",
     example_dialogue: [
-      { speaker: "E", text_en: "Don't get angry.", text_ko: "화내지 마." },
-      { speaker: "K", text_en: "I'm not, I'm just tired.", text_ko: "화난 거 아니야, 그냥 피곤해." },
+      { speaker: "E", text_en: "We should hurry up. It's getting dark outside.", text_ko: "우리 서둘러야겠어. 밖이 어두워지고 있어." },
+      { speaker: "K", text_en: "You're right. Let's head back to the car.", text_ko: "맞아. 자동차로 돌아가자." },
+      { speaker: "E", text_en: "Why did he leave the party so early?", text_ko: "그는 왜 이렇게 파티에서 일찍 가버린 거야?" },
+      { speaker: "K", text_en: "He got bored with the conversation.", text_ko: "대화가 지루해졌거든." },
     ],
   },
   {
@@ -418,8 +440,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~라고 들었어요",
     pattern_en: "I was told (that) ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I was told that the store is closed.", text_ko: "가게가 문을 닫았다고 들었어요." },
-      { speaker: "K", text_en: "Yes, it closed last week.", text_ko: "네, 지난주에 닫았어요." },
+      { speaker: "E", text_en: "Have you met the new manager yet?", text_ko: "새로 오신 매니저님 아직 안 만나봤지?" },
+      { speaker: "K", text_en: "No, but I was told that he is very strict.", text_ko: "응, 하지만 그분이 엄청 엄격하시다고 들었어." },
+      { speaker: "E", text_en: "Is the famous Italian restaurant still open?", text_ko: "그 유명한 이탈리아 레스토랑 아직도 영업해?" },
+      { speaker: "K", text_en: "I was told they closed down last month.", text_ko: "지난달에 문을 닫았다고 들었어." },
     ],
   },
   {
@@ -429,8 +453,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "왜 ~?",
     pattern_en: "What makes ~?",
     example_dialogue: [
-      { speaker: "E", text_en: "What makes you say that?", text_ko: "왜 그렇게 말하는 거야?" },
-      { speaker: "K", text_en: "Just a feeling.", text_ko: "그냥 느낌이야." },
+      { speaker: "E", text_en: "What makes you think he will change his mind?", text_ko: "무엇 때문에 그가 마음을 바꿀 거라고 생각하는 거야?" },
+      { speaker: "K", text_en: "Because he looked quite hesitant during the meeting.", text_ko: "회의 중에 꽤 망설이는 것처럼 보였거든." },
+      { speaker: "E", text_en: "You look exceptionally happy today. What makes you so excited?", text_ko: "너 오늘 유난히 행복해 보인다. 무엇이 너를 그렇게 신나게 만든 거야?" },
+      { speaker: "K", text_en: "I just found out that I got a promotion!", text_ko: "나 방금 승진했다는 소식을 알게 됐거든!" },
     ],
   },
   {
@@ -440,8 +466,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~한지 얼마나 됐어요?",
     pattern_en: "How long have S + PP?",
     example_dialogue: [
-      { speaker: "E", text_en: "How long have you lived here?", text_ko: "여기 산 지 얼마나 됐어요?" },
-      { speaker: "K", text_en: "About five years.", text_ko: "5년쯤 됐어요." },
+      { speaker: "E", text_en: "Your English is so natural. How long have you lived in the US?", text_ko: "영어 발음이 정말 자연스럽네. 미국에 사신 지 얼마나 되셨어요?" },
+      { speaker: "K", text_en: "I've been living here for about five years now.", text_ko: "이제 한 5년 정도 살았어요." },
+      { speaker: "E", text_en: "This building looks incredibly old.", text_ko: "이 건물은 정말 믿기지 않을 정도로 오래되어 보이네." },
+      { speaker: "K", text_en: "How long has it been since it was built?", text_ko: "지어진 지 얼마나 된 걸까?" },
     ],
   },
   {
@@ -451,8 +479,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "꼭 ~할게요",
     pattern_en: "I promise ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I promise I'll be on time.", text_ko: "꼭 제시간에 갈게요." },
-      { speaker: "K", text_en: "I'll hold you to that.", text_ko: "약속 지켜요." },
+      { speaker: "E", text_en: "Please don't tell anyone about what I just said.", text_ko: "내가 방금 한 말 아무한테도 말하지 마." },
+      { speaker: "K", text_en: "I promise I won't tell a soul. Your secret is safe with me.", text_ko: "아무에게도 말 안 하겠다고 약속할게. 비밀 지켜줄게." },
+      { speaker: "E", text_en: "You are late again! We missed the beginning of the movie.", text_ko: "너 또 늦었어! 영화 시작 부분을 놓쳤잖아." },
+      { speaker: "K", text_en: "I'm really sorry. I promise to be on time next time.", text_ko: "정말 미안해. 다음엔 꼭 제시간에 오겠다고 약속할게." },
     ],
   },
   {
@@ -462,8 +492,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~해서야 비로소 …했다",
     pattern_en: "not … until ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I didn't sleep until midnight.", text_ko: "자정이 돼서야 비로소 잤어." },
-      { speaker: "K", text_en: "You must be exhausted.", text_ko: "정말 피곤하겠다." },
+      { speaker: "E", text_en: "Did you know that the library was closed yesterday?", text_ko: "어제 도서관 문 닫았던 거 알았어?" },
+      { speaker: "K", text_en: "No, I didn't realize it until I arrived at the entrance.", text_ko: "아니, 입구에 도착해서야 비로소 알았어." },
+      { speaker: "E", text_en: "When did you find your lost wallet?", text_ko: "잃어버린 지갑은 언제 찾았어?" },
+      { speaker: "K", text_en: "It was not until this morning that I found it under my bed.", text_ko: "오늘 아침이 되어서야 비로소 침대 밑에서 찾았어." },
     ],
   },
   {
@@ -473,8 +505,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~에 가본 적이 있다",
     pattern_en: "have been to ~",
     example_dialogue: [
-      { speaker: "E", text_en: "Have you been to Japan?", text_ko: "일본에 가본 적 있어?" },
-      { speaker: "K", text_en: "Yes, twice.", text_ko: "응, 두 번." },
+      { speaker: "E", text_en: "Have you ever traveled to Europe?", text_ko: "유럽 여행 가본 적 있어?" },
+      { speaker: "K", text_en: "Yes, I have been to Paris and London twice.", text_ko: "응, 파리랑 런던에 두 번 가본 적 있어." },
+      { speaker: "E", text_en: "Is that new art gallery downtown any good?", text_ko: "시내에 새로 생긴 미술관 괜찮아?" },
+      { speaker: "K", text_en: "I'm not sure. I haven't been to that place yet.", text_ko: "잘 모르겠어. 난 아직 거기에 안 가봤거든." },
     ],
   },
   {
@@ -484,8 +518,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~라고 쓰여 있다",
     pattern_en: "It says ~",
     example_dialogue: [
-      { speaker: "E", text_en: "The sign says no parking.", text_ko: "표지판에 주차 금지라고 쓰여 있어." },
-      { speaker: "K", text_en: "Let's park elsewhere.", text_ko: "다른 데 주차하자." },
+      { speaker: "E", text_en: "What does the sign over there mean?", text_ko: "저기 있는 표지판이 무슨 뜻이야?" },
+      { speaker: "K", text_en: "It says \"No Parking\" in big bold letters.", text_ko: "큰 굵은 글씨로 \"주차 금지\"라고 쓰여 있어." },
+      { speaker: "E", text_en: "Did you read the email from the HR department?", text_ko: "인사부에서 온 이메일 읽어봤어?" },
+      { speaker: "K", text_en: "Yes, it says the office will be closed this Friday.", text_ko: "응, 이번 주 금요일에 사무실 휴무라고 쓰여 있더라." },
     ],
   },
   {
@@ -495,8 +531,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~를 가진 사람",
     pattern_en: "a person with ~",
     example_dialogue: [
-      { speaker: "E", text_en: "She's a person with great patience.", text_ko: "그녀는 인내심을 가진 사람이야." },
-      { speaker: "K", text_en: "That's a rare quality.", text_ko: "드문 장점이지." },
+      { speaker: "E", text_en: "Who is the man talking to the CEO right now?", text_ko: "지금 대표님이랑 이야기 나누고 있는 저 남자는 누구야?" },
+      { speaker: "K", text_en: "He is a person with extensive experience in international trade.", text_ko: "국제 무역 분야에서 풍부한 경험을 가진 사람이야." },
+      { speaker: "E", text_en: "I need someone to help me translate this document.", text_ko: "이 서류 번역을 도와줄 사람이 필요해." },
+      { speaker: "K", text_en: "You should look for a person who is fluent in both Korean and English.", text_ko: "한국어와 영어 모두에 능통한 사람을 찾아봐." },
     ],
   },
   {
@@ -506,8 +544,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "내가 ~하기에는",
     pattern_en: "My ~ is to/that …",
     example_dialogue: [
-      { speaker: "E", text_en: "My point is that we need more time.", text_ko: "내 말은 시간이 더 필요하다는 거야." },
-      { speaker: "K", text_en: "I agree completely.", text_ko: "전적으로 동의해." },
+      { speaker: "E", text_en: "What is your primary goal for this quarter?", text_ko: "이번 분기 네 가장 주요한 목표가 뭐야?" },
+      { speaker: "K", text_en: "My goal is to increase our online sales by twenty percent.", text_ko: "내 목표는 온라인 매출을 20% 성장시키는 거야." },
+      { speaker: "E", text_en: "Is there any problem with the final report?", text_ko: "최종 보고서에 무슨 문제라도 있어?" },
+      { speaker: "K", text_en: "My only concern is that the budget might be slightly tight.", text_ko: "내 유일한 걱정은 예산이 다소 타이트할 수도 있다는 점이야." },
     ],
   },
   {
@@ -517,8 +557,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~에 의하면",
     pattern_en: "From what ~",
     example_dialogue: [
-      { speaker: "E", text_en: "From what I heard, the plan changed.", text_ko: "내가 들은 바에 의하면 계획이 바뀌었어." },
-      { speaker: "K", text_en: "When did that happen?", text_ko: "언제 그랬대?" },
+      { speaker: "E", text_en: "Is the company performance improving this year?", text_ko: "올해 회사 실적이 좀 나아지고 있어?" },
+      { speaker: "K", text_en: "From what I've heard, the revenue has grown significantly.", text_ko: "내가 들은 바에 의하면, 매출이 크게 늘었다고 하더라고." },
+      { speaker: "E", text_en: "Do you think she will accept our offer?", text_ko: "그녀가 우리 제안을 받아들일까?" },
+      { speaker: "K", text_en: "From what I can see, she seems very interested in this position.", text_ko: "내가 보기에는, 이 직무에 관심이 아주 많아 보여." },
     ],
   },
   {
@@ -528,8 +570,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "만약 ~라면",
     pattern_en: "If S + V(과거), S + would ~",
     example_dialogue: [
-      { speaker: "E", text_en: "If I had time, I would help you.", text_ko: "시간이 있다면 도와줄 텐데." },
-      { speaker: "K", text_en: "That's okay, I understand.", text_ko: "괜찮아, 이해해." },
+      { speaker: "E", text_en: "Do you want to go to the concert tonight?", text_ko: "오늘 밤 콘서트 가고 싶어?" },
+      { speaker: "K", text_en: "I'd love to, but if I had more money, I would buy a ticket.", text_ko: "가고 싶지만, 돈이 더 있다면 티켓을 살 텐데." },
+      { speaker: "E", text_en: "Why don't you ask her out?", text_ko: "그녀에게 데이트 신청해 보는 건 어때?" },
+      { speaker: "K", text_en: "If I were braver, I would ask her. But I'm too nervous.", text_ko: "내가 더 용감하다면 신청할 텐데. 너무 떨려." },
     ],
   },
   {
@@ -539,8 +583,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "만약 ~했더라면",
     pattern_en: "If S + had + PP, S + would have + PP",
     example_dialogue: [
-      { speaker: "E", text_en: "If I had known, I would have called.", text_ko: "알았더라면 전화했을 텐데." },
-      { speaker: "K", text_en: "It's fine, really.", text_ko: "정말 괜찮아." },
+      { speaker: "E", text_en: "Did you catch the train yesterday?", text_ko: "어제 기차 제시간에 탔어?" },
+      { speaker: "K", text_en: "No, if I had woken up earlier, I would have caught it.", text_ko: "아니, 내가 더 일찍 일어났다면 탔을 텐데." },
+      { speaker: "E", text_en: "How was the exam?", text_ko: "시험 어땠어?" },
+      { speaker: "K", text_en: "It was tough. If I had studied harder, I would have passed it.", text_ko: "어려웠어. 공부를 더 열심히 했다면 합격했을 텐데." },
     ],
   },
   {
@@ -550,8 +596,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "만약 ~했더라면",
     pattern_en: "If S + had + PP, S + would + V",
     example_dialogue: [
-      { speaker: "E", text_en: "If I had saved money, I would be rich now.", text_ko: "돈을 모았더라면 지금 부자일 텐데." },
-      { speaker: "K", text_en: "It's never too late.", text_ko: "늦지 않았어." },
+      { speaker: "E", text_en: "Are you still looking for your keys?", text_ko: "아직도 열쇠 찾고 있어?" },
+      { speaker: "K", text_en: "Yes. If I had put them on the table yesterday, I would know where they are now.", text_ko: "응. 어제 테이블 위에 두었더라면 지금 어디 있는지 알 텐데." },
+      { speaker: "E", text_en: "You look really tired today.", text_ko: "너 오늘 정말 피곤해 보인다." },
+      { speaker: "K", text_en: "If I had slept more last night, I would feel better now.", text_ko: "어젯밤에 잠을 더 잤더라면 지금 컨디션이 더 좋을 텐데." },
     ],
   },
   {
@@ -561,8 +609,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~하면",
     pattern_en: "If ~",
     example_dialogue: [
-      { speaker: "E", text_en: "If you need anything, let me know.", text_ko: "필요한 게 있으면 알려줘." },
-      { speaker: "K", text_en: "Thanks, I will.", text_ko: "고마워, 그럴게." },
+      { speaker: "E", text_en: "If it rains tomorrow, the picnic will be canceled.", text_ko: "내일 비가 오면 소풍은 취소될 거야." },
+      { speaker: "K", text_en: "Let's check the weather forecast tonight.", text_ko: "오늘 밤에 일기예보를 확인해 보자." },
+      { speaker: "E", text_en: "If you need any help, please let me know.", text_ko: "도움이 필요하시면 언제든 말씀해 주세요." },
+      { speaker: "K", text_en: "Thank you. I appreciate your kindness.", text_ko: "감사합니다. 친절에 감사드려요." },
     ],
   },
   {
@@ -572,8 +622,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "틀림없이 ~했을 거야",
     pattern_en: "must have + PP",
     example_dialogue: [
-      { speaker: "E", text_en: "He must have left already.", text_ko: "그는 틀림없이 벌써 떠났을 거야." },
-      { speaker: "K", text_en: "Let's call him.", text_ko: "전화해 보자." },
+      { speaker: "E", text_en: "The streets are completely wet.", text_ko: "길이 완전히 젖었네." },
+      { speaker: "K", text_en: "It must have rained heavily while we were inside.", text_ko: "우리가 안에 있는 동안 비가 많이 왔음에 틀림없어." },
+      { speaker: "E", text_en: "She passed the difficult exam with a perfect score.", text_ko: "그녀는 그 어려운 시험을 만점으로 통과했대." },
+      { speaker: "K", text_en: "Wow, she must have studied incredibly hard.", text_ko: "와, 공부를 정말 열심히 했음에 틀림없네." },
     ],
   },
   {
@@ -583,8 +635,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~한 것",
     pattern_en: "the thing that ~",
     example_dialogue: [
-      { speaker: "E", text_en: "The thing that bothers me is the noise.", text_ko: "날 괴롭히는 건 소음이야." },
-      { speaker: "K", text_en: "Let's close the window.", text_ko: "창문을 닫자." },
+      { speaker: "E", text_en: "What is the most important thing to you?", text_ko: "너에게 가장 중요한 게 뭐야?" },
+      { speaker: "K", text_en: "The thing that matters most to me is my family's health.", text_ko: "나에게 가장 중요한 것은 가족의 건강이야." },
+      { speaker: "E", text_en: "I don't understand why he acts like that.", text_ko: "그는 왜 저렇게 행동하는지 이해가 안 가." },
+      { speaker: "K", text_en: "What he needs is just a little bit of attention.", text_ko: "그에게 필요한 것은 단지 아주 조그만 관심뿐이야." },
     ],
   },
   {
@@ -594,8 +648,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~하는 사람",
     pattern_en: "a person who ~",
     example_dialogue: [
-      { speaker: "E", text_en: "She's a person who never gives up.", text_ko: "그녀는 절대 포기하지 않는 사람이야." },
-      { speaker: "K", text_en: "I admire that.", text_ko: "존경스러워." },
+      { speaker: "E", text_en: "Who is your role model?", text_ko: "네 롤모델이 누구야?" },
+      { speaker: "K", text_en: "I respect a person who never gives up on their dreams.", text_ko: "나는 꿈을 절대 포기하지 않는 사람을 존경해." },
+      { speaker: "E", text_en: "We need a new team leader for this project.", text_ko: "이번 프로젝트를 이끌 새 팀장이 필요해." },
+      { speaker: "K", text_en: "We should choose a person who has strong communication skills.", text_ko: "소통 능력이 뛰어난 사람을 선택해야 해." },
     ],
   },
   {
@@ -605,8 +661,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~조차 하지 않다",
     pattern_en: "not even ~",
     example_dialogue: [
-      { speaker: "E", text_en: "He didn't even say goodbye.", text_ko: "그는 작별 인사조차 하지 않았어." },
-      { speaker: "K", text_en: "That's rude.", text_ko: "무례하네." },
+      { speaker: "E", text_en: "Did you enjoy the movie last night?", text_ko: "어젯밤에 영화 재미있게 봤어?" },
+      { speaker: "K", text_en: "No, it was so boring that I didn't even finish watching it.", text_ko: "아니, 너무 지루해서 끝까지 보지도 않았어." },
+      { speaker: "E", text_en: "Does he know about the schedule change?", text_ko: "그가 일정 바뀐 거 알고 있어?" },
+      { speaker: "K", text_en: "No, he doesn't even answer my phone calls.", text_ko: "아니, 내 전화조차 받지 않아." },
     ],
   },
   {
@@ -616,8 +674,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "단지 ~하다",
     pattern_en: "just ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I just want to relax today.", text_ko: "오늘은 그냥 쉬고 싶어." },
-      { speaker: "K", text_en: "You deserve a break.", text_ko: "좀 쉬어도 돼." },
+      { speaker: "E", text_en: "Why did you call me so late?", text_ko: "왜 이렇게 늦게 전화했어?" },
+      { speaker: "K", text_en: "I just wanted to hear your voice.", text_ko: "그냥 단지 네 목소리가 듣고 싶어서 그랬어." },
+      { speaker: "E", text_en: "Are you buying that expensive jacket?", text_ko: "그 비싼 재킷 살 거야?" },
+      { speaker: "K", text_en: "No, I'm just looking around the store.", text_ko: "아니, 그냥 단지 가게를 둘러보는 중이야." },
     ],
   },
   {
@@ -627,8 +687,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~할 리 없다",
     pattern_en: "There is no reason (that) ~",
     example_dialogue: [
-      { speaker: "E", text_en: "There is no reason to worry.", text_ko: "걱정할 리 없어." },
-      { speaker: "K", text_en: "You're right, I'll calm down.", text_ko: "맞아, 진정할게." },
+      { speaker: "E", text_en: "There is no reason to be afraid of making mistakes.", text_ko: "실수하는 것을 두려워할 이유가 전혀 없어." },
+      { speaker: "K", text_en: "You're right. That's how we learn.", text_ko: "맞아. 그렇게 배우는 거지." },
+      { speaker: "E", text_en: "He said he forgot his own birthday.", text_ko: "그가 자기 생일을 잊어버렸다고 하더라고." },
+      { speaker: "K", text_en: "That can't be true. He must be joking.", text_ko: "그럴 리가 없어. 농담하는 게 분명해." },
     ],
   },
   {
@@ -638,8 +700,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~가 있을 예정이다",
     pattern_en: "There is going to be ~",
     example_dialogue: [
-      { speaker: "E", text_en: "There is going to be a meeting tomorrow.", text_ko: "내일 회의가 있을 예정이야." },
-      { speaker: "K", text_en: "What time?", text_ko: "몇 시에?" },
+      { speaker: "E", text_en: "Why is the office so busy today?", text_ko: "오늘 왜 이렇게 사무실이 분주하지?" },
+      { speaker: "K", text_en: "There is going to be a big presentation this afternoon.", text_ko: "오늘 오후에 큰 발표가 있을 예정이거든." },
+      { speaker: "E", text_en: "Are you doing anything special this weekend?", text_ko: "이번 주말에 특별한 계획 있어?" },
+      { speaker: "K", text_en: "There is going to be a food festival downtown. I might check it out.", text_ko: "시내에서 푸드 페스티벌이 열릴 예정이야. 한번 가볼까 해." },
     ],
   },
   {
@@ -649,8 +713,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~가 있는 것 같다",
     pattern_en: "There seems to be ~",
     example_dialogue: [
-      { speaker: "E", text_en: "There seems to be a problem.", text_ko: "문제가 있는 것 같아." },
-      { speaker: "K", text_en: "Let me check it.", text_ko: "내가 확인해 볼게." },
+      { speaker: "E", text_en: "Why isn't the internet working?", text_ko: "인터넷이 왜 안 되지?" },
+      { speaker: "K", text_en: "There seems to be a problem with the Wi-Fi router.", text_ko: "와이파이 공유기에 문제가 있는 것 같아." },
+      { speaker: "E", text_en: "The atmosphere in the meeting room was tense.", text_ko: "회의실 분위기가 살벌하더라고." },
+      { speaker: "K", text_en: "Yes, there seems to be a misunderstanding between the managers.", text_ko: "응, 매니저들 사이에 오해가 좀 있는 것 같아." },
     ],
   },
   {
@@ -847,8 +913,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~든 상관 안 한다",
     pattern_en: "I don't care ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I don't care what they think.", text_ko: "그들이 뭐라 생각하든 상관 안 해." },
-      { speaker: "K", text_en: "Good for you.", text_ko: "멋지다." },
+      { speaker: "E", text_en: "What color do you want for the new couch?", text_ko: "새 소파 색상 어떤 걸로 원해?" },
+      { speaker: "K", text_en: "I don't care what color it is, as long as it's comfortable.", text_ko: "편하기만 하다면 무슨 색이든 난 상관 없어." },
+      { speaker: "E", text_en: "People might talk about your choice.", text_ko: "사람들이 네 선택에 대해 수군거릴지도 몰라." },
+      { speaker: "K", text_en: "I don't care what they think of me.", text_ko: "그들이 나를 어떻게 생각하든 난 신경 안 써." },
     ],
   },
   {
@@ -858,8 +926,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "…하는 이유는 ~때문이다",
     pattern_en: "The reason … is that ~",
     example_dialogue: [
-      { speaker: "E", text_en: "The reason I'm late is that I missed the bus.", text_ko: "늦은 이유는 버스를 놓쳤기 때문이야." },
-      { speaker: "K", text_en: "I see, no problem.", text_ko: "그렇구나, 괜찮아." },
+      { speaker: "E", text_en: "Why are you so late today?", text_ko: "너 오늘 왜 이렇게 늦었어?" },
+      { speaker: "K", text_en: "The reason I'm late is that I got stuck in heavy traffic.", text_ko: "내가 늦은 이유는 교통 체증에 가로막혔기 때문이야." },
+      { speaker: "E", text_en: "Why did she decline the job offer?", text_ko: "그녀는 왜 그 일자리 제안을 거절한 거야?" },
+      { speaker: "K", text_en: "The reason she declined is that the salary was too low.", text_ko: "거절한 이유는 연봉이 너무 낮았기 때문이래." },
     ],
   },
   {
@@ -869,8 +939,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~부터 …하고 있다",
     pattern_en: "have been -ing since ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I've been waiting since noon.", text_ko: "정오부터 기다리고 있어." },
-      { speaker: "K", text_en: "Sorry I'm so late!", text_ko: "늦어서 정말 미안!" },
+      { speaker: "E", text_en: "You look exhausted. What have you been doing?", text_ko: "너 진이 빠져 보인다. 뭐 하고 있었어?" },
+      { speaker: "K", text_en: "I have been working on this report since early this morning.", text_ko: "오늘 이른 아침부터 줄곧 이 보고서를 붙잡고 일해오고 있어." },
+      { speaker: "E", text_en: "Do you know how to play the piano?", text_ko: "피아노 칠 줄 알아?" },
+      { speaker: "K", text_en: "Yes, I have been playing the piano since I was seven years old.", text_ko: "응, 일곱 살 때 이후로 줄곧 피아노를 쳐왔어." },
     ],
   },
   {
@@ -880,8 +952,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~한 게 있다면",
     pattern_en: "If there is anything ~",
     example_dialogue: [
-      { speaker: "E", text_en: "If there is anything you need, ask me.", text_ko: "필요한 게 있다면 물어봐." },
-      { speaker: "K", text_en: "Thank you so much.", text_ko: "정말 고마워." },
+      { speaker: "E", text_en: "I'm moving to my new apartment tomorrow.", text_ko: "나 내일 새 아파트로 이사해." },
+      { speaker: "K", text_en: "If there is anything I can do to help, just let me know.", text_ko: "내가 도울 수 있는 일이 있다면 뭐든 편하게 말해줘." },
+      { speaker: "E", text_en: "Thank you for organizing the event.", text_ko: "행사를 준비해 주셔서 감사합니다." },
+      { speaker: "K", text_en: "If there is anything you are not satisfied with, please tell us.", text_ko: "혹시라도 만족스럽지 못한 부분이 있다면 저희에게 말씀해 주세요." },
     ],
   },
   {
@@ -891,8 +965,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "여기 ~한 게 있다",
     pattern_en: "Here's what ~",
     example_dialogue: [
-      { speaker: "E", text_en: "Here's what we'll do.", text_ko: "여기 우리가 할 게 있어." },
-      { speaker: "K", text_en: "I'm listening.", text_ko: "듣고 있어." },
+      { speaker: "E", text_en: "We need a plan to finish this by Friday.", text_ko: "금요일까지 이걸 끝내려면 계획이 필요해." },
+      { speaker: "K", text_en: "Okay, here's what we are going to do first.", text_ko: "좋아, 우리가 먼저 할 일은 바로 이것이야." },
+      { speaker: "E", text_en: "What did the doctor tell you about your health?", text_ko: "의사가 네 건강에 대해 뭐라고 하셔?" },
+      { speaker: "K", text_en: "Here's what he said: I need to get more sleep.", text_ko: "의사가 말한 건 바로 이거야. 잠을 더 자야 한대." },
     ],
   },
   {
@@ -902,8 +978,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~같은",
     pattern_en: "such as ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I like fruits such as apples and pears.", text_ko: "사과나 배 같은 과일을 좋아해." },
-      { speaker: "K", text_en: "Me too.", text_ko: "나도." },
+      { speaker: "E", text_en: "What kind of hobbies do you enjoy?", text_ko: "어떤 종류의 취미를 즐겨?" },
+      { speaker: "K", text_en: "I like outdoor activities, such as hiking and camping.", text_ko: "하이킹이나 캠핑과 같은 야외 활동을 좋아해." },
+      { speaker: "E", text_en: "We need to avoid eating unhealthy foods.", text_ko: "우리는 건강에 좋지 않은 음식을 먹는 것을 피해야 해." },
+      { speaker: "K", text_en: "Right, foods such as fast food and sugary drinks.", text_ko: "맞아, 패스트푸드나 당분이 많은 음료 같은 식품들 말이지." },
     ],
   },
   {
@@ -913,8 +991,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~처럼/~같은",
     pattern_en: "like ~",
     example_dialogue: [
-      { speaker: "E", text_en: "She sings like a professional.", text_ko: "그녀는 전문가처럼 노래해." },
-      { speaker: "K", text_en: "She's talented.", text_ko: "재능 있네." },
+      { speaker: "E", text_en: "She sings so beautifully.", text_ko: "그녀는 노래를 정말 아름답게 부른다." },
+      { speaker: "K", text_en: "Yeah, she sings like a professional angel.", text_ko: "응, 마치 프로 천사처럼 노래해." },
+      { speaker: "E", text_en: "Why are you acting like a child?", text_ko: "너 왜 아이처럼 행동하고 그래?" },
+      { speaker: "K", text_en: "I'm just really excited about the trip!", text_ko: "여행 때문에 너무 신나서 그렇지!" },
     ],
   },
   {
@@ -924,8 +1004,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "~이라는 감이 오다",
     pattern_en: "I have a feeling (that) ~",
     example_dialogue: [
-      { speaker: "E", text_en: "I have a feeling it'll be a great day.", text_ko: "좋은 날이 될 것 같은 감이 와." },
-      { speaker: "K", text_en: "I hope so!", text_ko: "그러길 바라!" },
+      { speaker: "E", text_en: "Do you think we will win the match today?", text_ko: "오늘 우리 경기에서 이길 것 같아?" },
+      { speaker: "K", text_en: "I have a feeling that today is our lucky day.", text_ko: "오늘은 우리의 운이 좋은 날이라는 느낌이 들어." },
+      { speaker: "E", text_en: "He didn't say much during dinner.", text_ko: "그는 저녁 식사 동안 말을 별로 안 하더라." },
+      { speaker: "K", text_en: "I have a feeling he is hiding something from us.", text_ko: "그가 우리에게 무언가를 숨기고 있다는 느낌이 드네." },
     ],
   },
   {
@@ -935,8 +1017,10 @@ export const PATTERNS: PatternData[] = [
     pattern_ko: "그게 바로 ~한 것이다",
     pattern_en: "That's what ~",
     example_dialogue: [
-      { speaker: "E", text_en: "That's what I was thinking.", text_ko: "그게 바로 내가 생각한 거야." },
-      { speaker: "K", text_en: "Great minds think alike.", text_ko: "통했네." },
+      { speaker: "E", text_en: "I think we should focus on customer service.", text_ko: "우리가 고객 서비스에 집중해야 한다고 생각해." },
+      { speaker: "K", text_en: "Exactly! That's what I've been trying to say.", text_ko: "정확해! 그것이 바로 내가 계속 말하려던 바야." },
+      { speaker: "E", text_en: "Why did you buy that expensive watch?", text_ko: "왜 그렇게 비싼 시계를 산 거야?" },
+      { speaker: "K", text_en: "That's what I wanted for my birthday.", text_ko: "그게 바로 내 생일에 내가 원했던 것이거든." },
     ],
   },
   {
