@@ -11,7 +11,7 @@ type ServiceItem = {
   title: string;
   description: string;
   href: string;
-  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder" | "message" | "naming" | "tarot";
+  icon: "saju" | "mbti" | "compatibility" | "ipip" | "lucky" | "fortune" | "ladder" | "message" | "naming" | "tarot" | "english";
 };
 
 function formatDate(dateString: string, locale: string) {
@@ -63,6 +63,7 @@ export default async function HomePage() {
     { title: t("menu_iching"), description: locale === "en" ? "Reveal your energy for today." : "오늘 하루의 기운을 가볍고 편안하게 확인해보세요.", href: "https://my-iching-app-five.vercel.app", icon: "fortune" },
     { title: t("menu_ladder"), description: locale === "en" ? "Play the Ladder Game with friends!" : "운명의 사다리를 타볼까요? 친구들과 함께 즐겨보세요.", href: "/services/ladder", icon: "ladder" },
     { title: t("menu_naming"), description: locale === "en" ? "Find a name that brings good fortune." : "사주의 기운에 맞는 좋은 이름을 찾아보세요.", href: "/services/naming", icon: "naming" },
+    { title: locale === "en" ? "English Patterns" : "영어 구문 학습", description: locale === "en" ? "Master 140 essential patterns with flashcards." : "필수 회화 구문 140개를 플래시카드로 자투리 시간에 익혀보세요.", href: `/${locale}/english`, icon: "message" },
   ];
 
   const displayTitle = locale === "en" && todayPick?.title_en ? todayPick.title_en : todayPick?.title;
