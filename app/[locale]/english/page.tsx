@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, Check, ChevronDown } from "lucide-react";
+import { BookOpen, Check, ChevronDown, FlaskConical, ChevronRight } from "lucide-react";
 import {
   PATTERNS,
   CHAPTER_TITLES,
@@ -65,6 +65,23 @@ export default function EnglishHomePage() {
             {done}/{total}
           </span>
         </div>
+
+        {/* 업무용 기술영어 코너 진입 */}
+        <Link
+          href={`${base}/tech`}
+          className="mt-3 flex items-center gap-3 rounded-2xl bg-indigo-600 p-4 text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <FlaskConical className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">고전압 절연 기술영어 치트시트</span>
+            <span className="mt-0.5 block text-xs text-indigo-100">
+              회의 · 논문 발표용 4주 / 2주 완성 플랜
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0" />
+        </Link>
       </header>
 
       {/* 단원 아코디언 (전부 접힘 시작 · 단일 오픈) */}
