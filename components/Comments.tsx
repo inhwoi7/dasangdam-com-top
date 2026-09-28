@@ -63,6 +63,21 @@ export default function Comments({ slug }: { slug: string }) {
         isSecret: isSecret,
         createdAt: serverTimestamp(),
       });
+
+      // 새 댓글 알림 메일 (관리자 모드일 때는 보내지 않음, 실패해도 댓글 등록에는 영향 없음)
+      if (!adminMode) {
+        fetch("/api/notify-comment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nickname: nickname.trim(),
+            text: text.trim(),
+            isSecret,
+            url: window.location.href,
+          }),
+        }).catch(() => {});
+      }
+
       setText("");
       setPassword("");
       setIsSecret(false);
