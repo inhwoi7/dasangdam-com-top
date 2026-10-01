@@ -3,6 +3,9 @@ import { getArticlePostsPaginated } from "@/lib/notion";
 
 export const revalidate = 0;
 
+// 글이 올라온 지 이 날짜 이내면 NEW 표시 (홈 화면과 동일한 기준)
+const NEW_BADGE_DAYS = 3;
+
 function formatDate(dateString: string, locale: string) {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -10,6 +13,33 @@ function formatDate(dateString: string, locale: string) {
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ko-KR", {
     year: "numeric", month: "2-digit", day: "2-digit"
   }).format(date);
+}
+
+function isNewPost(dateString?: string) {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays >= 0 && diffDays <= NEW_BADGE_DAYS;
+}
+
+function NewBadge() {
+  return (
+    <span style={{
+      display: "inline-block",
+      fontSize: "10px",
+      fontWeight: 700,
+      color: "#ffffff",
+      background: "#e08a3c",
+      borderRadius: "999px",
+      padding: "2px 7px",
+      marginLeft: "6px",
+      verticalAlign: "middle",
+      letterSpacing: "0.02em",
+    }}>
+      NEW
+    </span>
+  );
 }
 
 export default async function BlogPage({
@@ -67,7 +97,10 @@ export default async function BlogPage({
                       {post.category && <span className="categoryTag">{post.category}</span>}
                       {post.publishedDate && <span className="postDate">{formatDate(post.publishedDate, locale)}</span>}
                     </div>
-                    <h3>{locale === "en" && post.title_en ? post.title_en : post.title}</h3>
+                    <h3>
+                      {locale === "en" && post.title_en ? post.title_en : post.title}
+                      {isNewPost(post.publishedDate) && <NewBadge />}
+                    </h3>
                     {(locale === "en" && post.excerpt_en ? post.excerpt_en : post.excerpt) && (
                       <p>{locale === "en" && post.excerpt_en ? post.excerpt_en : post.excerpt}</p>
                     )}
