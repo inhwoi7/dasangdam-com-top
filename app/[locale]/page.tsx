@@ -130,7 +130,10 @@ export default async function HomePage() {
                   </div>
                   <div className="recommendBody">
                     <div className="recommendCopy">
-                      <h2>{displayTitle}</h2>
+                      <h2>
+                        {displayTitle}
+                        {isNewPost(todayPick?.publishedDate) && <NewBadge />}
+                      </h2>
                       {displayExcerpt && <p>{displayExcerpt}</p>}
                       <div style={{ marginTop: "6px" }}>
                         <CommentCount slug={todayPick.slug} />
@@ -150,7 +153,10 @@ export default async function HomePage() {
                   </div>
                   <div className="recommendBody">
                     <div className="recommendCopy">
-                      <h2>{displayTitle}</h2>
+                      <h2>
+                        {displayTitle}
+                        {isNewPost(todayPick?.publishedDate) && <NewBadge />}
+                      </h2>
                       {displayExcerpt && <p>{displayExcerpt}</p>}
                     </div>
                   </div>
