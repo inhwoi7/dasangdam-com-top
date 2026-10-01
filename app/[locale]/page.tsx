@@ -3,6 +3,7 @@ import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
 import { getLocale, getTranslations } from "next-intl/server";
 import LangSwitch from "@/components/LangSwitch";
+import CommentCount from "@/components/CommentCount";
 import { supabase } from "@/lib/community";
 
 export const revalidate = 0;
@@ -221,6 +222,7 @@ export default async function HomePage() {
                     <div className="postMeta">
                       {post.category && <span className="categoryTag">{post.category}</span>}
                       {post.publishedDate && <span className="postDate">{formatDate(post.publishedDate, locale)}</span>}
+                      <CommentCount slug={post.slug} />
                     </div>
                     <h3>
                       {locale === "en" && post.title_en ? post.title_en : post.title}

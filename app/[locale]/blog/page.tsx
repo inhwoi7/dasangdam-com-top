@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getArticlePostsPaginated } from "@/lib/notion";
+import CommentCount from "@/components/CommentCount";
 
 export const revalidate = 0;
 
@@ -96,6 +97,7 @@ export default async function BlogPage({
                     <div className="postMeta">
                       {post.category && <span className="categoryTag">{post.category}</span>}
                       {post.publishedDate && <span className="postDate">{formatDate(post.publishedDate, locale)}</span>}
+                      <CommentCount slug={post.slug} />
                     </div>
                     <h3>
                       {locale === "en" && post.title_en ? post.title_en : post.title}
