@@ -5,7 +5,7 @@ import CommentCount from "@/components/CommentCount";
 export const revalidate = 0;
 
 // 글이 올라온 지 이 날짜 이내면 NEW 표시 (홈 화면과 동일한 기준)
-const NEW_BADGE_DAYS = 3;
+const NEW_BADGE_DAYS = 7;
 
 function formatDate(dateString: string, locale: string) {
   if (!dateString) return "";

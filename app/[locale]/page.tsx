@@ -16,7 +16,7 @@ type ServiceItem = {
 };
 
 // 글이 올라온 지 이 날짜 이내면 NEW 표시
-const NEW_BADGE_DAYS = 3;
+const NEW_BADGE_DAYS = 7;
 
 function formatDate(dateString: string, locale: string) {
   if (!dateString) return "";
@@ -132,6 +132,9 @@ export default async function HomePage() {
                     <div className="recommendCopy">
                       <h2>{displayTitle}</h2>
                       {displayExcerpt && <p>{displayExcerpt}</p>}
+                      <div style={{ marginTop: "6px" }}>
+                        <CommentCount slug={todayPick.slug} />
+                      </div>
                     </div>
                     <div className="recommendAction">
                       <span>{t("see_detail")}</span>
