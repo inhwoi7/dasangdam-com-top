@@ -13,7 +13,7 @@ const T = {
     password: '비밀번호 * (삭제용)',
     passwordPh: '숫자 4자리도 OK',
     topic: '주제',
-    contentPh: '오늘 있었던 일, 고민, 감사한 것... 무엇이든 편하게 적어주세요.',
+    contentPh: '오늘 있었던 일, 고민, 감사한 것... 무엇이든 편하게 적어주세요. (Ctrl+V로 스크린샷을 바로 붙여넣을 수 있어요)',
     photo: '📷 사진 첨부 (최대 5MB)',
     cancel: '취소',
     submit: '게시하기',
@@ -33,7 +33,7 @@ const T = {
     password: 'Password * (for deletion)',
     passwordPh: '4 digits is fine',
     topic: 'Topic',
-    contentPh: 'Share anything — your day, worries, or gratitude.',
+    contentPh: 'Share anything — your day, worries, or gratitude. (Paste a screenshot with Ctrl+V)',
     photo: '📷 Attach photo (max 5MB)',
     cancel: 'Cancel',
     submit: 'Post',
@@ -55,12 +55,33 @@ export default function PostForm({ onSuccess, locale = 'ko' }: { onSuccess: () =
   const fileRef = useRef<HTMLInputElement>(null)
   const t = locale === 'en' ? T.en : T.ko
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const applyImageFile = (file: File) => {
     if (file.size > 5 * 1024 * 1024) { alert(t.errSize); return }
     setImageFile(file)
     setPreview(URL.createObjectURL(file))
+  }
+
+  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    applyImageFile(file)
+  }
+
+  // 텍스트 입력창에 Ctrl+V로 스크린샷을 붙여넣으면 바로 첨부 사진으로 등록
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          applyImageFile(file)
+        }
+        break
+      }
+    }
   }
 
   const handleSubmit = async () => {
@@ -116,10 +137,13 @@ export default function PostForm({ onSuccess, locale = 'ko' }: { onSuccess: () =
       </div>
       <textarea rows={4} placeholder={t.contentPh} value={form.content}
         onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
+        onPaste={handlePaste}
         className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400 resize-none mb-3" />
       {preview && (
-        <div className="relative mb-3 w-full h-40">
-          <img src={preview} alt="미리보기" className="w-full h-full object-cover rounded-xl" />
+        // max-h로 높이를 제한하고 object-contain으로 잘리지 않게 보여줘서,
+        // 스크린샷처럼 세로로 긴 이미지를 붙여넣어도 아래 버튼이 가려지지 않습니다.
+        <div className="relative mb-3 w-full max-h-56 bg-stone-50 border border-stone-200 rounded-xl overflow-hidden flex items-center justify-center">
+          <img src={preview} alt="미리보기" className="max-w-full max-h-56 object-contain" />
           <button onClick={() => { setImageFile(null); setPreview(null) }}
             className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">삭제</button>
         </div>
