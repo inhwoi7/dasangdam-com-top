@@ -95,13 +95,13 @@ export default function PostFeed({ locale = 'ko' }: { locale?: string }) {
         <PostForm onSuccess={load} locale={locale} />
       </div>
 
-      {/* 피드 */}
+      {/* 피드 — 한 줄에 하나씩만 보이도록 한 칸짜리 레이아웃으로 표시 */}
       {loading ? (
         <div className="text-center text-sm text-stone-400 py-10">{t.loading}</div>
       ) : posts.length === 0 ? (
         <div className="text-center text-sm text-stone-400 py-10">{t.empty}</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} onDelete={handleDelete} locale={locale} />
           ))}
