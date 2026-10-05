@@ -266,7 +266,10 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
       )}
       <div className="p-4">
         <span className="text-xs text-amber-600 font-medium">{post.category}</span>
-        <p className="text-sm text-stone-700 mt-1 leading-relaxed line-clamp-4">{linkify(post.content)}</p>
+        {post.title && (
+          <h3 className="text-base font-semibold text-stone-800 mt-1">{post.title}</h3>
+        )}
+        <p className="text-sm text-stone-700 mt-1 leading-relaxed whitespace-pre-wrap line-clamp-6">{linkify(post.content)}</p>
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">
           <div className="text-xs text-stone-400">{post.nickname} · {timeAgo(post.created_at, locale)}</div>
           <div className="flex items-center gap-2">

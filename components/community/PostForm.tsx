@@ -14,6 +14,8 @@ const T = {
     nicknamePh: '예: 행복한나무',
     password: '비밀번호 * (삭제용)',
     passwordPh: '숫자 4자리도 OK',
+    postTitle: '제목 *',
+    postTitlePh: '무슨 이야기인지 한 줄로 적어주세요',
     topic: '주제',
     contentPh: `오늘 있었던 일, 고민, 감사한 것... 무엇이든 편하게 적어주세요. (Ctrl+V로 스크린샷을 바로 붙여넣을 수 있어요, 최대 ${MAX_IMAGES}장)`,
     photo: `📷 사진 첨부 (최대 5MB, ${MAX_IMAGES}장까지)`,
@@ -22,6 +24,7 @@ const T = {
     submitting: '등록 중...',
     errNick: '닉네임을 입력해주세요.',
     errPw: '비밀번호를 입력해주세요 (나중에 글 삭제에 필요해요).',
+    errTitle: '제목을 입력해주세요.',
     errContent: '내용을 입력해주세요.',
     errSize: '사진은 한 장당 5MB 이하로 올려주세요.',
     errMax: `사진은 최대 ${MAX_IMAGES}장까지 첨부할 수 있어요.`,
@@ -35,6 +38,8 @@ const T = {
     nicknamePh: 'e.g. HappyTree',
     password: 'Password * (for deletion)',
     passwordPh: '4 digits is fine',
+    postTitle: 'Title *',
+    postTitlePh: 'A short line about what this is',
     topic: 'Topic',
     contentPh: `Share anything — your day, worries, or gratitude. (Paste screenshots with Ctrl+V, up to ${MAX_IMAGES})`,
     photo: `📷 Attach photos (max 5MB each, up to ${MAX_IMAGES})`,
@@ -43,6 +48,7 @@ const T = {
     submitting: 'Posting...',
     errNick: 'Please enter a nickname.',
     errPw: 'Please enter a password (needed to delete your post later).',
+    errTitle: 'Please enter a title.',
     errContent: 'Please write something.',
     errSize: 'Each photo must be under 5MB.',
     errMax: `You can attach up to ${MAX_IMAGES} photos.`,
@@ -55,7 +61,7 @@ type ImageItem = { file: File; preview: string }
 export default function PostForm({ onSuccess, locale = 'ko' }: { onSuccess: () => void; locale?: string }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ nickname: '', password: '', category: '일상·감사', content: '' })
+  const [form, setForm] = useState({ nickname: '', password: '', category: '일상·감사', title: '', content: '' })
   const [images, setImages] = useState<ImageItem[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
   const t = locale === 'en' ? T.en : T.ko
@@ -105,11 +111,12 @@ export default function PostForm({ onSuccess, locale = 'ko' }: { onSuccess: () =
   const handleSubmit = async () => {
     if (!form.nickname.trim()) return alert(t.errNick)
     if (!form.password.trim()) return alert(t.errPw)
+    if (!form.title.trim()) return alert(t.errTitle)
     if (!form.content.trim()) return alert(t.errContent)
     setLoading(true)
     try {
       await createPost({ ...form, imageFiles: images.map(i => i.file) })
-      setForm({ nickname: '', password: '', category: '일상·감사', content: '' })
+      setForm({ nickname: '', password: '', category: '일상·감사', title: '', content: '' })
       setImages([])
       setOpen(false)
       onSuccess()
@@ -128,6 +135,12 @@ export default function PostForm({ onSuccess, locale = 'ko' }: { onSuccess: () =
   return (
     <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
       <h3 className="text-base font-medium text-stone-700 mb-4">{t.title}</h3>
+      <div className="mb-3">
+        <label className="text-xs text-stone-500 mb-1 block">{t.postTitle}</label>
+        <input type="text" placeholder={t.postTitlePh} value={form.title}
+          onChange={e => setForm(p => ({ ...p, title: e.target.value }))} maxLength={60}
+          className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-400" />
+      </div>
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label className="text-xs text-stone-500 mb-1 block">{t.nickname}</label>

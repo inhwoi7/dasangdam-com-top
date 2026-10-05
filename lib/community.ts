@@ -22,6 +22,7 @@ export type Post = {
   id: string
   nickname: string
   category: string
+  title: string | null
   content: string
   image_url: string | null
   image_urls: string[] | null
@@ -41,7 +42,7 @@ export type Comment = {
 export async function getPosts(category?: string): Promise<Post[]> {
   let query = supabase
     .from('community_posts')
-    .select('id, nickname, category, content, image_url, image_urls, likes, created_at')
+    .select('id, nickname, category, title, content, image_url, image_urls, likes, created_at')
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -58,12 +59,14 @@ export async function createPost({
   nickname,
   password,
   category,
+  title,
   content,
   imageFiles,
 }: {
   nickname: string
   password: string
   category: string
+  title: string
   content: string
   imageFiles?: File[]
 }): Promise<void> {
@@ -95,6 +98,7 @@ export async function createPost({
     nickname,
     password_hash,
     category,
+    title,
     content,
     image_url: image_urls[0] ?? null, // 첫 장은 기존 화면과의 호환을 위해 여기에도 저장
     image_urls: image_urls.length > 0 ? image_urls : null,

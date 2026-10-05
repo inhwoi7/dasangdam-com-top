@@ -79,7 +79,7 @@ export default async function HomePage() {
   // 커뮤니티 최신 글 3개
   const { data: recentPosts } = await supabase
     .from("community_posts")
-    .select("id, nickname, category, content, created_at")
+    .select("id, nickname, category, title, content, created_at")
     .order("created_at", { ascending: false })
     .limit(3);
 
@@ -279,11 +279,15 @@ export default async function HomePage() {
                       <span className="categoryTag">{post.category}</span>
                       <span className="postDate">{timeAgo(post.created_at)}</span>
                     </div>
-                    <h3 style={{ fontSize: "16px", fontWeight: 600 }}>{post.nickname}</h3>
+                    <h3 style={{ fontSize: "16px", fontWeight: 600 }}>{post.title || post.nickname}</h3>
+                    <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-faint)" }}>
+                      {post.nickname}
+                    </p>
                     <p style={{
                       margin: "4px 0 0",
                       fontSize: "14px",
                       color: "var(--text-soft)",
+                      whiteSpace: "pre-wrap",
                       overflow: "hidden",
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
