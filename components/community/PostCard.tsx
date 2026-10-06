@@ -173,41 +173,39 @@ function CommentSection({ postId, locale }: { postId: string; locale: string }) 
                 </div>
               ))}
 
-              <div className="mt-2 space-y-1">
-                <div className="flex gap-1">
+              <div className="mt-2 space-y-1.5">
+                <div className="flex flex-col sm:flex-row gap-1.5">
                   <input
                     type="text"
                     placeholder={ct.nicknamePh}
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     maxLength={20}
-                    className="flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-400"
+                    className="w-full sm:flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-amber-400 box-border"
                   />
                   <input
                     type="password"
                     placeholder={ct.passwordPh}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-400"
+                    className="w-full sm:flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-amber-400 box-border"
                   />
                 </div>
-                <div className="flex gap-1">
-                  <input
-                    type="text"
-                    placeholder={ct.contentPh}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && submit()}
-                    className="flex-1 text-xs border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:border-amber-400"
-                  />
-                  <button
-                    onClick={submit}
-                    disabled={submitting}
-                    className="text-xs bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 disabled:opacity-50 transition flex-shrink-0"
-                  >
-                    {submitting ? ct.submitting : ct.submit}
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  placeholder={ct.contentPh}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submit()}
+                  className="w-full text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-amber-400 box-border"
+                />
+                <button
+                  onClick={submit}
+                  disabled={submitting}
+                  className="w-full text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 disabled:opacity-50 transition"
+                >
+                  {submitting ? ct.submitting : ct.submit}
+                </button>
               </div>
             </>
           )}
@@ -269,7 +267,7 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
         {post.title && (
           <h3 className="text-base font-semibold text-stone-800 mt-1">{post.title}</h3>
         )}
-        <p className="text-sm text-stone-700 mt-1 leading-relaxed whitespace-pre-wrap line-clamp-6">{linkify(post.content)}</p>
+        <p className="text-sm text-stone-700 mt-1 leading-relaxed whitespace-pre-wrap">{linkify(post.content)}</p>
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">
           <div className="text-xs text-stone-400">{post.nickname} · {timeAgo(post.created_at, locale)}</div>
           <div className="flex items-center gap-2">
