@@ -57,6 +57,20 @@ export default function PostFeed({ locale = 'ko' }: { locale?: string }) {
 
   useEffect(() => { load() }, [load])
 
+  // 홈 화면 등에서 특정 글(#글아이디)로 들어오면 그 글 위치로 스크롤
+  useEffect(() => {
+    if (posts.length === 0) return
+    const hash = window.location.hash
+    if (!hash) return
+    const id = hash.slice(1)
+    const el = document.getElementById(id)
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    }
+  }, [posts])
+
   const handleDelete = (id: string) =>
     setPosts((prev) => prev.filter((p) => p.id !== id))
 

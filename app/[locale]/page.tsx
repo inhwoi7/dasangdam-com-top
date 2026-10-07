@@ -273,7 +273,7 @@ export default async function HomePage() {
           {recentPosts && recentPosts.length > 0 ? (
             <div className="postList">
               {recentPosts.map((post) => (
-                <Link key={post.id} href={`/${locale}/community`} className="postRow" style={{ textDecoration: "none" }}>
+                <Link key={post.id} href={`/${locale}/community#${post.id}`} className="postRow" style={{ textDecoration: "none" }}>
                   <div className="postMain">
                     <div className="postMeta">
                       <span className="categoryTag">{post.category}</span>

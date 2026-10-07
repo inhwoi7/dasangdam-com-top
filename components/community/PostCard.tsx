@@ -244,7 +244,7 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
       : []
 
   return (
-    <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
+    <div id={post.id} className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition scroll-mt-4">
       {images.length === 1 && (
         <img src={images[0]} alt="첨부 이미지" className="w-full h-44 object-cover" loading="lazy" />
       )}
