@@ -3,10 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// 공지 팝업 켜기/끄기 스위치
+// false = 팝업 안 뜸 / true = 팝업 뜸 (하루 한 번)
+const SHOW_POPUP = false
+
 export default function AnnouncementPopup({ locale }: { locale: string }) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    if (!SHOW_POPUP) return
     const dismissed = localStorage.getItem('popup-dismissed-date')
     const today = new Date().toDateString()
     if (dismissed !== today) {
