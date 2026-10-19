@@ -1,157 +1,238 @@
-// app/[locale]/english/toeic/expressions/[no]/page.tsx
+// app/[locale]/english/toeic/page.tsx
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter, notFound } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Check } from "lucide-react";
-import PatternCard from "@/components/PatternCard";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Check, ChevronDown, Mic } from "lucide-react";
 import {
   EXPRESSIONS,
+  EXPRESSION_CATEGORIES,
   SETS,
-  getExpression,
+  SET_CATEGORIES,
   formatToeicNo,
 } from "@/lib/toeicPart2";
 import { useToeicProgress } from "@/lib/useToeicProgress";
 
-export default function ToeicExpressionPage() {
-  const { locale, no } = useParams<{ locale: string; no: string }>();
+type Tab = "expr" | "set";
+
+export default function ToeicHomePage() {
+  const { locale } = useParams<{ locale: string }>();
   const base = `/${locale}/english`;
-  const exprNo = Number(no);
 
-  const router = useRouter();
-  const { isMastered, toggle, loaded } = useToeicProgress("expr");
+  const [tab, setTab] = useState<Tab>("expr");
+  const [openCat, setOpenCat] = useState<string | null>(null);
 
-  const expr = getExpression(exprNo);
+  const expr = useToeicProgress("expr");
+  const sets = useToeicProgress("set");
+  const progress = tab === "expr" ? expr : sets;
 
-  const { prev, next } = useMemo(() => {
-    const idx = EXPRESSIONS.findIndex((e) => e.no === exprNo);
-    return {
-      prev: idx > 0 ? EXPRESSIONS[idx - 1] : null,
-      next:
-        idx >= 0 && idx < EXPRESSIONS.length - 1 ? EXPRESSIONS[idx + 1] : null,
-    };
-  }, [exprNo]);
+  // 상세 페이지에서 "목차"로 돌아올 때 보던 탭 유지 (?tab=set)
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t === "set") setTab("set");
+  }, []);
 
-  // 이 표현이 조합 구문으로 쓰인 사진별 답변 세트
-  const relatedSets = useMemo(
-    () => SETS.filter((s) => s.combo.includes(exprNo)).slice(0, 8),
-    [exprNo]
-  );
+  const switchTab = (t: Tab) => {
+    setTab(t);
+    setOpenCat(null);
+    window.history.replaceState(null, "", `?tab=${t}`);
+  };
 
-  if (!expr) notFound();
+  const groups = useMemo(() => {
+    if (tab === "expr") {
+      return EXPRESSION_CATEGORIES.map((cat) => ({
+        cat,
+        items: EXPRESSIONS.filter((e) => e.category === cat).map((e) => ({
+          no: e.no,
+          label: e.ko,
+        })),
+      }));
+    }
+    return SET_CATEGORIES.map((cat) => ({
+      cat,
+      items: SETS.filter((s) => s.category === cat).map((s) => ({
+        no: s.no,
+        label: s.situation_ko,
+      })),
+    }));
+  }, [tab]);
 
-  const done = loaded && isMastered(exprNo);
+  const total = tab === "expr" ? EXPRESSIONS.length : SETS.length;
+  const done = progress.loaded ? progress.mastered.size : 0;
+  const percent = total ? Math.round((done / total) * 100) : 0;
+  const detailBase = `${base}/toeic/${tab === "expr" ? "expressions" : "sets"}`;
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 px-4 pb-24 pt-6">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 px-4 pb-10 pt-5">
+      <header className="mb-4">
         <Link
-          href={`${base}/toeic?tab=expr`}
-          className="flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+          href={base}
+          className="mb-3 flex w-fit items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
         >
           <ArrowLeft className="h-4 w-4" />
-          목차
+          영어 구문 학습
         </Link>
-        <span className="text-xs font-semibold tracking-widest text-slate-400">
-          {expr.category} · NO. {formatToeicNo(expr.no)}
-        </span>
-      </div>
 
-      <PatternCard
-        id={expr.no}
-        patternKo={expr.ko}
-        patternEn={expr.en}
-        resetKey={expr.no}
-      />
-
-      <button
-        type="button"
-        onClick={() => toggle(expr.no)}
-        className={[
-          "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-colors",
-          done
-            ? "bg-amber-500 text-white hover:bg-amber-600"
-            : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50",
-        ].join(" ")}
-      >
-        <Check className="h-4 w-4" strokeWidth={3} />
-        {done ? "마스터 완료" : "마스터로 표시"}
-      </button>
-
-      {relatedSets.length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-3 px-1 text-sm font-semibold text-slate-500">
-            이 표현이 쓰인 사진 답변
-          </h2>
-          <ul className="space-y-2">
-            {relatedSets.map((s) => (
-              <li key={s.no}>
-                <Link
-                  href={`${base}/toeic/sets/${s.no}`}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3.5 py-3 ring-1 ring-slate-200/70 transition-colors hover:bg-slate-50 active:bg-slate-100"
-                >
-                  <span className="text-[11px] font-semibold tabular-nums text-slate-400">
-                    {formatToeicNo(s.no)}
-                  </span>
-                  <span className="flex-1 truncate text-[13px] font-medium text-slate-800">
-                    {s.situation_ko}
-                  </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <nav className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-md border-t border-slate-200 bg-white/90 px-4 py-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <NavButton
-            direction="prev"
-            disabled={!prev}
-            onClick={() =>
-              prev && router.push(`${base}/toeic/expressions/${prev.no}`)
-            }
-          />
-          <NavButton
-            direction="next"
-            disabled={!next}
-            onClick={() =>
-              next && router.push(`${base}/toeic/expressions/${next.no}`)
-            }
-          />
+        <div className="flex items-center gap-1.5 text-amber-600">
+          <Mic className="h-4 w-4" />
+          <span className="text-[11px] font-semibold tracking-widest">
+            TOEIC SPEAKING
+          </span>
         </div>
-      </nav>
+        <h1 className="mt-1 text-xl font-bold text-slate-900">
+          Part 2 사진 묘사
+        </h1>
+
+        {/* 탭 */}
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-slate-200/70 p-1">
+          <TabButton active={tab === "expr"} onClick={() => switchTab("expr")}>
+            필수 표현 100선
+          </TabButton>
+          <TabButton active={tab === "set"} onClick={() => switchTab("set")}>
+            실전 답변 100세트
+          </TabButton>
+        </div>
+
+        {/* 진행률 */}
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className="shrink-0 text-xs font-semibold text-slate-500">
+            {done}/{total}
+          </span>
+        </div>
+
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+          {tab === "expr"
+            ? "한글 뜻을 보고 영어 표현을 먼저 떠올려 본 뒤, 카드를 눌러 확인하세요."
+            : "사진 상황을 보고 30초 안에 직접 말해 본 뒤, 모범 스크립트를 확인하세요."}
+        </p>
+      </header>
+
+      {/* 카테고리 아코디언 */}
+      <section className="space-y-2">
+        {groups.map(({ cat, items }, idx) => {
+          const isOpen = openCat === cat;
+          const catDone = progress.loaded
+            ? items.filter((it) => progress.isMastered(it.no)).length
+            : 0;
+
+          return (
+            <div
+              key={cat}
+              className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70"
+            >
+              <button
+                type="button"
+                onClick={() => setOpenCat((cur) => (cur === cat ? null : cat))}
+                className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-sm font-bold text-amber-700">
+                  {idx + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-slate-800">
+                    {cat}
+                  </span>
+                </span>
+                <span className="shrink-0 text-[11px] font-medium text-slate-400">
+                  {catDone}/{items.length}
+                </span>
+                <ChevronDown
+                  className={[
+                    "h-4 w-4 shrink-0 text-slate-400 transition-transform duration-300",
+                    isOpen ? "rotate-180" : "",
+                  ].join(" ")}
+                />
+              </button>
+
+              <div
+                className={[
+                  "grid transition-all duration-300 ease-out",
+                  isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                ].join(" ")}
+              >
+                <ul className="overflow-hidden border-t border-slate-100">
+                  {items.map((it) => {
+                    const isDone = progress.loaded && progress.isMastered(it.no);
+                    return (
+                      <li
+                        key={it.no}
+                        className="flex items-center gap-1.5 border-b border-slate-50 px-1.5 last:border-b-0"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => progress.toggle(it.no)}
+                          aria-pressed={isDone}
+                          aria-label={`${formatToeicNo(it.no)} 마스터 표시`}
+                          className={[
+                            "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors",
+                            isDone
+                              ? "border-amber-500 bg-amber-500 text-white"
+                              : "border-slate-300 bg-white text-transparent hover:border-amber-400",
+                          ].join(" ")}
+                        >
+                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                        </button>
+
+                        <Link
+                          href={`${detailBase}/${it.no}`}
+                          className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-slate-50 active:bg-slate-100"
+                        >
+                          <span className="text-[11px] font-semibold tabular-nums text-slate-400">
+                            {formatToeicNo(it.no)}
+                          </span>
+                          <span
+                            className={[
+                              "flex-1 truncate text-[13px] font-medium",
+                              isDone
+                                ? "text-slate-400 line-through"
+                                : "text-slate-800",
+                            ].join(" ")}
+                          >
+                            {it.label}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          );
+        })}
+      </section>
     </main>
   );
 }
 
-function NavButton({
-  direction,
-  disabled,
+function TabButton({
+  active,
   onClick,
+  children,
 }: {
-  direction: "prev" | "next";
-  disabled: boolean;
+  active: boolean;
   onClick: () => void;
+  children: React.ReactNode;
 }) {
-  const isPrev = direction === "prev";
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      aria-pressed={active}
       className={[
-        "flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-3 text-sm font-semibold transition-colors",
-        disabled
-          ? "cursor-not-allowed bg-slate-100 text-slate-300"
-          : "bg-slate-800 text-white hover:bg-slate-900 active:bg-slate-700",
+        "rounded-xl py-2 text-sm font-semibold transition-colors",
+        active
+          ? "bg-white text-slate-900 shadow-sm"
+          : "text-slate-500 hover:text-slate-700",
       ].join(" ")}
     >
-      {isPrev && <ChevronLeft className="h-4 w-4" />}
-      <span>{isPrev ? "이전 표현" : "다음 표현"}</span>
-      {!isPrev && <ChevronRight className="h-4 w-4" />}
+      {children}
     </button>
   );
 }
