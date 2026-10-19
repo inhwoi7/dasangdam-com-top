@@ -1,63 +1,104 @@
-// app/[locale]/english/page.tsx
+// app/[locale]/english/toeic/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, Check, ChevronDown, FlaskConical, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Mic } from "lucide-react";
 import {
-  PATTERNS,
-  CHAPTER_TITLES,
-  formatNo,
-  type PatternData,
-} from "@/lib/patterns";
-import { useMastered } from "@/lib/useMastered";
+  EXPRESSIONS,
+  EXPRESSION_CATEGORIES,
+  SETS,
+  SET_CATEGORIES,
+  formatToeicNo,
+} from "@/lib/toeicPart2";
+import { useToeicProgress } from "@/lib/useToeicProgress";
 
-export default function EnglishHomePage() {
+type Tab = "expr" | "set";
+
+export default function ToeicHomePage() {
   const { locale } = useParams<{ locale: string }>();
   const base = `/${locale}/english`;
 
-  const { isMastered, toggle, mastered, loaded } = useMastered();
+  const [tab, setTab] = useState<Tab>("expr");
+  const [openCat, setOpenCat] = useState<string | null>(null);
 
-  // 단원별로 묶기
-  const chapters = useMemo(() => {
-    const map = new Map<number, PatternData[]>();
-    for (const p of PATTERNS) {
-      const list = map.get(p.chapter_num) ?? [];
-      list.push(p);
-      map.set(p.chapter_num, list);
-    }
-    return [...map.entries()].sort((a, b) => a[0] - b[0]);
+  const expr = useToeicProgress("expr");
+  const sets = useToeicProgress("set");
+  const progress = tab === "expr" ? expr : sets;
+
+  // 상세 페이지에서 "목차"로 돌아올 때 보던 탭 유지 (?tab=set)
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t === "set") setTab("set");
   }, []);
 
-  // 한 번에 하나만 펼침. null = 전부 접힘(첫 화면이 한눈에 들어옴)
-  const [openCh, setOpenCh] = useState<number | null>(null);
-  const toggleChapter = (num: number) =>
-    setOpenCh((cur) => (cur === num ? null : num));
+  const switchTab = (t: Tab) => {
+    setTab(t);
+    setOpenCat(null);
+    window.history.replaceState(null, "", `?tab=${t}`);
+  };
 
-  const total = PATTERNS.length;
-  const done = loaded ? mastered.size : 0;
+  const groups = useMemo(() => {
+    if (tab === "expr") {
+      return EXPRESSION_CATEGORIES.map((cat) => ({
+        cat,
+        items: EXPRESSIONS.filter((e) => e.category === cat).map((e) => ({
+          no: e.no,
+          label: e.ko,
+        })),
+      }));
+    }
+    return SET_CATEGORIES.map((cat) => ({
+      cat,
+      items: SETS.filter((s) => s.category === cat).map((s) => ({
+        no: s.no,
+        label: s.situation_ko,
+      })),
+    }));
+  }, [tab]);
+
+  const total = tab === "expr" ? EXPRESSIONS.length : SETS.length;
+  const done = progress.loaded ? progress.mastered.size : 0;
   const percent = total ? Math.round((done / total) * 100) : 0;
+  const detailBase = `${base}/toeic/${tab === "expr" ? "expressions" : "sets"}`;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 px-4 pb-10 pt-5">
-      {/* 헤더 (압축) */}
       <header className="mb-4">
-        <div className="flex items-center gap-1.5 text-teal-600">
-          <BookOpen className="h-4 w-4" />
+        <Link
+          href={base}
+          className="mb-3 flex w-fit items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          영어 구문 학습
+        </Link>
+
+        <div className="flex items-center gap-1.5 text-amber-600">
+          <Mic className="h-4 w-4" />
           <span className="text-[11px] font-semibold tracking-widest">
-            필수회화구문 140
+            TOEIC SPEAKING
           </span>
         </div>
         <h1 className="mt-1 text-xl font-bold text-slate-900">
-          나만의 영어 구문 노트
+          Part 2 사진 묘사
         </h1>
 
-        {/* 진행률 (슬림) */}
+        {/* 탭 */}
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-slate-200/70 p-1">
+          <TabButton active={tab === "expr"} onClick={() => switchTab("expr")}>
+            필수 표현 100선
+          </TabButton>
+          <TabButton active={tab === "set"} onClick={() => switchTab("set")}>
+            실전 답변 100세트
+          </TabButton>
+        </div>
+
+        {/* 진행률 */}
         <div className="mt-3 flex items-center gap-3">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
               style={{ width: `${percent}%` }}
             />
           </div>
@@ -66,55 +107,41 @@ export default function EnglishHomePage() {
           </span>
         </div>
 
-        {/* 업무용 기술영어 코너 진입 */}
-        <Link
-          href={`${base}/tech`}
-          className="mt-3 flex items-center gap-3 rounded-2xl bg-indigo-600 p-4 text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
-            <FlaskConical className="h-4 w-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold">고전압 절연 기술영어 치트시트</span>
-            <span className="mt-0.5 block text-xs text-indigo-100">
-              회의 · 논문 발표용 4주 / 2주 완성 플랜
-            </span>
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0" />
-        </Link>
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+          {tab === "expr"
+            ? "한글 뜻을 보고 영어 표현을 먼저 떠올려 본 뒤, 카드를 눌러 확인하세요."
+            : "사진 상황을 보고 30초 안에 직접 말해 본 뒤, 모범 스크립트를 확인하세요."}
+        </p>
       </header>
 
-      {/* 단원 아코디언 (전부 접힘 시작 · 단일 오픈) */}
+      {/* 카테고리 아코디언 */}
       <section className="space-y-2">
-        {chapters.map(([num, list]) => {
-          const isOpen = openCh === num;
-          const chapterDone = loaded
-            ? list.filter((p) => isMastered(p.id)).length
+        {groups.map(({ cat, items }, idx) => {
+          const isOpen = openCat === cat;
+          const catDone = progress.loaded
+            ? items.filter((it) => progress.isMastered(it.no)).length
             : 0;
 
           return (
             <div
-              key={num}
+              key={cat}
               className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/70"
             >
               <button
                 type="button"
-                onClick={() => toggleChapter(num)}
+                onClick={() => setOpenCat((cur) => (cur === cat ? null : cat))}
                 className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-sm font-bold text-teal-700">
-                  {num}
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-sm font-bold text-amber-700">
+                  {idx + 1}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-slate-800">
-                    Chapter {num}
-                  </span>
-                  <span className="line-clamp-1 text-[11px] text-slate-400">
-                    {CHAPTER_TITLES[num]}
+                    {cat}
                   </span>
                 </span>
                 <span className="shrink-0 text-[11px] font-medium text-slate-400">
-                  {chapterDone}/{list.length}
+                  {catDone}/{items.length}
                 </span>
                 <ChevronDown
                   className={[
@@ -124,7 +151,6 @@ export default function EnglishHomePage() {
                 />
               </button>
 
-              {/* 펼침 영역 — 부드럽게 열림 */}
               <div
                 className={[
                   "grid transition-all duration-300 ease-out",
@@ -132,36 +158,34 @@ export default function EnglishHomePage() {
                 ].join(" ")}
               >
                 <ul className="overflow-hidden border-t border-slate-100">
-                  {list.map((p) => {
-                    const isDone = loaded && isMastered(p.id);
+                  {items.map((it) => {
+                    const isDone = progress.loaded && progress.isMastered(it.no);
                     return (
                       <li
-                        key={p.id}
+                        key={it.no}
                         className="flex items-center gap-1.5 border-b border-slate-50 px-1.5 last:border-b-0"
                       >
-                        {/* 마스터 체크 */}
                         <button
                           type="button"
-                          onClick={() => toggle(p.id)}
+                          onClick={() => progress.toggle(it.no)}
                           aria-pressed={isDone}
-                          aria-label={`구문 ${formatNo(p.id)} 마스터 표시`}
+                          aria-label={`${formatToeicNo(it.no)} 마스터 표시`}
                           className={[
                             "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors",
                             isDone
-                              ? "border-teal-500 bg-teal-500 text-white"
-                              : "border-slate-300 bg-white text-transparent hover:border-teal-400",
+                              ? "border-amber-500 bg-amber-500 text-white"
+                              : "border-slate-300 bg-white text-transparent hover:border-amber-400",
                           ].join(" ")}
                         >
                           <Check className="h-3.5 w-3.5" strokeWidth={3} />
                         </button>
 
-                        {/* 구문 → 상세 */}
                         <Link
-                          href={`${base}/study/${p.id}`}
+                          href={`${detailBase}/${it.no}`}
                           className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-slate-50 active:bg-slate-100"
                         >
                           <span className="text-[11px] font-semibold tabular-nums text-slate-400">
-                            {formatNo(p.id)}
+                            {formatToeicNo(it.no)}
                           </span>
                           <span
                             className={[
@@ -171,7 +195,7 @@ export default function EnglishHomePage() {
                                 : "text-slate-800",
                             ].join(" ")}
                           >
-                            {p.pattern_ko}
+                            {it.label}
                           </span>
                         </Link>
                       </li>
@@ -184,5 +208,31 @@ export default function EnglishHomePage() {
         })}
       </section>
     </main>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={[
+        "rounded-xl py-2 text-sm font-semibold transition-colors",
+        active
+          ? "bg-white text-slate-900 shadow-sm"
+          : "text-slate-500 hover:text-slate-700",
+      ].join(" ")}
+    >
+      {children}
+    </button>
   );
 }
