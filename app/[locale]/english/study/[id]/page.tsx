@@ -39,7 +39,7 @@ export default function StudyPage() {
     <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 px-4 pb-24 pt-6">
       <div className="mb-6 flex items-center justify-between">
         <Link
-          href={base}
+          href={`${base}/patterns`}
           className="flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
         >
           <ArrowLeft className="h-4 w-4" />
