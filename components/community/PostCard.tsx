@@ -305,8 +305,8 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
             <button onClick={handleLike} aria-pressed={liked}
               aria-label={locale === 'en' ? 'Like' : '좋아요'}
               className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition ${liked ? 'bg-red-50' : 'hover:bg-stone-50'}`}>
-              <span className={`text-sm leading-none transition-transform ${liked ? 'text-red-500 scale-110' : 'text-stone-300'}`}>♥</span>
-              <span className={liked ? 'text-red-500 font-semibold' : 'text-stone-400'}>{likes}</span>
+              <span className={`text-sm leading-none transition-transform ${likes > 0 ? 'text-red-500' : 'text-stone-300'} ${liked ? 'scale-110' : ''}`}>♥</span>
+              <span className={liked ? 'text-red-500 font-semibold' : likes > 0 ? 'text-stone-500' : 'text-stone-400'}>{likes}</span>
             </button>
             <button onClick={handleDelete} disabled={deleting}
               className="text-xs text-stone-300 hover:text-red-400 transition disabled:opacity-50">
