@@ -222,10 +222,40 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
   const [likes, setLikes] = useState(post.likes)
   const [deleting, setDeleting] = useState(false)
 
+  // 이 브라우저에서 이미 누른 글이면 하트를 빨갛게 표시 (새로고침해도 유지)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('community-liked-posts')
+      const ids: string[] = raw ? JSON.parse(raw) : []
+      if (ids.includes(post.id)) setLiked(true)
+    } catch {
+      // 저장소를 못 읽어도 동작에는 문제 없음
+    }
+  }, [post.id])
+
   const handleLike = async () => {
     if (liked) return
     setLiked(true); setLikes(l => l + 1)
-    await toggleLike(post.id)
+    try {
+      const raw = localStorage.getItem('community-liked-posts')
+      const ids: string[] = raw ? JSON.parse(raw) : []
+      if (!ids.includes(post.id)) {
+        localStorage.setItem('community-liked-posts', JSON.stringify([...ids, post.id]))
+      }
+    } catch {
+      // 저장 실패는 무시
+    }
+    try {
+      await toggleLike(post.id)
+    } catch {
+      // 서버 반영에 실패하면 화면 상태를 되돌림
+      setLiked(false); setLikes(l => Math.max(0, l - 1))
+      try {
+        const raw = localStorage.getItem('community-liked-posts')
+        const ids: string[] = raw ? JSON.parse(raw) : []
+        localStorage.setItem('community-liked-posts', JSON.stringify(ids.filter(id => id !== post.id)))
+      } catch {}
+    }
   }
 
   const handleDelete = async () => {
@@ -271,9 +301,11 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">
           <div className="text-xs text-stone-400">{post.nickname} · {timeAgo(post.created_at, locale)}</div>
           <div className="flex items-center gap-2">
-            <button onClick={handleLike}
-              className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition ${liked ? 'text-amber-600 bg-amber-50' : 'text-stone-400 hover:text-amber-500'}`}>
-              ♥ {likes}
+            <button onClick={handleLike} aria-pressed={liked}
+              aria-label={locale === 'en' ? 'Like' : '좋아요'}
+              className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition ${liked ? 'bg-red-50' : 'hover:bg-stone-50'}`}>
+              <span className={`text-sm leading-none transition-transform ${liked ? 'text-red-500 scale-110' : 'text-stone-300'}`}>♥</span>
+              <span className={liked ? 'text-red-500 font-semibold' : 'text-stone-400'}>{likes}</span>
             </button>
             <button onClick={handleDelete} disabled={deleting}
               className="text-xs text-stone-300 hover:text-red-400 transition disabled:opacity-50">
