@@ -225,7 +225,7 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
   // 이 브라우저에서 이미 누른 글이면 하트를 빨갛게 표시 (새로고침해도 유지)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('community-liked-posts')
+      const raw = localStorage.getItem('community-liked-posts-v2')
       const ids: string[] = raw ? JSON.parse(raw) : []
       if (ids.includes(post.id)) setLiked(true)
     } catch {
@@ -237,10 +237,10 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
     if (liked) return
     setLiked(true); setLikes(l => l + 1)
     try {
-      const raw = localStorage.getItem('community-liked-posts')
+      const raw = localStorage.getItem('community-liked-posts-v2')
       const ids: string[] = raw ? JSON.parse(raw) : []
       if (!ids.includes(post.id)) {
-        localStorage.setItem('community-liked-posts', JSON.stringify([...ids, post.id]))
+        localStorage.setItem('community-liked-posts-v2', JSON.stringify([...ids, post.id]))
       }
     } catch {
       // 저장 실패는 무시
@@ -248,12 +248,13 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
     try {
       await toggleLike(post.id)
     } catch {
-      // 서버 반영에 실패하면 화면 상태를 되돌림
+      // 서버 반영에 실패하면 화면 상태를 되돌리고 알려줌
       setLiked(false); setLikes(l => Math.max(0, l - 1))
+      alert(locale === 'en' ? 'Could not save your like. Please try again.' : '좋아요 저장에 실패했어요. 잠시 후 다시 눌러주세요.')
       try {
-        const raw = localStorage.getItem('community-liked-posts')
+        const raw = localStorage.getItem('community-liked-posts-v2')
         const ids: string[] = raw ? JSON.parse(raw) : []
-        localStorage.setItem('community-liked-posts', JSON.stringify(ids.filter(id => id !== post.id)))
+        localStorage.setItem('community-liked-posts-v2', JSON.stringify(ids.filter(id => id !== post.id)))
       } catch {}
     }
   }

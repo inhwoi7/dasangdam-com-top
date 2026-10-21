@@ -135,7 +135,8 @@ export async function deletePost(id: string, password: string): Promise<boolean>
 }
 
 export async function toggleLike(id: string): Promise<void> {
-  await supabase.rpc('increment_likes', { post_id: id })
+  const { error } = await supabase.rpc('increment_likes', { post_id: id })
+  if (error) throw error
 }
 
 // ===== 댓글 =====
