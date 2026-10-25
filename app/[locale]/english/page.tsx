@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, ChevronRight, FlaskConical, Languages, Mic } from "lucide-react";
+import { BookOpen, ChevronRight, FlaskConical, Headphones, Languages, Mic } from "lucide-react";
 import { PATTERNS } from "@/lib/patterns";
 import { useMastered } from "@/lib/useMastered";
 
@@ -59,6 +59,16 @@ export default function EnglishHubPage() {
           icon={<Mic className="h-4 w-4" />}
           title="TOEIC Speaking Part 2"
           subtitle="사진 묘사 필수 표현 100선 · 실전 답변 100세트"
+        />
+
+        {/* TOEIC Speaking Part 3 */}
+        <CornerCard
+          href={`${base}/toeic3`}
+          color="bg-rose-500 hover:bg-rose-600 active:bg-rose-700"
+          subColor="text-rose-50"
+          icon={<Headphones className="h-4 w-4" />}
+          title="TOEIC Speaking Part 3"
+          subtitle="160점 목표 · 문법·표현·이유 150개 + 실전 질문 100"
         />
       </section>
     </main>
