@@ -218,6 +218,19 @@ function CommentSection({ postId, locale }: { postId: string; locale: string }) 
 export default function PostCard({ post, onDelete, locale = 'ko' }: {
   post: Post; onDelete: (id: string) => void; locale?: string
 }) {
+  // 올라온 지 7일 이내면 NEW 표시
+  const isNew = (() => {
+    const t = new Date(post.created_at).getTime()
+    if (Number.isNaN(t)) return false
+    const days = (Date.now() - t) / (1000 * 60 * 60 * 24)
+    return days >= 0 && days <= 7
+  })()
+  const newBadge = (
+    <span className="ml-1.5 inline-block rounded-full bg-[#e08a3c] px-1.5 py-0.5 align-middle text-[9px] font-bold leading-none text-white">
+      NEW
+    </span>
+  )
+
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(post.likes)
   const [deleting, setDeleting] = useState(false)
@@ -295,8 +308,12 @@ export default function PostCard({ post, onDelete, locale = 'ko' }: {
       )}
       <div className="p-4">
         <span className="text-xs text-amber-600 font-medium">{post.category}</span>
+        {!post.title && isNew && newBadge}
         {post.title && (
-          <h3 className="text-base font-semibold text-stone-800 mt-1">{post.title}</h3>
+          <h3 className="text-base font-semibold text-stone-800 mt-1">
+            {post.title}
+            {isNew && newBadge}
+          </h3>
         )}
         <p className="text-sm text-stone-700 mt-1 leading-relaxed whitespace-pre-wrap">{linkify(post.content)}</p>
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-50">

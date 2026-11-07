@@ -1,3 +1,4 @@
+// app/[locale]/page.tsx
 import Link from "next/link";
 import { ArrowRightIcon, ServiceIcon, SunLogo } from "@/components/icons";
 import { getArticlePosts, getFeaturedQuote } from "@/lib/notion";
@@ -279,7 +280,10 @@ export default async function HomePage() {
                       <span className="categoryTag">{post.category}</span>
                       <span className="postDate">{timeAgo(post.created_at)}</span>
                     </div>
-                    <h3 style={{ fontSize: "16px", fontWeight: 600 }}>{post.title || post.nickname}</h3>
+                    <h3 style={{ fontSize: "16px", fontWeight: 600 }}>
+                      {post.title || post.nickname}
+                      {isNewPost(post.created_at) && <NewBadge />}
+                    </h3>
                     <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-faint)" }}>
                       {post.nickname}
                     </p>
